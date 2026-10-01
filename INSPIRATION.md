@@ -23,7 +23,7 @@ _The first thing people see at the top of the homepage._
 - **What I like:** The folder effect on the right side: the menu (Home, Shop, For Us, Recipes) sits along the right edge as vertical tabs, like the dividers in a folder.
 - **Where I'd use it:** In the hero.
 - **Screenshot:** inspiration/
-- **To plan for:** On phones there isn't much room for tabs down the side, so we'd need a phone version (for example, the tabs along the bottom of the screen).
+- **Phone version:** Same folder effect, but with the tabs along the top of the screen. Tapping a tab feels like shuffling through folders: that tab's page comes to the front.
 
 ## Animations
 _Bounces, wiggles, hover effects, page transitions._
