@@ -31,6 +31,13 @@ _Bounces, wiggles, hover effects, page transitions._
 ## Scrolling
 _What happens as people scroll down the page._
 
+### Responsive Line Splits on Scroll demo
+- **Link:** https://demos.gsap.com/demo/responsive-line-splits-on-scroll
+- **Code:** https://codepen.io/GreenSock/pen/GggpRoB (uses GSAP's ScrollTrigger and SplitText)
+- **What I like:** Clean, desktop-sized text for key info, trends, etc., shown between the smooth-scrolling parts of the site.
+- **Where I'd use it:** On one or more pages, as part of the smooth scroll effect.
+- **Screenshot:** inspiration/
+
 ## Email signup
 _Forms and boxes where people join the mailing list._
 
