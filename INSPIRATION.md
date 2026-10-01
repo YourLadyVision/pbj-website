@@ -38,6 +38,13 @@ _What happens as people scroll down the page._
 - **Where I'd use it:** On one or more pages, as part of the smooth scroll effect.
 - **Screenshot:** inspiration/
 
+#### How it would work
+1. We write short, punchy text blocks for key info, like a trend or a hidden-gem fact about Mumbai.
+2. As people scroll, each block appears line by line, with each line sliding or fading in smoothly.
+3. The text resizes and re-arranges its lines to fit the screen, so it still looks clean on phones, not just desktops.
+
+**To plan for:** Keep these text moments short (one to three sentences) so they're quick to read on a phone, and space them out between other sections so they feel special.
+
 ## Email signup
 _Forms and boxes where people join the mailing list._
 
