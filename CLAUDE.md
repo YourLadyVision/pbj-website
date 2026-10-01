@@ -20,5 +20,8 @@
 - Keep pages fast and light — many visitors will be on mobile data.
 - Large, easy-to-tap buttons.
 
+## Inspiration
+- Check `INSPIRATION.md` (and screenshots in `inspiration/`) whenever we build something new.
+
 ## Working With the Owner
 - The owner is not technical. Explain changes in plain language and avoid jargon.
