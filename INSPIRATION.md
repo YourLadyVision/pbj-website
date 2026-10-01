@@ -54,6 +54,13 @@ _What happens as people scroll down the page._
 
 **To plan for:** Keep these text moments short (one to three sentences) so they're quick to read on a phone, and space them out between other sections so they feel special.
 
+### Stagger Items In on Scroll demo
+- **Link:** https://demos.gsap.com/demo/stagger-items-in-on-scroll
+- **Code:** https://codepen.io/GreenSock/pen/NWGPxGZ (uses GSAP's ScrollTrigger)
+- **What I like:** It shows many things neatly lined up, appearing one after another as I scroll.
+- **Where I'd use it:** The "Spin-off Events" section showing all the events we've done so far. This probably comes later, once we have a few successful events under our belt.
+- **Screenshot:** inspiration/
+
 ## Email signup
 _Forms and boxes where people join the mailing list._
 
