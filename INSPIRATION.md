@@ -37,7 +37,7 @@ _What happens as people scroll down the page._
 - **What I like:** The whole smooth scroll effect.
 - **Where I'd use it:** Everywhere, across the whole website and web app.
 - **Screenshot:** inspiration/
-- **Notes:** Works together with GSAP's ScrollTrigger, so it can be the smooth scroll that the other scroll ideas (line splits, horizontal text, the sandwich mascot) play on top of. 
+- **Notes:** Works together with GSAP's ScrollTrigger, so it can be the smooth scroll that the other scroll ideas (line splits, horizontal text, the sandwich mascot) play on top of.
 - **Decision:** Smooth scroll on computers only. On phones, leave the phone's normal touch scrolling alone (this is Lenis's default). Scroll animations still play on phones.
 
 ### Responsive Line Splits on Scroll demo
