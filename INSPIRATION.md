@@ -31,6 +31,14 @@ _Bounces, wiggles, hover effects, page transitions._
 ## Scrolling
 _What happens as people scroll down the page._
 
+### Lenis: Smooth Scroll
+- **Link:** https://github.com/darkroomengineering/lenis
+- **Demo:** https://lenis.darkroom.engineering
+- **What I like:** The whole smooth scroll effect.
+- **Where I'd use it:** Everywhere, across the whole website and web app.
+- **Screenshot:** inspiration/
+- **Notes:** Works together with GSAP's ScrollTrigger, so it can be the smooth scroll that the other scroll ideas (line splits, horizontal text, the sandwich mascot) play on top of. On phones it keeps the normal touch scrolling by default, which usually feels best there.
+
 ### Responsive Line Splits on Scroll demo
 - **Link:** https://demos.gsap.com/demo/responsive-line-splits-on-scroll
 - **Code:** https://codepen.io/GreenSock/pen/GggpRoB (uses GSAP's ScrollTrigger and SplitText)
