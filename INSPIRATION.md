@@ -28,13 +28,6 @@ _Bounces, wiggles, hover effects, page transitions._
 - **Where I'd use it:** Not decided yet. Probably for the tagline, "Mining Hidden Gems Around You", but nothing is fixed on where else it might go.
 - **Screenshot:** inspiration/
 
-### Image Sequence demo
-- **Link:** https://demos.gsap.com/demo/image-sequence
-- **Code:** https://codepen.io/GreenSock/pen/VwgevYW (uses GSAP's ScrollTrigger)
-- **What I like:** The image lights up and looks like a scene from a commercial.
-- **Where I'd use it:** For my mascot: a 3D PB&J sandwich that builds itself as people scroll (not interactive, just scroll-driven).
-- **Screenshot:** inspiration/
-
 ## Scrolling
 _What happens as people scroll down the page._
 
@@ -43,6 +36,13 @@ _Forms and boxes where people join the mailing list._
 
 ## Mascot
 _Characters, illustrations, and personality._
+
+### Image Sequence demo
+- **Link:** https://demos.gsap.com/demo/image-sequence
+- **Code:** https://codepen.io/GreenSock/pen/VwgevYW (uses GSAP's ScrollTrigger)
+- **What I like:** The image lights up and looks like a scene from a commercial.
+- **Where I'd use it:** For my mascot: a 3D PB&J sandwich that builds itself as people scroll (not interactive, just scroll-driven).
+- **Screenshot:** inspiration/
 
 ## Other
 _Anything that doesn't fit above._
