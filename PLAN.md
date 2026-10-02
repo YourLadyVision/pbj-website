@@ -57,6 +57,7 @@ Six folder tabs: **Home, Events, About, List Your Event, Be Our Partner, Our Sec
 
 ## Not Building Yet
 - Spin-off Events section (later, once we've handpicked and organised our own events)
+- Partner Hosts list with a profile page for each host (later, once we have partners on our roster; see "No Art Music Week artist page" in INSPIRATION.md)
 - Buying tickets or paying on the site
 - Hosts listing events themselves (for now, List Your Event only collects interest)
 - User accounts and logins
