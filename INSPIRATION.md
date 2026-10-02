@@ -27,8 +27,12 @@ _The first thing people see at the top of the homepage._
 
 ### No Art page load
 - **Link:** https://www.awwwards.com/inspiration/no-art-page-load-no-art
-- **What I like:** The way the hero loads in: a short loading screen with a small line of text, which then gives way to the hero.
-- **Where I'd use it:** When our site first opens, with the loading text **"ooze the fun"**, then revealing the hero and mascot.
+- **What I like:** The way the hero loads in (about 9 seconds in the video):
+  1. A black screen with a tiny line of loading text in the centre.
+  2. The screen turns white and a tiny picture appears in the middle, framed by small corner marks like a camera viewfinder.
+  3. The picture grows from that small box until it fills the whole screen.
+  4. Full-screen photos and video of their events flick past, with the hand-drawn logo in the middle inside the viewfinder marks.
+- **Where I'd use it:** When our site first opens, with the loading text **"ooze the fun"**. The small framed picture grows to fill the screen and reveals the hero and mascot. We can swap black and white for our PB&J colours.
 - **Screenshot:** inspiration/
 - **To plan for:** Keep it short (a second or two) so people on mobile data aren't kept waiting, and ideally show it only on the first visit, not every time someone switches tabs.
 
