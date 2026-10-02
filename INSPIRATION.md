@@ -113,7 +113,7 @@ _Anything that doesn't fit above._
 - **What I like:** The uneven gaps between words. Each line is stretched to fill the full width, so the spaces between words grow and shrink (this is called "justified" text). A big, bold headline sits on the left, and smaller all-caps typewriter-style text on the right.
 - **Where I'd use it:** On the texts where I say so (not everywhere).
 - **Screenshot:** inspiration/other-no-art-justified-text.webp
-- **To plan for:** On narrow phone screens, lines with only a few words can get very large gaps. We'll check each spot on phones and adjust where it gets hard to read.
+- **To plan for:** On narrow phone screens, lines with only a few words can get very large gaps. The phone version will take a few rounds of trying and adjusting until each spot reads well.
 
 ### No Art Music Week artist page
 - **Link:** https://www.noartmusicweek.com/artists/itz3bby
