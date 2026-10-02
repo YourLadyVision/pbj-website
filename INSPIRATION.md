@@ -108,6 +108,13 @@ _Characters, illustrations, and personality._
 ## Other
 _Anything that doesn't fit above._
 
+### No Art "About" text style (uneven gaps)
+- **Link:** https://www.noartmusic.com (About section)
+- **What I like:** The uneven gaps between words. Each line is stretched to fill the full width, so the spaces between words grow and shrink (this is called "justified" text). A big, bold headline sits on the left, and smaller all-caps typewriter-style text on the right.
+- **Where I'd use it:** On the texts where I say so (not everywhere).
+- **Screenshot:** inspiration/other-no-art-justified-text.webp
+- **To plan for:** On narrow phone screens, lines with only a few words can get very large gaps. We'll check each spot on phones and adjust where it gets hard to read.
+
 ### No Art Music Week artist page
 - **Link:** https://www.noartmusicweek.com/artists/itz3bby
 - **What it looks like:** Each artist gets a profile: a big bold name, a large photo, the event they're playing (with date), and buttons to their Instagram and SoundCloud. Below it, a "Discover more artists" list shows everyone else on the lineup.
