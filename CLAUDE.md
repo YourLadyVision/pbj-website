@@ -7,7 +7,7 @@
 
 ## Look & Feel
 - **Style:** Playful and bouncy. Rounded corners, soft shadows, gentle bounce/wiggle animations on buttons and cards. Friendly, fun, never corporate.
-- **Colors (PB&J sandwich palette):**
+- **Colors (PB&J sandwich palette, placeholders until the owner shares the final palette):**
   - Peanut butter: warm tan/caramel (e.g. `#C68B3E`)
   - Jelly: grape purple (e.g. `#6B2D5C`) and strawberry red (e.g. `#D7263D`)
   - Bread: soft cream (e.g. `#FFF4DC`) for backgrounds
@@ -16,7 +16,7 @@
 - Respect users who turn off motion (reduce animations when "reduced motion" is on).
 
 ## Build Priorities
-- **Mobile-first:** Design for phones first, then scale up to tablets and desktops.
+- **Desktop-first:** Design for computers first, then adapt for tablets and phones. The phone version must still work and look great.
 - Keep pages fast and light — many visitors will be on mobile data.
 - Large, easy-to-tap buttons.
 
