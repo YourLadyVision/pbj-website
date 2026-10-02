@@ -20,6 +20,9 @@
 - Keep pages fast and light — many visitors will be on mobile data.
 - Large, easy-to-tap buttons.
 
+## Plan
+- Follow `PLAN.md` for what we're building, in what order, and what we're not building yet.
+
 ## Inspiration
 - Check `INSPIRATION.md` (and screenshots in `inspiration/`) whenever we build something new.
 
