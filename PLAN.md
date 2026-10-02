@@ -19,12 +19,13 @@ Six folder tabs: **Home, Events, About, List Your Event, Be Our Partner, Our Sec
 - Phones: tabs stacked close together at the top with part of each label showing. Tap to peek (the tab slides out to show its full label), tap again to open. Switching tabs feels like shuffling through folders.
 
 **Home** (top to bottom)
-1. Hero: our mascot, front and centre, with a "Join the list" button
-2. Short intro that spins into view as people scroll
-3. What PBJ is all about
-4. Pre-launch host lineup
-5. Early perks
-6. Email signup, then the Instagram link and "stay tuned for dates"
+1. Loading screen with the text "ooze the fun" (short, first visit only; see "No Art page load" in INSPIRATION.md), which reveals the hero
+2. Hero: our mascot, front and centre, with a "Join the list" button
+3. Short intro that spins into view as people scroll
+4. What PBJ is all about
+5. Pre-launch host lineup
+6. Early perks
+7. Email signup, then the Instagram link and "stay tuned for dates"
 
 **Events:** "PBJ-approved events happening around you until we mine exclusive hidden gems for you."
 - Curated picks from around Mumbai (not everything), filterable by neighbourhood, price (low to high), date and category

@@ -25,6 +25,13 @@ _The first thing people see at the top of the homepage._
 - **Screenshot:** inspiration/
 - **Phone version:** Same folder effect, but with the tabs along the top of the screen. Tapping a tab feels like shuffling through folders: that tab's page comes to the front.
 
+### No Art page load
+- **Link:** https://www.awwwards.com/inspiration/no-art-page-load-no-art
+- **What I like:** The way the hero loads in: a short loading screen with a small line of text, which then gives way to the hero.
+- **Where I'd use it:** When our site first opens, with the loading text **"ooze the fun"**, then revealing the hero and mascot.
+- **Screenshot:** inspiration/
+- **To plan for:** Keep it short (a second or two) so people on mobile data aren't kept waiting, and ideally show it only on the first visit, not every time someone switches tabs.
+
 ## Animations
 _Bounces, wiggles, hover effects, page transitions._
 
