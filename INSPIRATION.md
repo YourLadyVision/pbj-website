@@ -68,6 +68,12 @@ _What happens as people scroll down the page._
 - **Where I'd use it:** The "Spin-off Events" section showing all the events we've done so far. This probably comes later, once we have a few successful events under our belt.
 - **Screenshot:** inspiration/
 
+### 197 Historias Ilustradas grid scroll
+- **Link:** https://www.awwwards.com/inspiration/grid-scroll-197-historias-ilustradas
+- **What I like:** The grid scroll effect: each illustrated story card in the grid looks clean and focused.
+- **Where I'd use it:** As an option for the "Spin-off Events" / Successful Events section (alternative to the Stagger Items idea above).
+- **Screenshot:** inspiration/
+
 ## Email signup
 _Forms and boxes where people join the mailing list._
 
