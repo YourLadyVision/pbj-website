@@ -38,9 +38,11 @@ _Bounces, wiggles, hover effects, page transitions._
 ### No Art shop "shop now" cursor
 - **Link:** https://www.noartmusic.com/products
 - **What I like:** When the mouse moves over a product, a small "shop now" label follows the cursor around.
-- **Where I'd use it:** Later, on the Events page once we have our own events listed: an "I AM IN" button that follows the cursor over each event card.
+- **Where I'd use it:** On the Events page, the button follows the cursor over each event card:
+  - **"Go to event"** for curated events that link out to other platforms (from launch)
+  - **"I AM IN"** for PBJ's own events (later, once we have them)
 - **Screenshot:** inspiration/
-- **Phone version:** Phones have no cursor, so on phones the "I AM IN" button sits on each event card as a normal button.
+- **Phone version:** Phones have no cursor, so on phones the button sits on each event card as a normal button.
 
 ## Scrolling
 _What happens as people scroll down the page._

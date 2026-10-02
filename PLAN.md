@@ -30,6 +30,7 @@ Six folder tabs: **Home, Events, About, List Your Event, Be Our Partner, Our Sec
 - Curated picks from around Mumbai (not everything), filterable by neighbourhood, price (low to high), date and category
 - Each event gets a PBJ-style card in our own words, using only photos we have permission for
 - A "Go to event" button links out (to the host's own page or Instagram where possible), next to a "Get notified about events like this" signup
+- On computers, the "Go to event" button follows the cursor over each event card (see "No Art shop cursor" in INSPIRATION.md); on phones it's a normal button on the card. Later, PBJ's own events get an "I AM IN" button that works the same way.
 - We add events by hand through a simple form or spreadsheet (no code). Events hide themselves automatically once their date has passed.
 
 **About:** the story behind PBJ and the founders' details.
