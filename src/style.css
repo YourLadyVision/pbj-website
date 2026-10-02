@@ -1,0 +1,245 @@
+/* PB&J palette — placeholders until the final palette arrives (see CLAUDE.md) */
+:root {
+  --peanut: #c68b3e;
+  --honey: #e2a64f;
+  --grape: #6b2d5c;
+  --strawberry: #d7263d;
+  --bread: #fff4dc;
+  --crust: #8b5a2b;
+  --night: #3b1f2b;
+  --ink: #3b2414;
+
+  --tab-size: 64px;
+  --radius: 22px;
+  --display: "Baloo 2", system-ui, sans-serif;
+  --mono: "Space Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  background: var(--bread);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+h1, h2 {
+  font-family: var(--display);
+  font-weight: 800;
+  line-height: 1;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+h1 { font-size: clamp(2.8rem, 6.5vw, 6rem); }
+h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
+
+.kicker {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 1rem;
+}
+
+.placeholder { opacity: 0.6; max-width: 40ch; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-block;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--bread);
+  background: var(--strawberry);
+  border: 0;
+  border-radius: 999px;
+  padding: 0.85rem 1.8rem;
+  min-height: 48px;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 6px 0 var(--grape);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+}
+.btn:hover { transform: translateY(-3px) rotate(-2deg); box-shadow: 0 9px 0 var(--grape); }
+.btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--grape); }
+
+/* ---------- Folder tabs (computers: right edge) ---------- */
+.tabs {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--tab-size);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.tab {
+  flex: 1;
+  writing-mode: vertical-rl;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bread);
+  background: var(--tab);
+  border: 0;
+  border-radius: 16px 0 0 16px;
+  margin: 3px 0;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s, color 0.2s;
+}
+.tab:hover { transform: translateX(-6px); }
+.tab[aria-current="page"] {
+  background: var(--bread);
+  color: var(--ink);
+  transform: translateX(-10px);
+  box-shadow: -4px 0 0 var(--tab);
+}
+
+.folder { margin-right: var(--tab-size); }
+
+/* ---------- Panels & blocks ---------- */
+.block {
+  padding: clamp(4rem, 10vw, 8rem) clamp(1.5rem, 6vw, 6rem);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 3rem 1.5rem;
+  box-shadow: 0 8px 24px rgba(59, 36, 20, 0.08);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.card:hover { transform: translateY(-6px) rotate(-1deg); }
+
+.signup-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+.signup-form input {
+  font: inherit;
+  flex: 1 1 260px;
+  max-width: 420px;
+  min-height: 52px;
+  padding: 0 1.25rem;
+  border: 3px solid var(--crust);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+}
+.form-note { margin-top: 1rem; }
+
+/* ---------- Hero + mascot ---------- */
+.hero {
+  position: relative;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: center;
+  padding: 0 clamp(1.5rem, 5vw, 5rem);
+  overflow: hidden;
+}
+
+.hero-text { position: relative; z-index: 2; }
+.hero-text h1 { margin-bottom: 1.25rem; }
+.hero-sub { max-width: 32ch; margin: 0 0 2rem; }
+
+.mascot {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+.mascot canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  font-size: 0.8rem;
+  margin: 0;
+  animation: bob 1.6s ease-in-out infinite;
+}
+@keyframes bob { 50% { transform: translate(-50%, 6px); } }
+
+/* ---------- Phones: tabs stacked like folders at the top ---------- */
+@media (max-width: 767px) {
+  :root { --tab-h: 44px; --stack-step: 8px; }
+
+  .tabs {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: auto;
+    height: calc(var(--tab-h) + 5 * var(--stack-step) + 12px);
+    display: block;
+    background: var(--bread);
+  }
+
+  .tab {
+    position: absolute;
+    writing-mode: horizontal-tb;
+    left: calc(8px + var(--i) * 13%);
+    top: calc(6px + var(--i) * var(--stack-step));
+    width: 38%;
+    height: var(--tab-h);
+    margin: 0;
+    padding: 0 12px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    border-radius: 14px 14px 0 0;
+    box-shadow: -3px 0 6px rgba(0, 0, 0, 0.15);
+    z-index: var(--i);
+    font-size: 0.7rem;
+  }
+  .tab:hover { transform: none; }
+  .tab[aria-current="page"] { transform: none; box-shadow: inset 0 -4px 0 var(--tab), -3px 0 6px rgba(0, 0, 0, 0.15); }
+
+  /* First tap: the tab slides out so its full label shows */
+  .tab.peek {
+    z-index: 20;
+    width: auto;
+    min-width: 38%;
+    transform: translateY(10px) scale(1.04);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  }
+
+  .folder { margin-right: 0; padding-top: calc(var(--tab-h) + 5 * var(--stack-step) + 12px); }
+
+  .hero {
+    height: calc(100svh - (var(--tab-h) + 5 * var(--stack-step) + 12px));
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    padding-top: 1.5rem;
+  }
+  .hero-sub { margin-bottom: 1.25rem; }
+}
+
+/* Respect people who turn off motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

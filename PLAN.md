@@ -57,6 +57,18 @@ Six folder tabs: **Home, Events, About, List Your Event, Be Our Partner, Our Sec
 - **List Your Event:** host interest signup (hosts and partners list)
 - **Be Our Partner** and **Our Secret:** a "reach out" contact button instead of a signup
 
+## Building Steps
+- [x] 1. Starting project (Vite, GSAP, Lenis, Three.js)
+- [ ] 2. The six folder tabs (first version done: hover on computers, tap to peek / tap to open on phones)
+- [ ] 3. Home page sections in order (placeholders in place)
+- [ ] 4. The other five tabs
+- [ ] 5. Effects: "ooze the fun" loading screen, intro spin-in, line-by-line text, uneven-gap text, cursor-following button
+- [ ] 6. Events page: curated cards, filters, easy way to add events, old events hide automatically
+- [ ] 7. Email signups (guests list; hosts and partners list)
+- [ ] 8. 3D sandwich mascot (first version done: code-built, assembles on scroll, face pops on at the end)
+- [ ] 9. Phone version rounds
+- [ ] 10. Launch on PeanutButterJelly.vip (only when desktop and phone are both ready)
+
 ## Not Building Yet
 - Spin-off Events section (later, once we've handpicked and organised our own events)
 - Partner Hosts list with a profile page for each host (later, once we have partners on our roster; see "No Art Music Week artist page" in INSPIRATION.md)

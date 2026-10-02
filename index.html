@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PeanutButterJelly.vip — Mining Hidden Gems Around You</title>
+    <meta name="description" content="PeanutButterJelly.vip: mining hidden gems around you in Mumbai." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Folder tabs: right edge on computers, stacked at the top on phones -->
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab" data-tab="home" style="--tab: var(--peanut)">Home</button>
+      <button class="tab" data-tab="events" style="--tab: var(--strawberry)">Events</button>
+      <button class="tab" data-tab="about" style="--tab: var(--grape)">About</button>
+      <button class="tab" data-tab="list" style="--tab: var(--crust)">List Your Event</button>
+      <button class="tab" data-tab="partner" style="--tab: var(--honey)">Be Our Partner</button>
+      <button class="tab" data-tab="secret" style="--tab: var(--night)">Our Secret</button>
+    </nav>
+
+    <main class="folder">
+      <!-- HOME -->
+      <section class="panel" data-panel="home">
+        <div class="hero">
+          <div class="hero-text">
+            <p class="kicker">■ PeanutButterJelly.vip</p>
+            <h1>Mining Hidden Gems Around You</h1>
+            <p class="hero-sub">Small, good things happening in Mumbai — found on purpose, not by luck.</p>
+            <a class="btn" href="#signup">Join the list</a>
+          </div>
+          <div class="mascot" aria-label="A PB&J sandwich mascot that builds itself as you scroll" role="img">
+            <canvas id="mascot-canvas"></canvas>
+          </div>
+          <p class="scroll-hint">Scroll to make a sandwich ↓</p>
+        </div>
+
+        <div class="block">
+          <p class="kicker">■ Hello, Mumbai</p>
+          <h2>A short intro that spins into view.</h2>
+          <p class="placeholder">Placeholder text — the real intro goes here.</p>
+        </div>
+
+        <div class="block">
+          <p class="kicker">■ What PBJ is all about</p>
+          <h2>What PBJ is all about.</h2>
+          <p class="placeholder">Placeholder text — what PBJ is and why it exists.</p>
+        </div>
+
+        <div class="block">
+          <p class="kicker">■ Pre-launch hosts</p>
+          <h2>Our pre-launch host lineup.</h2>
+          <div class="cards">
+            <div class="card">Host 1</div>
+            <div class="card">Host 2</div>
+            <div class="card">Host 3</div>
+          </div>
+        </div>
+
+        <div class="block">
+          <p class="kicker">■ Early perks</p>
+          <h2>Early perks for early birds.</h2>
+          <p class="placeholder">Placeholder text — what people get for signing up now.</p>
+        </div>
+
+        <div class="block signup" id="signup">
+          <p class="kicker">■ Join the list</p>
+          <h2>Be first to hear about the dates.</h2>
+          <form class="signup-form">
+            <input type="email" placeholder="your@email.com" aria-label="Email address" required />
+            <button class="btn" type="submit">I'm in</button>
+          </form>
+          <p class="form-note" hidden>Thanks! (Signups go live in a later step, so nothing was saved yet.)</p>
+        </div>
+      </section>
+
+      <!-- OTHER TABS (placeholders for now) -->
+      <section class="panel" data-panel="events" hidden>
+        <div class="block">
+          <p class="kicker">■ Events</p>
+          <h2>PBJ-approved events happening around you until we mine exclusive hidden gems for you.</h2>
+          <p class="placeholder">Coming soon: curated event cards with filters.</p>
+        </div>
+      </section>
+      <section class="panel" data-panel="about" hidden>
+        <div class="block">
+          <p class="kicker">■ About</p>
+          <h2>The story behind PBJ.</h2>
+          <p class="placeholder">Coming soon: our story and the founders.</p>
+        </div>
+      </section>
+      <section class="panel" data-panel="list" hidden>
+        <div class="block">
+          <p class="kicker">■ List Your Event</p>
+          <h2>Got something worth finding?</h2>
+          <p class="placeholder">Coming soon: who can list, how to list, a few rules and a host signup.</p>
+        </div>
+      </section>
+      <section class="panel" data-panel="partner" hidden>
+        <div class="block">
+          <p class="kicker">■ Be Our Partner</p>
+          <h2>Why partner with PBJ.</h2>
+          <p class="placeholder">Coming soon: what we offer venues, hosts and brands.</p>
+        </div>
+      </section>
+      <section class="panel" data-panel="secret" hidden>
+        <div class="block">
+          <p class="kicker">■ Our Secret</p>
+          <h2>What PBJ does differently? It's a secret we can share if you reach out.</h2>
+          <p class="placeholder">Coming soon: a reach-out button.</p>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
