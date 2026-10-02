@@ -98,3 +98,9 @@ _Characters, illustrations, and personality._
 
 ## Other
 _Anything that doesn't fit above._
+
+### No Art Music Week artist page
+- **Link:** https://www.noartmusicweek.com/artists/itz3bby
+- **What it looks like:** Each artist gets a profile: a big bold name, a large photo, the event they're playing (with date), and buttons to their Instagram and SoundCloud. Below it, a "Discover more artists" list shows everyone else on the lineup.
+- **Where I'd use it:** Our list of Partner Hosts under PBJ, once we have them on our roster. Each host gets a profile like this (photo, name, their upcoming PBJ event, links to their Instagram or website), with "Discover more hosts" below.
+- **Screenshot:** inspiration/
