@@ -73,6 +73,7 @@ _What happens as people scroll down the page._
 - **What I like:** The grid scroll effect: each illustrated story card in the grid looks clean and focused.
 - **Where I'd use it:** As an option for the "Spin-off Events" / Successful Events section (alternative to the Stagger Items idea above).
 - **Click transition:** https://www.awwwards.com/inspiration/grid-transition-197-historias-ilustradas — when someone taps a card in the grid, this is how it opens into that event's full story.
+- **End of story:** https://www.awwwards.com/inspiration/story-fade-197-historias-ilustradas — when someone scrolls to the end of an event's full story, a lineup of the next stories appears below and the story above fades out.
 - **Screenshot:** inspiration/
 
 ## Email signup
