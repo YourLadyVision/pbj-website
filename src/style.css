@@ -8,6 +8,7 @@
   --crust: #8b5a2b;
   --night: #3b1f2b;
   --ink: #3b2414;
+  --page: #ffffff; /* plain white background, like 197historiasilustradas.com */
 
   --tab-size: 64px;
   --radius: 22px;
@@ -20,7 +21,7 @@
 html, body { margin: 0; }
 
 body {
-  background: var(--bread);
+  background: var(--page);
   color: var(--ink);
   font-family: var(--mono);
   font-size: 16px;
@@ -98,7 +99,7 @@ h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
 }
 .tab:hover { transform: translateX(-6px); }
 .tab[aria-current="page"] {
-  background: var(--bread);
+  background: var(--page);
   color: var(--ink);
   transform: translateX(-10px);
   box-shadow: -4px 0 0 var(--tab);
@@ -118,7 +119,7 @@ h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
   margin-top: 2rem;
 }
 .card {
-  background: #fff;
+  background: var(--bread);
   border-radius: var(--radius);
   padding: 3rem 1.5rem;
   box-shadow: 0 8px 24px rgba(59, 36, 20, 0.08);
@@ -196,7 +197,7 @@ h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
     width: auto;
     height: calc(var(--tab-h) + 5 * var(--stack-step) + 12px);
     display: block;
-    background: var(--bread);
+    background: var(--page);
   }
 
   .tab {

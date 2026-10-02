@@ -10,7 +10,8 @@
 - **Colors (PB&J sandwich palette, placeholders until the owner shares the final palette):**
   - Peanut butter: warm tan/caramel (e.g. `#C68B3E`)
   - Jelly: grape purple (e.g. `#6B2D5C`) and strawberry red (e.g. `#D7263D`)
-  - Bread: soft cream (e.g. `#FFF4DC`) for backgrounds
+  - Page background: plain white (`#FFFFFF`), like https://www.197historiasilustradas.com/sobre-nosotros
+  - Bread: soft cream (e.g. `#FFF4DC`) for cards and accents
   - Crust: toasted brown (e.g. `#8B5A2B`) for text and outlines
 - Keep text readable: dark text on light backgrounds, good contrast.
 - Respect users who turn off motion (reduce animations when "reduced motion" is on).
