@@ -8,7 +8,7 @@
   --crust: #8b5a2b;
   --night: #3b1f2b;
   --ink: #3b2414;
-  --page: #ffffff; /* plain white background, like 197historiasilustradas.com */
+  --page: #f9f9f7; /* soft warm off-white, the same as Claude's light-mode background */
 
   --tab-size: 64px;
   --radius: 22px;
