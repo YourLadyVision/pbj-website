@@ -16,7 +16,7 @@
 - Respect users who turn off motion (reduce animations when "reduced motion" is on).
 
 ## Build Priorities
-- **Desktop-first:** Design for computers first, then adapt for tablets and phones. The phone version must still work and look great.
+- **Desktop-first:** Design for computers first, then adapt for tablets and phones. The phone version must still work and look great: we only launch when both desktop and phone versions are ready.
 - Keep pages fast and light — many visitors will be on mobile data.
 - Large, easy-to-tap buttons.
 
