@@ -210,13 +210,42 @@ h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
   position: relative;
   height: 100%;
   min-height: 0;
+  cursor: pointer;
 }
-.mascot canvas {
+/* The sandwich: four photo layers stacked and animated by mascot.js */
+.sandwich {
+  --w: 560px;
   position: absolute;
   inset: 0;
-  width: 100% !important;
-  height: 100% !important;
+  transform-origin: 50% 50%;
+}
+.layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  will-change: transform;
+}
+.px { width: var(--w); }
+.px img {
   display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-filter: drop-shadow(0 8px 10px rgba(59, 36, 20, 0.2));
+  filter: drop-shadow(0 8px 10px rgba(59, 36, 20, 0.2));
+}
+.sandwich-shadow {
+  position: absolute;
+  left: 50%;
+  top: 66%;
+  width: calc(var(--w) * 0.78);
+  height: calc(var(--w) * 0.16);
+  transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(59, 36, 20, 0.3), transparent);
+  filter: blur(6px);
 }
 
 .scroll-hint {

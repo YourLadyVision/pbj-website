@@ -15,7 +15,7 @@ gsap.ticker.add((time) => lenis.raf(time * 1000));
 gsap.ticker.lagSmoothing(0);
 if (import.meta.env.DEV) window.lenis = lenis; // handy for testing in the browser
 
-const mascot = createMascot(document.getElementById("mascot-canvas"));
+const mascot = createMascot(document.querySelector(".mascot"));
 playIntro({ lenis });
 
 setupTabs({

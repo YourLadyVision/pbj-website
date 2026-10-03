@@ -65,7 +65,7 @@ Six folder tabs: **Home, Events, About, List Your Event, Be Our Partner, Our Sec
 - [ ] 5. Effects: "ooze the fun" loading screen (first version done), intro spin-in, line-by-line text, uneven-gap text, cursor-following button
 - [ ] 6. Events page: curated cards, filters, easy way to add events, old events hide automatically
 - [ ] 7. Email signups (guests list; hosts and partners list)
-- [ ] 8. 3D sandwich mascot (first version done: code-built, assembles on scroll, face pops on at the end)
+- [ ] 8. Sandwich mascot (now built from the owner's four photos: bread, jelly, peanut butter, bread; assembles on scroll, mouse depth effect, click to wobble. The earlier code-built 3D version is in git history)
 - [ ] 9. Phone version rounds
 - [ ] Before launch: write an engineer guide (how to run the site, what each file does, what's unfinished), label the "version 1" point in GitHub, and have an engineer review it (optional short check-in earlier, once the main pages are built)
 - [ ] 10. Launch on PeanutButterJelly.vip (only when desktop and phone are both ready)
