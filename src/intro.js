@@ -4,56 +4,73 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 // Loading intro:
 // 1. Jelly-purple screen with "■ OOZE THE FUN"
-// 2. The whole screen twists and gets sucked into a gooey hole in the middle (like a jelly black hole)
-// 3. The page swirls back out of that hole, with a wobbly, gooey edge, until it fills the screen
+// 2. The purple turns into a spinning jelly vortex, and the text is sucked straight into its centre
+// 3. The whole vortex collapses into a gooey hole over a dark backdrop
+// 4. The page swirls back out of that hole until it fills the screen
 
-// Twirl shader: content spins faster near the centre and shrinks into a wobbling, spiralling disc
-const swirlShader = {
+// Vortex shader: glossy spiral bands flowing into a dark eye, which can collapse into a wobbling disc
+const vortexShader = {
   uniforms: {
-    tex: { value: null },
-    progress: { value: 0 },
     time: { value: 0 },
+    vortex: { value: 0 }, // 0 = flat jelly, 1 = full spiral
+    collapse: { value: 0 }, // 0 = full screen, 1 = sucked into the centre
     aspect: { value: 1 },
-    jelly: { value: new THREE.Vector3() },
+    grape: { value: new THREE.Vector3() },
+    light: { value: new THREE.Vector3() },
+    glow: { value: new THREE.Vector3() },
+    night: { value: new THREE.Vector3() },
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
     void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
   `,
   fragmentShader: /* glsl */ `
-    uniform sampler2D tex;
-    uniform float progress;
     uniform float time;
+    uniform float vortex;
+    uniform float collapse;
     uniform float aspect;
-    uniform vec3 jelly;
+    uniform vec3 grape;
+    uniform vec3 light;
+    uniform vec3 glow;
+    uniform vec3 night;
     varying vec2 vUv;
 
     void main() {
-      float p = progress;
       vec2 d = (vUv - 0.5) * vec2(aspect, 1.0);
       float r = length(d);
       float a = atan(d.y, d.x);
+      float c = collapse;
 
-      // Sucked in: the picture shrinks towards the centre and twists harder near the middle
-      float shrink = 1.0 / max(1.0 - p * 0.97, 0.03);
-      float twist = p * 3.0 + p * p * 14.0 * exp(-r * 3.0);
-      float sa = a + twist;
-      vec2 sd = vec2(cos(sa), sin(sa)) * r * shrink;
-      vec2 suv = sd / vec2(aspect, 1.0) + 0.5;
+      // Spiral arms that flow inward; they tighten and speed up as everything is sucked in
+      float rr = r * (1.0 + c * c * 6.0);
+      float flow = time * (1.2 + vortex * 2.0) + c * c * 18.0;
+      float s = a * 3.0 + log(rr + 0.001) * 6.0 + flow;
+      float band = 0.5 + 0.5 * sin(s);
+      float gloss = pow(band, 8.0);
+      vec3 spiral = mix(grape * 0.65, light, band);
+      spiral = mix(spiral, glow, gloss * 0.55);
+      spiral = mix(night, spiral, smoothstep(0.02, 0.3, rr)); // the dark eye in the middle
+      vec3 col = mix(grape, spiral, vortex);
 
-      vec3 col = jelly;
-      if (suv.x > 0.0 && suv.x < 1.0 && suv.y > 0.0 && suv.y < 1.0) col = texture2D(tex, suv).rgb;
-
-      // Gooey edge: the jelly disc shrinks, wobbles and spirals as it goes
-      float edge = mix(1.25, 0.0, smoothstep(0.0, 1.0, p));
-      edge *= 1.0 + 0.10 * p * sin(a * 3.0 + twist * 0.8 - time * 5.0)
-                  + 0.05 * p * sin(a * 7.0 - time * 7.0);
+      // Collapse: the jelly shrinks into a wobbly, gooey disc
+      float edge = 1.1 * (1.0 - c);
+      edge *= 1.0 + 0.10 * c * sin(a * 3.0 - time * 6.0) + 0.05 * c * sin(a * 7.0 + time * 8.0);
       float alpha = 1.0 - smoothstep(edge - 0.015, edge, r);
 
       gl_FragColor = vec4(col * alpha, alpha);
     }
   `,
 };
+
+// Colours go to the shader as plain 0–1 values (no colour conversion) so they match the CSS exactly
+function cssColor(value) {
+  const probe = document.createElement("i");
+  probe.style.color = value;
+  document.body.appendChild(probe);
+  const [r, g, b] = getComputedStyle(probe).color.match(/\d+/g).map(Number);
+  probe.remove();
+  return new THREE.Vector3(r / 255, g / 255, b / 255);
+}
 
 export function playIntro({ lenis }) {
   const html = document.documentElement;
@@ -96,9 +113,9 @@ export function playIntro({ lenis }) {
     return `${cx - r.left}px ${cy - r.top}px`;
   };
 
-  let cleanupSwirl = () => {};
+  let cleanupVortex = () => {};
   const finish = () => {
-    cleanupSwirl();
+    cleanupVortex();
     html.classList.remove("intro");
     gsap.set(site, { clearProps: "clipPath" });
     gsap.set(layers, { clearProps: "transform,transformOrigin" });
@@ -117,66 +134,36 @@ export function playIntro({ lenis }) {
 
   layers.forEach((el) => gsap.set(el, { rotate: -160, scale: 0.25, transformOrigin: originFor(el) }));
 
-  // ---- A twistable copy of the loading screen, drawn on top of it ----
+  // ---- The vortex, drawn behind the text ----
   const dpr = Math.min(window.devicePixelRatio, 2);
   const canvas = document.createElement("canvas");
-  canvas.className = "intro-swirl";
-  canvas.style.visibility = "hidden";
-  document.body.appendChild(canvas);
+  overlay.prepend(canvas);
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
   renderer.setPixelRatio(dpr);
   renderer.setSize(vw, vh, false);
 
-  const pic = document.createElement("canvas");
-  pic.width = vw * dpr;
-  pic.height = vh * dpr;
-  const picTexture = new THREE.CanvasTexture(pic);
-
-  const material = new THREE.ShaderMaterial({ ...swirlShader, transparent: true, premultipliedAlpha: true });
-  material.uniforms = THREE.UniformsUtils.clone(swirlShader.uniforms);
-  material.uniforms.tex.value = picTexture;
-  material.uniforms.aspect.value = vw / vh;
-  // Pass the jelly colour straight through (no colour conversion) so it matches the page exactly
-  const [r, g, b] = getComputedStyle(overlay).backgroundColor.match(/\d+/g).map(Number);
-  material.uniforms.jelly.value.set(r / 255, g / 255, b / 255);
-  const swirl = material.uniforms.progress;
+  const material = new THREE.ShaderMaterial({ ...vortexShader, transparent: true, premultipliedAlpha: true });
+  const u = (material.uniforms = THREE.UniformsUtils.clone(vortexShader.uniforms));
+  u.aspect.value = vw / vh;
+  u.grape.value = cssColor("var(--grape)");
+  u.light.value = cssColor("#a85a96"); // lighter, glossy jelly
+  u.glow.value = cssColor("var(--cheek, #f49aa8)");
+  u.night.value = cssColor("var(--night)");
   const scene = new THREE.Scene();
   scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
   const camera = new THREE.Camera();
 
-  // Paint the loading screen (purple + text, exactly where the real text sits) into the picture
-  function paintPicture() {
-    const ctx = pic.getContext("2d");
-    const style = getComputedStyle(text);
-    const box = text.getBoundingClientRect();
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = getComputedStyle(overlay).backgroundColor;
-    ctx.fillRect(0, 0, vw, vh);
-    ctx.fillStyle = style.color;
-    ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-    if ("letterSpacing" in ctx) ctx.letterSpacing = style.letterSpacing;
-    ctx.textBaseline = "middle";
-    ctx.fillText(text.textContent.toUpperCase(), box.left, box.top + box.height / 2);
-    picTexture.needsUpdate = true;
-  }
-
   const tick = (time) => {
-    material.uniforms.time.value = time;
-    if (canvas.style.visibility !== "hidden") renderer.render(scene, camera);
+    u.time.value = time;
+    renderer.render(scene, camera);
     drawHole(time);
   };
   gsap.ticker.add(tick);
+  tick(gsap.ticker.time);
+  overlay.style.background = "transparent"; // the vortex canvas now paints the jelly
 
-  function swapToSwirl() {
-    paintPicture();
-    canvas.style.visibility = "visible";
-    overlay.style.visibility = "hidden";
-    renderer.render(scene, camera);
-  }
-
-  cleanupSwirl = () => {
+  cleanupVortex = () => {
     gsap.ticker.remove(tick);
-    picTexture.dispose();
     material.dispose();
     renderer.dispose();
     canvas.remove();
@@ -187,12 +174,18 @@ export function playIntro({ lenis }) {
   tl
     // 1. "Ooze the fun" on jelly purple
     .from(text, { opacity: 0, y: 8, duration: 0.4 })
-    // 2. Sucked into the gooey hole
-    .call(swapToSwirl, null, 1.4)
-    .to(swirl, { value: 1, duration: 1.3, ease: "power2.in" }, 1.4)
-    // 3. The page swirls back out of the hole
-    .to(hole, { r: maxR, duration: 1.5, ease: "power2.inOut" }, 2.5)
-    .to(hole, { spin: 4, duration: 1.5, ease: "power1.out" }, 2.5)
-    .to(hole, { wobble: 0, duration: 0.6, ease: "power1.in" }, 3.4)
-    .to(layers, { rotate: 0, scale: 1, duration: 1.5, ease: "power3.out" }, 2.5);
+    // 2. The jelly starts to spiral, and the text is pulled straight into the middle
+    .to(u.vortex, { value: 1, duration: 1.0, ease: "power2.inOut" }, 0.6)
+    .to(
+      text,
+      { scale: 0, letterSpacing: "-0.5em", opacity: 0, filter: "blur(2px)", duration: 0.9, ease: "power3.in" },
+      1.4
+    )
+    // 3. The whole vortex is sucked into a gooey hole
+    .to(u.collapse, { value: 1, duration: 0.9, ease: "power2.inOut" }, 2.0)
+    // 4. The page swirls back out of the hole
+    .to(hole, { r: maxR, duration: 1.5, ease: "power2.inOut" }, 2.8)
+    .to(hole, { spin: 4, duration: 1.5, ease: "power1.out" }, 2.8)
+    .to(hole, { wobble: 0, duration: 0.6, ease: "power1.in" }, 3.7)
+    .to(layers, { rotate: 0, scale: 1, duration: 1.5, ease: "power3.out" }, 2.8);
 }
