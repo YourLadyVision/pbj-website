@@ -212,14 +212,6 @@ h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
   min-height: 0;
   cursor: pointer;
 }
-.mascot-shadow {
-  position: absolute;
-  left: 0;
-  top: 0;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(59, 36, 20, 0.34), rgba(59, 36, 20, 0.1) 60%, transparent);
-  pointer-events: none;
-}
 .mascot canvas {
   position: absolute;
   inset: 0;

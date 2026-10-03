@@ -119,21 +119,27 @@ export function createMascot(root) {
   const turntable = new THREE.Group(); // spins the whole sandwich
   scene.add(turntable);
 
-  // A soft shadow on the ground under the sandwich (a plain element behind the canvas)
-  const shadowEl = root.querySelector(".mascot-shadow");
-  const ground = new THREE.Vector3();
-  let groundY = -0.45;
-  let size = { w: 1, h: 1 };
-
   // ---- The animated values (the timeline moves these; draw() puts them on screen) ----
   const piece = LAYERS.map((_, i) => ({ y: APART[i], x: TILTS[i][0], turn: TILTS[i][1], z: TILTS[i][2] }));
   const cam = { target: 0.9, zoom: 1 };
   const spin = { angle: 0 };
   const hop = LAYERS.map(() => ({ v: 0 }));
+  // Each layer follows its scroll position on a springy "string", so landing and lifting off are a
+  // little bouncy in both directions. A floor stops any layer sinking into the one below it.
+  const springs = LAYERS.map(() => ({ y: 0, v: 0, ready: false }));
+  const MAX_STRAY = 0.22; // the furthest a bounce can go from the scroll position, in sandwich units
+  let OMEGA = 13; // how stiff the spring is (higher = snappier)
+  let DAMPING = 2 * 0.45 * OMEGA; // 0.45 = slightly bouncy (1 would be no bounce at all)
+  const tune = (omega, zeta) => {
+    OMEGA = omega;
+    DAMPING = 2 * zeta * omega;
+  };
+  let lastTime = 0;
   const meshes = [];
   let rest = [0, 0, 0, 0]; // where each slab sits when the sandwich is built
   let stackCenter = 0.1;
   let ppu = 140; // pixels per world unit
+  let size = { w: 1, h: 1 }; // the canvas size we last drew at
   let spread = 1;
 
   // ---- Scroll timeline: pieces drop in one by one, then the whole sandwich spins ----
@@ -156,7 +162,7 @@ export function createMascot(root) {
     .fromTo(cam, { target: () => 0.9 * spread }, { target: () => stackCenter, duration: 3.2, ease: "none" }, 0)
     .fromTo(cam, { zoom: 1 }, { zoom: 1 / 0.82, duration: 1.2, ease: "power2.inOut" }, 3.2);
 
-  if (import.meta.env.DEV) window.mascotDebug = { spin, cam, piece, tl, turntable, renderer, scene, camera, draw: (t) => draw(t) }; // handy for testing in the browser
+  if (import.meta.env.DEV) window.mascotDebug = { spin, cam, piece, tl, turntable, renderer, scene, camera, draw: (t, snap) => draw(t, snap), tune }; // handy for testing in the browser
 
   function resize() {
     const { clientWidth: cw, clientHeight: ch } = root;
@@ -168,9 +174,8 @@ export function createMascot(root) {
     size = { w: cw, h: ch };
     const W = Math.min(cw * 0.95, ch * 0.58); // width of the whole photo on screen
     ppu = W / PHOTO_W;
-    shadowEl.style.width = shadowEl.style.height = `${3.4 * ppu}px`;
     // Keep the whole floating-apart stack inside the hero, even on short screens
-    spread = Math.min(1, Math.max(0.35, (0.78 * ch / W - 0.54) / 0.73));
+    spread = Math.min(1, Math.max(0.35, (0.7 * ch / W - 0.54) / 0.73));
     camera.left = -cw / 2 / ppu;
     camera.right = cw / 2 / ppu;
     camera.top = ch / 2 / ppu;
@@ -180,18 +185,52 @@ export function createMascot(root) {
     draw(0);
   }
 
-  function draw(time) {
+  // snap = jump straight to the scroll position with no spring (used for testing and first draw)
+  function draw(time, snap = false) {
     if (!meshes.length) return;
-    // A layer only floats while it is still in the air. Once it has landed it moves with the stack, so
-    // layers never bob into each other (that made their edges cut through one another).
+    const dt = Math.min(0.05, Math.max(0, time - lastTime));
+    lastTime = time;
     const bounce = hop[0].v * 0.12; // the click hop moves the whole sandwich together
+    let belowY = -Infinity;
     meshes.forEach((mesh, i) => {
       const p = piece[i];
+      const sp = springs[i];
+      if (snap || !sp.ready) {
+        sp.y = p.y;
+        sp.v = 0;
+        sp.ready = true;
+      } else if (dt > 0) {
+        // Move the spring toward where the scroll says this layer should be (in small, steady steps)
+        const steps = Math.ceil(dt * 120);
+        const h = dt / steps;
+        for (let k = 0; k < steps; k++) {
+          sp.v += (-OMEGA * OMEGA * (sp.y - p.y) - DAMPING * sp.v) * h;
+          sp.y += sp.v * h;
+        }
+        // A bounce never strays far from where the scroll puts the layer (keeps it inside the frame)
+        const stray = Math.max(-MAX_STRAY, Math.min(MAX_STRAY, sp.y - p.y));
+        if (stray !== sp.y - p.y) {
+          sp.y = p.y + stray;
+          sp.v *= 0.5;
+        }
+      }
+      // A layer only floats while it is still in the air; once landed it moves with the stack
       const apartY = APART[i] * spread;
       const floating = Math.min(1, Math.max(0, (p.y - rest[i]) / (apartY - rest[i] || 1)));
       // A tilted slab dips one corner down, so lift it just enough to stay clear of the layer below
       const clearance = i === 0 ? 0 : 1.3 * (Math.abs(Math.sin(p.x)) + Math.abs(Math.sin(p.z)));
-      mesh.position.y = p.y + clearance + Math.sin(time * 1.4 + i * 1.3) * 0.08 * floating + bounce;
+      let y = sp.y + clearance + Math.sin(time * 1.4 + i * 1.3) * 0.08 * floating + bounce;
+      // The floor: never lower than resting on the layer below. Hitting it makes a small bounce.
+      if (i > 0) {
+        const floor = belowY + (rest[i] - rest[i - 1]);
+        if (y < floor) {
+          sp.y += floor - y;
+          y = floor;
+          if (sp.v < 0) sp.v *= -0.35;
+        }
+      }
+      belowY = y;
+      mesh.position.y = y;
       mesh.rotation.set(p.x, p.turn, p.z + Math.sin(time * 1.1 + i) * 0.06 * floating);
     });
     turntable.rotation.y = spin.angle;
@@ -202,14 +241,6 @@ export function createMascot(root) {
     camera.zoom = cam.zoom;
     camera.updateProjectionMatrix();
     renderer.render(scene, camera);
-
-    // Put the shadow under the sandwich: project the ground point to the screen
-    camera.updateMatrixWorld();
-    ground.set(0, groundY, 0).project(camera);
-    const px = (ground.x * 0.5 + 0.5) * size.w;
-    const py = (-ground.y * 0.5 + 0.5) * size.h;
-    const half = (3.4 * ppu) / 2;
-    shadowEl.style.transform = `translate(${(px - half).toFixed(1)}px, ${(py - half).toFixed(1)}px) scale(${camera.zoom.toFixed(3)}, ${(camera.zoom * Math.sin(ELEVATION)).toFixed(3)})`;
   }
 
   // ---- Build the slabs once the photos have loaded ----
@@ -264,7 +295,6 @@ export function createMascot(root) {
     });
     // The camera ends up looking at the middle of the finished stack
     stackCenter = (rest[3] - slabs.get(LAYERS[0].src).thickness) / 2;
-    groundY = -slabs.get(LAYERS[0].src).thickness - 0.1;
     tl.invalidate();
     tl.progress(tl.progress());
     draw(0);
