@@ -227,6 +227,36 @@ export function buildSlab(img, { thickness, elevation, bevel = 0.03, sideColor =
   geometry.rotateX(-Math.PI / 2);
   geometry.translate(0, -(depth + bevel), 0);
 
+  // Give every vertex its distance along the edge (back and forth, so there is no jump where the loop
+  // closes). The wall texture is laid out by this, so it flows smoothly even round a ragged edge.
+  const ring = outline.map(([mx, my]) => [((mx + 0.5) / w - 0.5) * PHOTO_W, (((my + 0.5) / h - 0.5) * PHOTO_H) / sinE]);
+  const along = new Float32Array(ring.length);
+  let perimeter = 0;
+  for (let i = 0; i < ring.length; i++) {
+    along[i] = perimeter;
+    const next = ring[(i + 1) % ring.length];
+    perimeter += Math.hypot(next[0] - ring[i][0], next[1] - ring[i][1]);
+  }
+  const pos = geometry.attributes.position;
+  const wallU = new Float32Array(pos.count);
+  for (let v = 0; v < pos.count; v++) {
+    const x = pos.getX(v);
+    const z = pos.getZ(v);
+    let best = 0;
+    let bestD = Infinity;
+    for (let i = 0; i < ring.length; i++) {
+      const dx = ring[i][0] - x;
+      const dz = ring[i][1] - z;
+      const d = dx * dx + dz * dz;
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    }
+    wallU[v] = Math.min(along[best], perimeter - along[best]);
+  }
+  geometry.setAttribute("wallU", new THREE.BufferAttribute(wallU, 1));
+
   const wallBand = buildWallBand(img, outline, scale, thickness, sideColor);
   return { geometry, thickness: depth + 2 * bevel, wallBand };
 }

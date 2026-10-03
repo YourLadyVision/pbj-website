@@ -41,6 +41,8 @@ const vertexShader = /* glsl */ `
   uniform vec3 photoRight;
   uniform vec3 photoUp;
   uniform vec2 photoSize;
+  attribute float wallU;
+  varying float vWallU;
   varying vec2 vUv;
   varying vec3 vPos;
   varying vec3 vNormalObj;
@@ -49,6 +51,7 @@ const vertexShader = /* glsl */ `
     vec2 screen = vec2(dot(position, photoRight), dot(position, photoUp));
     vUv = screen / photoSize + 0.5;
     vPos = position;
+    vWallU = wallU;
     vNormalObj = normal;
     vNormalWorld = normalize(mat3(modelMatrix) * normal);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -62,6 +65,7 @@ const fragmentShader = /* glsl */ `
   uniform vec3 toCamera;
   uniform vec3 lightDir;
   uniform vec3 sideColor;
+  varying float vWallU;
   varying vec2 vUv;
   varying vec3 vPos;
   varying vec3 vNormalObj;
@@ -73,8 +77,7 @@ const fragmentShader = /* glsl */ `
     vec3 n = normalize(vNormalObj);
 
     // The side walls: the strip cut from the photo, wrapped around the slab
-    vec3 along = normalize(vec3(-n.z, 0.0, n.x) + vec3(0.0001));
-    vec2 wallUv = vec2(dot(vPos, along) / wallLength, 1.0 + vPos.y / wallHeight);
+    vec2 wallUv = vec2(vWallU / wallLength, 1.0 + vPos.y / wallHeight);
     vec3 wall = texture2D(wallMap, wallUv).rgb;
 
     // The photo itself, painted on from where it was taken (never cut out: a missing pixel is a wall pixel)
@@ -142,13 +145,18 @@ export function createMascot(root) {
       { y: () => APART[i] * spread },
       { y: () => rest[i], duration: 1, ease: i === 0 ? "power2.out" : "bounce.out" },
       startAt[i]
-    ).to(p, { x: 0, turn: 0, z: 0, duration: i === 0 ? 1 : 0.8 }, startAt[i]);
+    ).fromTo(
+      p,
+      { x: TILTS[i][0], turn: TILTS[i][1], z: TILTS[i][2] },
+      { x: 0, turn: 0, z: 0, duration: i === 0 ? 1 : 0.8 },
+      startAt[i]
+    );
   });
-  tl.to(spin, { angle: Math.PI * 2, duration: 1.2, ease: "back.inOut(1.4)" }, 3.2)
+  tl.fromTo(spin, { angle: 0 }, { angle: Math.PI * 2, duration: 1.2, ease: "back.inOut(1.4)" }, 3.2)
     .fromTo(cam, { target: () => 0.9 * spread }, { target: () => stackCenter, duration: 3.2, ease: "none" }, 0)
-    .to(cam, { zoom: 1 / 0.82, duration: 1.2, ease: "power2.inOut" }, 3.2);
+    .fromTo(cam, { zoom: 1 }, { zoom: 1 / 0.82, duration: 1.2, ease: "power2.inOut" }, 3.2);
 
-  if (import.meta.env.DEV) window.mascotDebug = { spin, cam, piece, tl, turntable, draw: (t) => draw(t) }; // handy for testing in the browser
+  if (import.meta.env.DEV) window.mascotDebug = { spin, cam, piece, tl, turntable, renderer, scene, camera, draw: (t) => draw(t) }; // handy for testing in the browser
 
   function resize() {
     const { clientWidth: cw, clientHeight: ch } = root;
@@ -174,11 +182,17 @@ export function createMascot(root) {
 
   function draw(time) {
     if (!meshes.length) return;
-    const calm = 1 - tl.progress(); // pieces float less as the sandwich comes together
+    // A layer only floats while it is still in the air. Once it has landed it moves with the stack, so
+    // layers never bob into each other (that made their edges cut through one another).
+    const bounce = hop[0].v * 0.12; // the click hop moves the whole sandwich together
     meshes.forEach((mesh, i) => {
       const p = piece[i];
-      mesh.position.y = p.y + Math.sin(time * 1.4 + i * 1.3) * 0.08 * calm + hop[i].v * 0.12;
-      mesh.rotation.set(p.x, p.turn, p.z + Math.sin(time * 1.1 + i) * 0.06 * calm);
+      const apartY = APART[i] * spread;
+      const floating = Math.min(1, Math.max(0, (p.y - rest[i]) / (apartY - rest[i] || 1)));
+      // A tilted slab dips one corner down, so lift it just enough to stay clear of the layer below
+      const clearance = i === 0 ? 0 : 1.3 * (Math.abs(Math.sin(p.x)) + Math.abs(Math.sin(p.z)));
+      mesh.position.y = p.y + clearance + Math.sin(time * 1.4 + i * 1.3) * 0.08 * floating + bounce;
+      mesh.rotation.set(p.x, p.turn, p.z + Math.sin(time * 1.1 + i) * 0.06 * floating);
     });
     turntable.rotation.y = spin.angle;
     // The camera follows the stack down and zooms in, and the whole thing bobs a little
@@ -279,13 +293,9 @@ export function createMascot(root) {
   new IntersectionObserver(([entry]) => (visible = entry.isIntersecting)).observe(root);
   gsap.ticker.add((time) => visible && draw(time));
 
-  // ---- Click or tap: the layers hop one after another, like jelly wobbling ----
+  // ---- Click or tap: the whole sandwich hops ----
   root.addEventListener("click", () => {
-    gsap.fromTo(
-      hop,
-      { v: 0 },
-      { v: 1, duration: 0.18, yoyo: true, repeat: 1, stagger: 0.06, ease: "power2.out", overwrite: "auto" }
-    );
+    gsap.fromTo(hop[0], { v: 0 }, { v: 1, duration: 0.16, yoyo: true, repeat: 1, ease: "power2.out", overwrite: "auto" });
   });
 
   return { resize };
