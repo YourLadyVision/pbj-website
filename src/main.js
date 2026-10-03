@@ -16,7 +16,7 @@ gsap.ticker.lagSmoothing(0);
 if (import.meta.env.DEV) window.lenis = lenis; // handy for testing in the browser
 
 const mascot = createMascot(document.getElementById("mascot-canvas"));
-playIntro({ lenis });
+playIntro({ lenis, mascot });
 
 setupTabs({
   onSwitch(name) {

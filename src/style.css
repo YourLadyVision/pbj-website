@@ -265,20 +265,12 @@ html.intro .intro-overlay {
   text-transform: uppercase;
 }
 
-/* Logo tile filling the square while it grows (like No Art's logo square) */
+/* Tile filling the square while it grows: the mascot on a PB&J colour
+   (stands in for a logo, like No Art's logo square, until the real logo arrives) */
 .intro-tile {
   position: absolute;
   inset: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  container-type: inline-size;
-  background: var(--grape);
-  color: var(--bread);
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: 24cqi;
-  line-height: 1;
+  background: var(--grape) center / 88% no-repeat;
   overflow: hidden;
 }
 

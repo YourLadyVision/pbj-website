@@ -6,7 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 // 2. Cut to the page: a small square with viewfinder corners appears in the middle
 // 3. The square grows to about half the screen
 // 4. Then it opens up to the full page, which zooms out into place
-export function playIntro({ lenis }) {
+export function playIntro({ lenis, mascot }) {
   const html = document.documentElement;
   if (!html.classList.contains("intro")) return;
 
@@ -15,6 +15,7 @@ export function playIntro({ lenis }) {
   const text = overlay.querySelector("p");
   const frame = document.querySelector(".intro-frame");
   const tile = frame.querySelector(".intro-tile");
+  tile.style.backgroundImage = `url(${mascot.snapshot()})`;
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   lenis.stop();
