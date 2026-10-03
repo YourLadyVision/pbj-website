@@ -16,25 +16,16 @@
       try {
         if (location.hostname === "localhost" || location.search.includes("intro") || !sessionStorage.getItem("pbj-intro"))
           document.documentElement.classList.add("intro");
+        history.scrollRestoration = "manual"; // always start the intro at the top of the page
       } catch (e) {
         document.documentElement.classList.add("intro");
       }
     </script>
   </head>
   <body>
-    <!-- Loading intro: jelly-purple screen with the mascot and "ooze the fun".
-         The mascot melts into the jelly, then the jelly slides up (dripping) to reveal the page. -->
-    <div class="intro-overlay" aria-hidden="true">
-      <img class="intro-mascot" alt="" />
-      <p>■ Ooze the fun</p>
-      <svg class="intro-drips" preserveAspectRatio="none"><path /></svg>
-    </div>
-    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
-      <filter id="melt" x="-20%" y="-20%" width="140%" height="180%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.05 0.003" numOctaves="2" seed="4" />
-        <feDisplacementMap in="SourceGraphic" scale="0" xChannelSelector="R" yChannelSelector="G" />
-      </filter>
-    </svg>
+    <!-- Loading intro: jelly-purple screen with "ooze the fun" swirls into a gooey hole,
+         then the page swirls back out of it -->
+    <div class="intro-overlay" aria-hidden="true"><p>■ Ooze the fun</p></div>
 
     <div id="site">
     <!-- Folder tabs: right edge on computers, stacked at the top on phones -->

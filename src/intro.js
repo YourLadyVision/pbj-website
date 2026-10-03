@@ -1,29 +1,107 @@
+import * as THREE from "three";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 // Loading intro:
-// 1. Jelly-purple screen: the mascot pops in above "■ OOZE THE FUN"
-// 2. The mascot melts down into the jelly
-// 3. The jelly slides up like a curtain, its bottom edge dripping, revealing the page
-export function playIntro({ lenis, mascot }) {
+// 1. Jelly-purple screen with "■ OOZE THE FUN"
+// 2. The whole screen twists and gets sucked into a gooey hole in the middle (like a jelly black hole)
+// 3. The page swirls back out of that hole, with a wobbly, gooey edge, until it fills the screen
+
+// Twirl shader: content spins faster near the centre and shrinks into a wobbling, spiralling disc
+const swirlShader = {
+  uniforms: {
+    tex: { value: null },
+    progress: { value: 0 },
+    time: { value: 0 },
+    aspect: { value: 1 },
+    jelly: { value: new THREE.Vector3() },
+  },
+  vertexShader: /* glsl */ `
+    varying vec2 vUv;
+    void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
+  `,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tex;
+    uniform float progress;
+    uniform float time;
+    uniform float aspect;
+    uniform vec3 jelly;
+    varying vec2 vUv;
+
+    void main() {
+      float p = progress;
+      vec2 d = (vUv - 0.5) * vec2(aspect, 1.0);
+      float r = length(d);
+      float a = atan(d.y, d.x);
+
+      // Sucked in: the picture shrinks towards the centre and twists harder near the middle
+      float shrink = 1.0 / max(1.0 - p * 0.97, 0.03);
+      float twist = p * 3.0 + p * p * 14.0 * exp(-r * 3.0);
+      float sa = a + twist;
+      vec2 sd = vec2(cos(sa), sin(sa)) * r * shrink;
+      vec2 suv = sd / vec2(aspect, 1.0) + 0.5;
+
+      vec3 col = jelly;
+      if (suv.x > 0.0 && suv.x < 1.0 && suv.y > 0.0 && suv.y < 1.0) col = texture2D(tex, suv).rgb;
+
+      // Gooey edge: the jelly disc shrinks, wobbles and spirals as it goes
+      float edge = mix(1.25, 0.0, smoothstep(0.0, 1.0, p));
+      edge *= 1.0 + 0.10 * p * sin(a * 3.0 + twist * 0.8 - time * 5.0)
+                  + 0.05 * p * sin(a * 7.0 - time * 7.0);
+      float alpha = 1.0 - smoothstep(edge - 0.015, edge, r);
+
+      gl_FragColor = vec4(col * alpha, alpha);
+    }
+  `,
+};
+
+export function playIntro({ lenis }) {
   const html = document.documentElement;
   if (!html.classList.contains("intro")) return;
 
+  const site = document.getElementById("site");
   const overlay = document.querySelector(".intro-overlay");
   const text = overlay.querySelector("p");
-  const img = overlay.querySelector(".intro-mascot");
-  const drips = overlay.querySelector(".intro-drips");
-  const dripPath = drips.querySelector("path");
-  const melt = document.querySelector("#melt feDisplacementMap");
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  img.src = mascot.snapshot();
   lenis.stop();
   window.scrollTo(0, 0);
 
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const cx = vw / 2;
+  const cy = vh / 2;
+
+  // ---- The page's gooey "hole" it swirls out of ----
+  const hole = { r: 0, wobble: 1, spin: 0 };
+  const maxR = Math.hypot(vw, vh) / 2 + 40;
+  function drawHole(t = 0) {
+    const top = site.getBoundingClientRect().top; // keep the hole centred on the screen
+    const pts = [];
+    for (let i = 0; i < 72; i++) {
+      const a = (i / 72) * Math.PI * 2;
+      const wob =
+        1 + hole.wobble * (0.09 * Math.sin(a * 3 + hole.spin * 2 - t * 5) + 0.05 * Math.sin(a * 7 + t * 7));
+      const r = hole.r * wob;
+      pts.push(`${(cx + Math.cos(a) * r).toFixed(1)} ${(cy - top + Math.sin(a) * r).toFixed(1)}`);
+    }
+    site.style.clipPath = `path("M${pts.join(" L")} Z")`;
+  }
+  drawHole();
+
+  // Each piece of the page spins and grows around the centre of the screen
+  const layers = [...site.children];
+  const originFor = (el) => {
+    const r = el.getBoundingClientRect();
+    return `${cx - r.left}px ${cy - r.top}px`;
+  };
+
+  let cleanupSwirl = () => {};
   const finish = () => {
+    cleanupSwirl();
     html.classList.remove("intro");
-    gsap.ticker.remove(wobble);
+    gsap.set(site, { clearProps: "clipPath" });
+    gsap.set(layers, { clearProps: "transform,transformOrigin" });
     try {
       sessionStorage.setItem("pbj-intro", "1");
     } catch (e) {}
@@ -31,58 +109,90 @@ export function playIntro({ lenis, mascot }) {
     ScrollTrigger.refresh();
   };
 
-  // ---- Dripping edge: a scalloped line with rounded drips of different lengths ----
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const dripHeight = 220;
-  drips.setAttribute("viewBox", `0 0 ${vw} ${dripHeight}`);
-
-  const count = Math.max(5, Math.round(vw / 90));
-  const dripList = Array.from({ length: count }, (_, i) => ({
-    x: ((i + 0.3 + Math.random() * 0.4) / count) * vw,
-    w: 10 + Math.random() * 14, // half-width
-    len: 18 + Math.random() * 46, // resting length
-    phase: Math.random() * Math.PI * 2,
-  }));
-  const state = { stretch: 1, time: 0 };
-
-  function drawDrips() {
-    const base = 6;
-    let d = `M0,0 L${vw},0 L${vw},${base}`;
-    for (let i = dripList.length - 1; i >= 0; i--) {
-      const { x, w, len, phase } = dripList[i];
-      const L = Math.min(dripHeight - 10, (len + Math.sin(state.time * 2.2 + phase) * 5) * state.stretch);
-      d += ` L${x + w},${base}`;
-      d += ` C${x + w * 0.6},${base + L * 0.25} ${x + w},${base + L} ${x},${base + L}`;
-      d += ` C${x - w},${base + L} ${x - w * 0.6},${base + L * 0.25} ${x - w},${base}`;
-    }
-    d += ` L0,${base} Z`;
-    dripPath.setAttribute("d", d);
-  }
-  function wobble(time) {
-    state.time = time;
-    drawDrips();
-  }
-  gsap.ticker.add(wobble);
-  drawDrips();
-
   if (reduceMotion) {
+    gsap.set(site, { clearProps: "clipPath" });
     gsap.timeline({ onComplete: finish }).to(overlay, { opacity: 0, duration: 0.4, delay: 1 });
     return;
   }
 
+  layers.forEach((el) => gsap.set(el, { rotate: -160, scale: 0.25, transformOrigin: originFor(el) }));
+
+  // ---- A twistable copy of the loading screen, drawn on top of it ----
+  const dpr = Math.min(window.devicePixelRatio, 2);
+  const canvas = document.createElement("canvas");
+  canvas.className = "intro-swirl";
+  canvas.style.visibility = "hidden";
+  document.body.appendChild(canvas);
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+  renderer.setPixelRatio(dpr);
+  renderer.setSize(vw, vh, false);
+
+  const pic = document.createElement("canvas");
+  pic.width = vw * dpr;
+  pic.height = vh * dpr;
+  const picTexture = new THREE.CanvasTexture(pic);
+
+  const material = new THREE.ShaderMaterial({ ...swirlShader, transparent: true, premultipliedAlpha: true });
+  material.uniforms = THREE.UniformsUtils.clone(swirlShader.uniforms);
+  material.uniforms.tex.value = picTexture;
+  material.uniforms.aspect.value = vw / vh;
+  // Pass the jelly colour straight through (no colour conversion) so it matches the page exactly
+  const [r, g, b] = getComputedStyle(overlay).backgroundColor.match(/\d+/g).map(Number);
+  material.uniforms.jelly.value.set(r / 255, g / 255, b / 255);
+  const swirl = material.uniforms.progress;
+  const scene = new THREE.Scene();
+  scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+  const camera = new THREE.Camera();
+
+  // Paint the loading screen (purple + text, exactly where the real text sits) into the picture
+  function paintPicture() {
+    const ctx = pic.getContext("2d");
+    const style = getComputedStyle(text);
+    const box = text.getBoundingClientRect();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = getComputedStyle(overlay).backgroundColor;
+    ctx.fillRect(0, 0, vw, vh);
+    ctx.fillStyle = style.color;
+    ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    if ("letterSpacing" in ctx) ctx.letterSpacing = style.letterSpacing;
+    ctx.textBaseline = "middle";
+    ctx.fillText(text.textContent.toUpperCase(), box.left, box.top + box.height / 2);
+    picTexture.needsUpdate = true;
+  }
+
+  const tick = (time) => {
+    material.uniforms.time.value = time;
+    if (canvas.style.visibility !== "hidden") renderer.render(scene, camera);
+    drawHole(time);
+  };
+  gsap.ticker.add(tick);
+
+  function swapToSwirl() {
+    paintPicture();
+    canvas.style.visibility = "visible";
+    overlay.style.visibility = "hidden";
+    renderer.render(scene, camera);
+  }
+
+  cleanupSwirl = () => {
+    gsap.ticker.remove(tick);
+    picTexture.dispose();
+    material.dispose();
+    renderer.dispose();
+    canvas.remove();
+  };
+
   const tl = gsap.timeline({ onComplete: finish });
   if (import.meta.env.DEV) window.introTl = tl; // handy for testing in the browser
   tl
-    // 1. Mascot pops in, then the words
-    .from(img, { scale: 0.5, opacity: 0, duration: 0.6, ease: "back.out(2)" })
-    .from(text, { opacity: 0, y: 8, duration: 0.4 }, 0.25)
-    // 2. The mascot melts down into the jelly
-    .to(melt, { attr: { scale: 130 }, duration: 1.0, ease: "power2.in" }, 1.4)
-    .to(img, { scaleY: 1.9, scaleX: 0.85, y: 110, transformOrigin: "50% 0%", duration: 1.0, ease: "power2.in" }, 1.4)
-    .to(img, { opacity: 0, duration: 0.45, ease: "power1.in" }, 2.0)
-    .to(text, { opacity: 0, duration: 0.3 }, 1.6)
-    // 3. The jelly slides up, its drips stretching as it goes
-    .to(state, { stretch: 2.6, duration: 0.7, ease: "power2.in" }, 2.1)
-    .to(overlay, { y: -(vh + dripHeight), duration: 1.1, ease: "power3.inOut" }, 2.2);
+    // 1. "Ooze the fun" on jelly purple
+    .from(text, { opacity: 0, y: 8, duration: 0.4 })
+    // 2. Sucked into the gooey hole
+    .call(swapToSwirl, null, 1.4)
+    .to(swirl, { value: 1, duration: 1.3, ease: "power2.in" }, 1.4)
+    // 3. The page swirls back out of the hole
+    .to(hole, { r: maxR, duration: 1.5, ease: "power2.inOut" }, 2.5)
+    .to(hole, { spin: 4, duration: 1.5, ease: "power1.out" }, 2.5)
+    .to(hole, { wobble: 0, duration: 0.6, ease: "power1.in" }, 3.4)
+    .to(layers, { rotate: 0, scale: 1, duration: 1.5, ease: "power3.out" }, 2.5);
 }

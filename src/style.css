@@ -240,44 +240,40 @@ h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
   .hero-sub { margin-bottom: 1.25rem; }
 }
 
-/* ---------- Loading intro (jelly screen, mascot melts, jelly slides up dripping) ---------- */
-.intro-overlay { display: none; }
+/* ---------- Loading intro (jelly screen swirls into a hole, the page swirls out) ---------- */
+.intro-overlay,
+.intro-swirl { display: none; }
 
 html.intro { overflow: hidden; }
+html.intro body { background: var(--night); } /* the dark "black hole" behind the swirl */
+html.intro #site { clip-path: circle(0px at 50% 50%); background: var(--page); }
 
 html.intro .intro-overlay {
   display: flex;
-  flex-direction: column;
   position: fixed;
   inset: 0;
   z-index: 100;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
   background: var(--grape);
   color: var(--bread);
 }
 .intro-overlay p {
   margin: 0;
   font-family: var(--mono);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.intro-mascot {
-  width: min(56vw, 300px);
-  aspect-ratio: 1;
-  filter: url(#melt);
-}
-/* The dripping bottom edge, hanging just below the purple screen */
-.intro-drips {
-  position: absolute;
-  left: 0;
-  top: calc(100% - 1px);
-  width: 100%;
-  height: 220px;
-  overflow: visible;
-  fill: var(--grape);
+/* The swirling copy of the loading screen (drawn by intro.js) */
+html.intro .intro-swirl {
+  display: block;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 101;
+  pointer-events: none;
 }
 
 /* Respect people who turn off motion */
