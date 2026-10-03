@@ -211,41 +211,49 @@ h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
   height: 100%;
   min-height: 0;
   cursor: pointer;
+  perspective: 2600px; /* gentle depth for the spinning stack */
 }
-/* The sandwich: four photo layers stacked and animated by mascot.js */
-.sandwich {
-  --w: 560px;
+/* The sandwich: four photo layers lying flat in 3D, tipped back and turned by mascot.js */
+.sandwich,
+.tilt,
+.spin {
   position: absolute;
   inset: 0;
-  transform-origin: 50% 50%;
+  transform-style: preserve-3d;
 }
+.sandwich { --w: 420px; --h: 410px; }
 .layer {
   position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
+  left: 50%;
+  top: 50%;
+  width: var(--w);
+  height: var(--h);
+  margin: calc(var(--h) / -2) 0 0 calc(var(--w) / -2);
   pointer-events: none;
   will-change: transform;
 }
-.px { width: var(--w); }
-.px img {
-  display: block;
+.layer img {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
   user-select: none;
   -webkit-user-drag: none;
-  -webkit-filter: drop-shadow(0 8px 10px rgba(59, 36, 20, 0.2));
-  filter: drop-shadow(0 8px 10px rgba(59, 36, 20, 0.2));
+  -webkit-filter: drop-shadow(0 4px 6px rgba(59, 36, 20, 0.22));
+  filter: drop-shadow(0 4px 6px rgba(59, 36, 20, 0.22));
 }
+/* The jelly photo is a bit bigger than the bread, so shrink it to fit the other layers */
+.layer--jelly img { transform: scale(0.88); }
+/* A soft shadow on the "ground" under the stack */
 .sandwich-shadow {
   position: absolute;
   left: 50%;
-  top: 66%;
-  width: calc(var(--w) * 0.78);
-  height: calc(var(--w) * 0.16);
-  transform: translate(-50%, -50%);
-  background: radial-gradient(closest-side, rgba(59, 36, 20, 0.3), transparent);
-  filter: blur(6px);
+  top: 50%;
+  width: calc(var(--w) * 0.9);
+  height: calc(var(--w) * 0.9);
+  margin: calc(var(--w) * -0.45) 0 0 calc(var(--w) * -0.45);
+  background: radial-gradient(closest-side, rgba(59, 36, 20, 0.32), transparent);
+  transform: translateZ(calc(var(--w) * -0.1));
 }
 
 .scroll-hint {
