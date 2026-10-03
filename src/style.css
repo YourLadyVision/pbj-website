@@ -10,7 +10,9 @@
   --ink: #3b2414;
   --page: #f9f9f7; /* soft warm off-white, the same as Claude's light-mode background */
 
-  --tab-size: 64px;
+  --tab-size: 72px;
+  --body-w: 14px;
+  --r: 12px;
   --radius: 22px;
   --display: "Baloo 2", system-ui, sans-serif;
   --mono: "Space Mono", ui-monospace, monospace;
@@ -69,41 +71,78 @@ h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
 .btn:hover { transform: translateY(-3px) rotate(-2deg); box-shadow: 0 9px 0 var(--grape); }
 .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--grape); }
 
-/* ---------- Folder tabs (computers: right edge) ---------- */
+/* ---------- Folder tabs: paper file folders stacked along the right edge ----------
+   Each folder is a coloured strip (the "body", ::before) running down the edge with a tab sticking
+   out of it. Later folders sit in front of earlier ones. A curved shoulder (::after) joins each tab
+   to its body, soft shadows fall on the folders behind, and the open folder is page-coloured so it
+   melts into the page. */
 .tabs {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
   width: var(--tab-size);
-  display: flex;
-  flex-direction: column;
   z-index: 10;
+  overflow: hidden;
 }
 
 .tab {
-  flex: 1;
+  --fill: var(--tab);
+  position: absolute;
+  left: 0;
+  top: var(--top);
+  width: 58px;
+  height: var(--len);
+  z-index: var(--i);
+  display: grid;
+  place-items: center;
+  padding: 0 4px 0 var(--body-w);
   writing-mode: vertical-rl;
   font-family: var(--mono);
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  line-height: 1.25;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--bread);
-  background: var(--tab);
+  color: var(--on, var(--bread));
+  background: var(--fill);
   border: 0;
-  border-radius: 16px 0 0 16px;
-  margin: 3px 0;
+  border-radius: 0 var(--r) var(--r) 0;
   cursor: pointer;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s, color 0.2s;
+  filter: url(#paper) drop-shadow(0 -3px 4px rgba(45, 25, 12, 0.3));
+  transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
 }
-.tab:hover { transform: translateX(-6px); }
+/* The folder's body: a strip down the edge, shaded where the page casts its shadow on it */
+.tab::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--body-w);
+  height: 100vh;
+  background: var(--fill);
+  box-shadow: inset 7px 0 7px -5px rgba(45, 25, 12, 0.32);
+}
+/* The curved shoulder where the tab's lower edge meets the body */
+.tab::after {
+  content: "";
+  position: absolute;
+  left: var(--body-w);
+  top: 100%;
+  width: var(--r);
+  height: var(--r);
+  background: radial-gradient(circle at 100% 100%, transparent calc(var(--r) - 0.5px), var(--fill) var(--r));
+}
+.tab:hover { width: 64px; }
+/* The open folder is the page itself: same colour, no grain, so it melts into the page */
 .tab[aria-current="page"] {
-  background: var(--page);
+  --fill: var(--page);
   color: var(--ink);
-  transform: translateX(-10px);
-  box-shadow: -4px 0 0 var(--tab);
+  width: 72px;
+  filter: drop-shadow(0 -3px 4px rgba(45, 25, 12, 0.3));
 }
+.tab[aria-current="page"]::before { box-shadow: none; }
 
 .folder { margin-right: var(--tab-size); }
 
@@ -187,7 +226,11 @@ h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
 
 /* ---------- Phones: tabs stacked like folders at the top ---------- */
 @media (max-width: 767px) {
-  :root { --tab-h: 44px; --stack-step: 8px; }
+  :root {
+    --tab-h: 44px;
+    --step: 8px;
+    --bar: calc(var(--tab-h) + 5 * var(--step) + 14px);
+  }
 
   .tabs {
     top: 0;
@@ -195,44 +238,66 @@ h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
     right: 0;
     bottom: auto;
     width: auto;
-    height: calc(var(--tab-h) + 5 * var(--stack-step) + 12px);
-    display: block;
-    background: var(--page);
+    height: var(--bar);
   }
 
   .tab {
-    position: absolute;
-    writing-mode: horizontal-tb;
-    left: calc(8px + var(--i) * 13%);
-    top: calc(6px + var(--i) * var(--stack-step));
-    width: 38%;
+    --x: calc(6px + var(--i) * 12.5vw);
+    --sh: linear-gradient(to top, rgba(45, 25, 12, 0.26), transparent);
+    left: var(--x);
+    top: calc(6px + var(--i) * var(--step));
+    width: 34vw;
     height: var(--tab-h);
-    margin: 0;
     padding: 0 12px;
-    text-align: left;
+    writing-mode: horizontal-tb;
+    place-items: center start;
     white-space: nowrap;
-    overflow: hidden;
-    border-radius: 14px 14px 0 0;
-    box-shadow: -3px 0 6px rgba(0, 0, 0, 0.15);
-    z-index: var(--i);
     font-size: 0.7rem;
+    border-radius: var(--r) var(--r) 0 0;
+    filter: url(#paper) drop-shadow(-3px -1px 4px rgba(45, 25, 12, 0.3));
+    transition: top 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
-  .tab:hover { transform: none; }
-  .tab[aria-current="page"] { transform: none; box-shadow: inset 0 -4px 0 var(--tab), -3px 0 6px rgba(0, 0, 0, 0.15); }
+  /* The folder's body: a full-width sheet under the tab, with a curved shoulder on its left */
+  .tab::before {
+    left: calc(-1 * var(--x));
+    top: calc(100% - var(--r));
+    width: 100vw;
+    height: calc(var(--bar) - 6px - var(--i) * var(--step) - var(--tab-h) + var(--r));
+    box-shadow: none;
+    background:
+      radial-gradient(circle at 0 0, transparent calc(var(--r) - 0.5px), var(--fill) var(--r))
+        calc(var(--x) - var(--r)) 0 / var(--r) var(--r) no-repeat,
+      var(--sh) 0 100% / 100% 10px no-repeat,
+      linear-gradient(var(--fill), var(--fill)) 0 100% / 100% calc(100% - var(--r)) no-repeat;
+  }
+  /* ...and its right-hand shoulder */
+  .tab::after {
+    left: 100%;
+    top: calc(100% - var(--r));
+    background: radial-gradient(circle at 100% 0, transparent calc(var(--r) - 0.5px), var(--fill) var(--r));
+  }
+  .tab:hover { width: 34vw; }
+  .tab[aria-current="page"] {
+    --sh: linear-gradient(transparent, transparent);
+    width: 34vw;
+    filter: drop-shadow(-3px -1px 4px rgba(45, 25, 12, 0.3));
+  }
 
-  /* First tap: the tab slides out so its full label shows */
+  /* First tap: the folder is pulled up and its tab widens so the full label shows */
   .tab.peek {
     z-index: 20;
-    width: auto;
-    min-width: 38%;
-    transform: translateY(10px) scale(1.04);
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+    width: max-content;
+    min-width: 34vw;
+    top: calc(6px + var(--i) * var(--step) - 5px);
+    height: calc(var(--tab-h) + 5px);
   }
+  .tab.peek::before,
+  .tab.peek::after { display: none; }
 
-  .folder { margin-right: 0; padding-top: calc(var(--tab-h) + 5 * var(--stack-step) + 12px); }
+  .folder { margin-right: 0; padding-top: var(--bar); }
 
   .hero {
-    height: calc(100svh - (var(--tab-h) + 5 * var(--stack-step) + 12px));
+    height: calc(100svh - var(--bar));
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
     padding-top: 1.5rem;

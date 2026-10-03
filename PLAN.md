@@ -59,7 +59,7 @@ Six folder tabs: **Home, Events, About, List Your Event, Be Our Partner, Our Sec
 
 ## Building Steps
 - [x] 1. Starting project (Vite, GSAP, Lenis, Three.js)
-- [ ] 2. The six folder tabs (first version done: hover on computers, tap to peek / tap to open on phones)
+- [ ] 2. The six folder tabs (done as layered paper folders: curved shoulders, grain, soft shadows, open folder merges into the page; hover on computers, tap to peek / tap to open on phones)
 - [ ] 3. Home page sections in order (placeholders in place)
 - [ ] 4. The other five tabs
 - [ ] 5. Effects: "ooze the fun" loading screen (first version done), intro spin-in, line-by-line text, uneven-gap text, cursor-following button
