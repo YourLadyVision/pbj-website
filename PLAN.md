@@ -19,7 +19,7 @@ Six folder tabs: **Home, Events, About, List Your Event, Be Our Partner, Our Sec
 - Phones: tabs stacked close together at the top with part of each label showing. Tap to peek (the tab slides out to show its full label), tap again to open. Switching tabs feels like shuffling through folders.
 
 **Home** (top to bottom)
-1. Loading screen (first visit only): jelly-purple screen with "ooze the fun"; a calm swirl forms in the middle like a drain in jelly, the text is sucked into its centre, the swirl collapses into a gooey hole, then the hero swirls back out of the hole
+1. Loading screen (first visit only): jelly-purple screen with "ooze the fun"; a calm violet vortex forms, the text is sucked straight into its dark centre (squeezing and streaking, not spinning), the jelly collapses into a gooey hole, then the hero swirls back out of the hole
 2. Hero: our mascot, front and centre, with a "Join the list" button
 3. Short intro that spins into view as people scroll
 4. What PBJ is all about

@@ -241,7 +241,8 @@ h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
 }
 
 /* ---------- Loading intro (jelly screen swirls into a hole, the page swirls out) ---------- */
-.intro-overlay { display: none; }
+.intro-overlay,
+.intro-swirl { display: none; }
 
 html.intro { overflow: hidden; }
 html.intro body { background: var(--night); } /* the dark "black hole" behind the swirl */
@@ -264,14 +265,16 @@ html.intro .intro-overlay {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-/* The spinning jelly vortex, drawn by intro.js behind the text */
-.intro-overlay canvas {
-  position: absolute;
+/* The swirling copy of the loading screen (drawn by intro.js) */
+html.intro .intro-swirl {
+  display: block;
+  position: fixed;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
+  z-index: 101;
+  pointer-events: none;
 }
-.intro-overlay p { position: relative; }
 
 /* Respect people who turn off motion */
 @media (prefers-reduced-motion: reduce) {
