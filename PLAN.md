@@ -67,6 +67,7 @@ Six folder tabs: **Home, Events, About, List Your Event, Be Our Partner, Our Sec
 - [ ] 7. Email signups (guests list; hosts and partners list)
 - [ ] 8. 3D sandwich mascot (first version done: code-built, assembles on scroll, face pops on at the end)
 - [ ] 9. Phone version rounds
+- [ ] Before launch: write an engineer guide (how to run the site, what each file does, what's unfinished), label the "version 1" point in GitHub, and have an engineer review it (optional short check-in earlier, once the main pages are built)
 - [ ] 10. Launch on PeanutButterJelly.vip (only when desktop and phone are both ready)
 
 ## Not Building Yet
