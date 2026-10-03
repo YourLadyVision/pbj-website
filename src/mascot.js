@@ -261,7 +261,7 @@ export function createMascot(canvas) {
     renderer.setSize(size, size, false);
     camera.aspect = 1;
     camera.updateProjectionMatrix();
-    camera.position.copy(target).addScaledVector(viewDir, 6.3 * cam.zoom);
+    camera.position.copy(target).addScaledVector(viewDir, 6.9 * cam.zoom);
     camera.lookAt(target);
     renderer.render(scene, camera);
     const url = canvas.toDataURL("image/png");
