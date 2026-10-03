@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 // Turns a see-through photo (bread, peanut butter, jelly) into a real 3D slab with thickness and
 // rounded edges, so it can spin and still look solid.
@@ -82,9 +83,98 @@ function simplify(points, epsilon) {
   return points.filter((_, i) => keep[i]);
 }
 
+// The side walls: the photo only shows the wall along the front-facing edge, so we cut that strip out
+// of the photo (following the edge) and later wrap it around the whole slab. That way the crust, the
+// peanut butter ridges and the jelly gloss continue all the way round instead of being a flat colour.
+function buildWallBand(img, outline, scale, wall, sideColor) {
+  const iw = img.naturalWidth;
+  const ih = img.naturalHeight;
+  const full = document.createElement("canvas");
+  full.width = iw;
+  full.height = ih;
+  const fctx = full.getContext("2d", { willReadFrequently: true });
+  fctx.drawImage(img, 0, 0);
+  const px = fctx.getImageData(0, 0, iw, ih).data;
+
+  let cx = 0;
+  let cy = 0;
+  outline.forEach(([x, y]) => {
+    cx += x;
+    cy += y;
+  });
+  cx /= outline.length;
+  cy /= outline.length;
+
+  // Walk the outline and collect points (in photo pixels) along edges that face the camera
+  const samples = [];
+  for (let i = 0; i < outline.length; i++) {
+    const a = outline[i];
+    const b = outline[(i + 1) % outline.length];
+    const tx = b[0] - a[0];
+    const ty = b[1] - a[1];
+    const len = Math.hypot(tx, ty) || 1;
+    let nx = ty / len;
+    let ny = -tx / len;
+    if ((a[0] - cx) * nx + (a[1] - cy) * ny < 0) {
+      nx = -nx;
+      ny = -ny;
+    }
+    if (ny < 0.45) continue; // not facing the front
+    const steps = Math.max(1, Math.round((len / scale) / 2));
+    for (let k = 0; k < steps; k++) {
+      const f = k / steps;
+      samples.push([((a[0] + tx * f + 0.5) / scale), ((a[1] + ty * f + 0.5) / scale)]);
+    }
+  }
+
+  const bandH = Math.max(4, Math.round(wall));
+  const bandW = Math.max(16, samples.length);
+  const band = document.createElement("canvas");
+  band.width = bandW;
+  band.height = bandH;
+  const bctx = band.getContext("2d");
+  const out = bctx.createImageData(bandW, bandH);
+  const fill = new THREE.Color(sideColor).convertLinearToSRGB();
+  let length = 0;
+  for (let j = 0; j < bandW; j++) {
+    const [sx, sy] = samples[Math.min(samples.length - 1, j)] || [0, 0];
+    if (j > 0 && samples[j]) length += Math.hypot(sx - samples[j - 1][0], sy - samples[j - 1][1]);
+    for (let k = 0; k < bandH; k++) {
+      const ix = Math.min(iw - 1, Math.max(0, Math.round(sx)));
+      const iy = Math.min(ih - 1, Math.max(0, Math.round(sy) + 2 + k));
+      const o = (iy * iw + ix) * 4;
+      const d = (k * bandW + j) * 4;
+      // See-through pixels (ragged edges) become the side colour, so there are never holes
+      const solid = px[o + 3] > 140;
+      out.data[d] = solid ? px[o] : fill.r * 255;
+      out.data[d + 1] = solid ? px[o + 1] : fill.g * 255;
+      out.data[d + 2] = solid ? px[o + 2] : fill.b * 255;
+      out.data[d + 3] = 255;
+    }
+  }
+  bctx.putImageData(out, 0, 0);
+  return { canvas: band, length: Math.max(0.5, length * (PHOTO_W / iw)) };
+}
+
+// Round off the pixel stair-steps: cut every corner a quarter of the way in (twice)
+function smoothClosed(points, rounds) {
+  let pts = points;
+  for (let r = 0; r < rounds; r++) {
+    const next = [];
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i];
+      const b = pts[(i + 1) % pts.length];
+      next.push([a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25]);
+      next.push([a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75]);
+    }
+    pts = next;
+  }
+  return pts;
+}
+
 // thickness: how tall the visible side wall is in the photo, in photo pixels (of 1024)
-export function buildSlab(img, { thickness, elevation, bevel = 0.02 }) {
-  const scale = 1 / 3;
+export function buildSlab(img, { thickness, elevation, bevel = 0.03, sideColor = "#c98a43" }) {
+  const scale = 0.4;
   const w = Math.round(img.naturalWidth * scale);
   const h = Math.round(img.naturalHeight * scale);
   const canvas = document.createElement("canvas");
@@ -103,7 +193,7 @@ export function buildSlab(img, { thickness, elevation, bevel = 0.02 }) {
     }
   }
 
-  const outline = simplify(traceOutline(top, w, h), 0.9);
+  const outline = smoothClosed(simplify(traceOutline(top, w, h), 1.1), 2);
   const sinE = Math.sin(elevation);
   const cosE = Math.cos(elevation);
   const shape = new THREE.Shape();
@@ -118,7 +208,7 @@ export function buildSlab(img, { thickness, elevation, bevel = 0.02 }) {
   // The wall's real height: what we see of it in the photo, divided by cos(elevation)
   const realHeight = ((wall / h) * PHOTO_H) / cosE;
   const depth = Math.max(0.001, realHeight - 2 * bevel);
-  const geometry = new THREE.ExtrudeGeometry(shape, {
+  let geometry = new THREE.ExtrudeGeometry(shape, {
     depth,
     steps: 1,
     curveSegments: 1,
@@ -126,10 +216,17 @@ export function buildSlab(img, { thickness, elevation, bevel = 0.02 }) {
     bevelThickness: bevel,
     bevelSize: bevel,
     bevelOffset: -bevel,
-    bevelSegments: 4,
+    bevelSegments: 6,
   });
+  // Smooth the shading across neighbouring faces so the edges look soft and rounded, not faceted
+  geometry.deleteAttribute("uv");
+  geometry.deleteAttribute("normal");
+  geometry = mergeVertices(geometry, 1e-4);
+  geometry.computeVertexNormals();
   // Lay it flat (the photo's "up" becomes "far away") and put the top face at height 0
   geometry.rotateX(-Math.PI / 2);
   geometry.translate(0, -(depth + bevel), 0);
-  return { geometry, thickness: depth + 2 * bevel };
+
+  const wallBand = buildWallBand(img, outline, scale, thickness, sideColor);
+  return { geometry, thickness: depth + 2 * bevel, wallBand };
 }

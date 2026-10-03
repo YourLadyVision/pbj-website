@@ -24,14 +24,16 @@ const TILTS = [
   [-0.3, 0.5, 0.25],
 ];
 
-// bread, jelly, peanut butter, bread: the photo, how thick its visible wall is (photo pixels), its
-// side colour, and a size fix (the jelly photo is bigger than the others)
+// bread, jelly, peanut butter, bread: the photo, how tall its visible wall is (photo pixels), its
+// fallback side colour, a size fix (the jelly photo is bigger than the others), and a tiny size
+// difference so no two layers' walls sit exactly on top of each other (that makes them flicker)
 const LAYERS = [
-  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1 },
-  { src: "/mascot/jelly.webp", wall: 26, side: "#8c0f1c", size: 0.88 },
-  { src: "/mascot/peanut-butter.webp", wall: 34, side: "#b87f3a", size: 1 },
-  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1 },
+  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035 },
+  { src: "/mascot/jelly.webp", wall: 26, side: "#8c0f1c", size: 0.88, bevel: 0.012 },
+  { src: "/mascot/peanut-butter.webp", wall: 34, side: "#b87f3a", size: 1.012, bevel: 0.016 },
+  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035 },
 ];
+const GAP = 0.004; // tiny space between layers so touching surfaces never fight over the same pixels
 
 // Paints the photo onto the slab by projecting it from the original viewpoint, trims the slab to the
 // photo's outline, and adds light that matches the photo at rest but changes as the slab turns.
@@ -40,11 +42,13 @@ const vertexShader = /* glsl */ `
   uniform vec3 photoUp;
   uniform vec2 photoSize;
   varying vec2 vUv;
+  varying vec3 vPos;
   varying vec3 vNormalObj;
   varying vec3 vNormalWorld;
   void main() {
     vec2 screen = vec2(dot(position, photoRight), dot(position, photoUp));
     vUv = screen / photoSize + 0.5;
+    vPos = position;
     vNormalObj = normal;
     vNormalWorld = normalize(mat3(modelMatrix) * normal);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -52,26 +56,38 @@ const vertexShader = /* glsl */ `
 `;
 const fragmentShader = /* glsl */ `
   uniform sampler2D map;
+  uniform sampler2D wallMap;
+  uniform float wallLength;
+  uniform float wallHeight;
   uniform vec3 toCamera;
   uniform vec3 lightDir;
   uniform vec3 sideColor;
   varying vec2 vUv;
+  varying vec3 vPos;
   varying vec3 vNormalObj;
   varying vec3 vNormalWorld;
 
   float light(vec3 n) { return 0.58 + 0.42 * max(dot(normalize(n), lightDir), 0.0); }
 
   void main() {
-    // Faces we can see in the photo take the photo's colours; the others get the side colour
-    bool inPhoto = dot(normalize(vNormalObj), toCamera) > 0.05;
-    vec3 col = sideColor;
-    if (inPhoto) {
-      vec4 t = texture2D(map, vUv);
-      if (t.a < 0.5) discard;
-      col = t.rgb;
-    }
+    vec3 n = normalize(vNormalObj);
+
+    // The side walls: the strip cut from the photo, wrapped around the slab
+    vec3 along = normalize(vec3(-n.z, 0.0, n.x) + vec3(0.0001));
+    vec2 wallUv = vec2(dot(vPos, along) / wallLength, 1.0 + vPos.y / wallHeight);
+    vec3 wall = texture2D(wallMap, wallUv).rgb;
+
+    // The photo itself, painted on from where it was taken (never cut out: a missing pixel is a wall pixel)
+    vec4 t = texture2D(map, vUv);
+    vec3 photo = mix(wall, t.rgb, smoothstep(0.35, 0.65, t.a));
+
+    // Top faces and the walls we can see in the photo use the photo; the rest use the wrapped wall
+    float facing = dot(n, toCamera);
+    float usePhoto = max(smoothstep(0.55, 0.75, n.y), smoothstep(0.0, 0.3, facing));
+    vec3 col = mix(wall, photo, usePhoto);
+
     // Same light as at rest (so the photo is untouched), brighter or darker as the slab turns
-    col *= clamp(light(vNormalWorld) / light(vNormalObj), 0.5, 1.3);
+    col *= clamp(light(vNormalWorld) / light(n), 0.5, 1.3);
     gl_FragColor = vec4(col, 1.0);
     #include <colorspace_fragment>
   }
@@ -137,10 +153,14 @@ export function createMascot(root) {
   function resize() {
     const { clientWidth: cw, clientHeight: ch } = root;
     if (!cw || !ch) return;
+    // Resizing clears the canvas, so only do it when the size really changed (a no-op resize mid-scroll
+    // would flash the sandwich blank for a frame)
+    if (cw === size.w && ch === size.h) return;
     renderer.setSize(cw, ch, false);
     size = { w: cw, h: ch };
     const W = Math.min(cw * 0.95, ch * 0.58); // width of the whole photo on screen
     ppu = W / PHOTO_W;
+    shadowEl.style.width = shadowEl.style.height = `${3.4 * ppu}px`;
     // Keep the whole floating-apart stack inside the hero, even on short screens
     spread = Math.min(1, Math.max(0.35, (0.78 * ch / W - 0.54) / 0.73));
     camera.left = -cw / 2 / ppu;
@@ -174,9 +194,8 @@ export function createMascot(root) {
     ground.set(0, groundY, 0).project(camera);
     const px = (ground.x * 0.5 + 0.5) * size.w;
     const py = (-ground.y * 0.5 + 0.5) * size.h;
-    const diameter = 3.4 * ppu * camera.zoom;
-    shadowEl.style.width = shadowEl.style.height = `${diameter}px`;
-    shadowEl.style.transform = `translate(${px - diameter / 2}px, ${py - diameter / 2}px) scaleY(${Math.sin(ELEVATION)})`;
+    const half = (3.4 * ppu) / 2;
+    shadowEl.style.transform = `translate(${(px - half).toFixed(1)}px, ${(py - half).toFixed(1)}px) scale(${camera.zoom.toFixed(3)}, ${(camera.zoom * Math.sin(ELEVATION)).toFixed(3)})`;
   }
 
   // ---- Build the slabs once the photos have loaded ----
@@ -184,7 +203,16 @@ export function createMascot(root) {
   Promise.all(LAYERS.map((l) => loadImage(l.src))).then((images) => {
     LAYERS.forEach((layer, i) => {
       if (!slabs.has(layer.src)) {
-        const { geometry, thickness } = buildSlab(images[i], { thickness: layer.wall, elevation: ELEVATION });
+        const { geometry, thickness, wallBand } = buildSlab(images[i], {
+          thickness: layer.wall,
+          elevation: ELEVATION,
+          bevel: layer.bevel,
+          sideColor: layer.side,
+        });
+        const wallTexture = new THREE.CanvasTexture(wallBand.canvas);
+        wallTexture.colorSpace = THREE.SRGBColorSpace;
+        wallTexture.wrapS = THREE.MirroredRepeatWrapping;
+        wallTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
         const texture = new THREE.Texture(images[i]);
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -195,6 +223,9 @@ export function createMascot(root) {
           fragmentShader,
           uniforms: {
             map: { value: texture },
+            wallMap: { value: wallTexture },
+            wallLength: { value: wallBand.length },
+            wallHeight: { value: thickness },
             photoRight: { value: new THREE.Vector3(1, 0, 0) },
             photoUp: { value: new THREE.Vector3(0, Math.cos(ELEVATION), -Math.sin(ELEVATION)) },
             photoSize: { value: new THREE.Vector2(PHOTO_W, PHOTO_H) },
@@ -215,7 +246,7 @@ export function createMascot(root) {
       mesh.scale.setScalar(layer.size);
       meshes.push(mesh);
       turntable.add(mesh);
-      rest[i] = i === 0 ? 0 : rest[i - 1] + thickness * layer.size;
+      rest[i] = i === 0 ? 0 : rest[i - 1] + thickness * layer.size + GAP;
     });
     // The camera ends up looking at the middle of the finished stack
     stackCenter = (rest[3] - slabs.get(LAYERS[0].src).thickness) / 2;
