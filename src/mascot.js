@@ -143,16 +143,16 @@ export function createMascot(root) {
     tl.fromTo(
       p,
       { y: () => APART[i] * spread },
-      { y: () => rest[i], duration: 1, ease: i === 0 ? "power2.out" : "bounce.out" },
+      { y: () => rest[i], duration: 1, ease: "power3.inOut" }, // smooth both ways (a bounce would jolt when scrolling back up)
       startAt[i]
     ).fromTo(
       p,
       { x: TILTS[i][0], turn: TILTS[i][1], z: TILTS[i][2] },
-      { x: 0, turn: 0, z: 0, duration: i === 0 ? 1 : 0.8 },
+      { x: 0, turn: 0, z: 0, duration: i === 0 ? 1 : 0.9, ease: "power2.inOut" },
       startAt[i]
     );
   });
-  tl.fromTo(spin, { angle: 0 }, { angle: Math.PI * 2, duration: 1.2, ease: "back.inOut(1.4)" }, 3.2)
+  tl.fromTo(spin, { angle: 0 }, { angle: Math.PI * 2, duration: 1.2, ease: "power3.inOut" }, 3.2)
     .fromTo(cam, { target: () => 0.9 * spread }, { target: () => stackCenter, duration: 3.2, ease: "none" }, 0)
     .fromTo(cam, { zoom: 1 }, { zoom: 1 / 0.82, duration: 1.2, ease: "power2.inOut" }, 3.2);
 
@@ -284,7 +284,7 @@ export function createMascot(root) {
     start: () => `top ${window.matchMedia("(max-width: 767px)").matches ? document.querySelector(".tabs").offsetHeight : 0}`,
     end: "+=180%",
     pin: true,
-    scrub: 0.8,
+    scrub: 0.3, // light smoothing only: the page already smooths scrolling, and more would make it trail behind
     invalidateOnRefresh: true,
     animation: tl,
   });
