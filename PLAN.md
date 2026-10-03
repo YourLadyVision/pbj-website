@@ -62,7 +62,7 @@ Six folder tabs: **Home, Events, About, List Your Event, Be Our Partner, Our Sec
 - [ ] 2. The six folder tabs (first version done: hover on computers, tap to peek / tap to open on phones)
 - [ ] 3. Home page sections in order (placeholders in place)
 - [ ] 4. The other five tabs
-- [ ] 5. Effects: "ooze the fun" loading screen, intro spin-in, line-by-line text, uneven-gap text, cursor-following button
+- [ ] 5. Effects: "ooze the fun" loading screen (first version done), intro spin-in, line-by-line text, uneven-gap text, cursor-following button
 - [ ] 6. Events page: curated cards, filters, easy way to add events, old events hide automatically
 - [ ] 7. Email signups (guests list; hosts and partners list)
 - [ ] 8. 3D sandwich mascot (first version done: code-built, assembles on scroll, face pops on at the end)
