@@ -282,8 +282,14 @@ export function createMascot(root) {
       const mesh = meshes[focus.i];
       const a = focus.amount;
       const box = mesh.geometry.boundingBox;
+      // Turn it to face the viewer straight on: the camera looks down at 50 degrees, so tip the slab up by
+      // the other 40 and its top face points right at us (and any little sway settles out)
+      mesh.rotation.x += (Math.PI / 2 - ELEVATION) * a;
+      mesh.rotation.z *= 1 - a;
+      // Facing us, its on-screen height is its real depth. Grow it a little, but keep it inside the screen
       const widthPx = (box.max.x - box.min.x) * LAYERS[focus.i].size * ppu * camera.zoom;
-      const grow = Math.max(1, Math.min(1.3, (size.w * 0.9) / widthPx));
+      const heightPx = (box.max.z - box.min.z) * LAYERS[focus.i].size * ppu * camera.zoom;
+      const grow = Math.min(1.3, (size.w * 0.88) / widthPx, (size.h * 0.88) / heightPx);
       mesh.scale.setScalar(LAYERS[focus.i].size * (1 + (grow - 1) * a));
       camera.updateMatrixWorld(true);
       mesh.updateMatrixWorld(true);
