@@ -183,7 +183,7 @@ export function createMascot(root) {
     camera.bottom = -ch / 2 / ppu;
     tl.invalidate();
     tl.progress(tl.progress());
-    draw(0);
+    draw(lastTime); // redraw at the same moment, so a resize never makes the sandwich jump
   }
 
   // snap = jump straight to the scroll position with no spring (used for testing and first draw)
@@ -257,7 +257,8 @@ export function createMascot(root) {
           lo = Math.min(lo, corner.y);
         }
       });
-      return hi > LIMIT && lo > -LIMIT ? hi - LIMIT : lo < -LIMIT && hi < LIMIT ? lo + LIMIT : 0;
+      // Too high pushes the view up, too low pushes it down. Always a smooth blend, never a sudden switch
+      return Math.max(0, hi - LIMIT) + Math.min(0, lo + LIMIT);
     };
     for (let pass = 0; pass < 2; pass++) {
       const over = frameShift(); // in screen units: positive = too high
