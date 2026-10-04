@@ -28,14 +28,14 @@ const TILTS = [
 // fallback side colour, a size fix (the jelly photo is bigger than the others), and a tiny size
 // difference so no two layers' walls sit exactly on top of each other (that makes them flicker)
 const LAYERS = [
-  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, key: 0.3, shear: 0.095 },
+  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035 },
   { src: "/mascot/jelly.webp", wall: 26, side: "#8c0f1c", size: 0.88, bevel: 0.012 },
   { src: "/mascot/peanut-butter.webp", wall: 34, side: "#b87f3a", size: 1.012, bevel: 0.016 },
-  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, key: 0.3, shear: 0.095 },
+  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035 },
 ];
 // The colour wash behind a layer when it comes out front: bold, from the brand colours, chosen so each
 // layer pops (bread on brown, peanut butter on grape, jelly on honey)
-const BREAD_WASH = "radial-gradient(ellipse at 50% 45%, #c08a52 0%, #8b5a2b 48%, #4a2a14 100%)"; // light to dark brown
+const BREAD_WASH = "radial-gradient(ellipse at 50% 45%, #5e3a1e 0%, #432611 50%, #2a160a 100%)"; // dark brown, so the cream bread and golden crust stand out
 const WASH = [
   BREAD_WASH,
   "radial-gradient(ellipse at 50% 45%, #f0b95e 0%, #e2a64f 45%, #c68b3e 100%)",
@@ -330,7 +330,7 @@ export function createMascot(root) {
     // A colour wash behind the tapped layer, and the other layers fade right back
     if (backdrop) backdrop.style.opacity = focus.dim.toFixed(3);
     meshes.forEach((mesh, i) => {
-      const alpha = i === focus.i ? 1 : 1 - 0.82 * focus.dim;
+      const alpha = i === focus.i ? 1 : 1 - 0.94 * focus.dim;
       mesh.material.uniforms.uKey.value = i === focus.i ? focus.amount : 0;
       mesh.material.uniforms.uAlpha.value = alpha;
       mesh.material.transparent = alpha < 0.999;
