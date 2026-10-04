@@ -135,6 +135,14 @@ export function createMascot(root) {
     DAMPING = 2 * zeta * omega;
   };
   const corner = new THREE.Vector3();
+  // Tap a layer and it floats out to the front of the screen. focus.i is which layer (-1 = none) and
+  // focus.amount goes 0 -> 1 as it travels out
+  const focus = { i: -1, amount: 0 };
+  const FOCUS_DEPTH = 8; // how far it is pulled toward the viewer (so it passes in front of the others)
+  const v1 = new THREE.Vector3();
+  const v2 = new THREE.Vector3();
+  const v3 = new THREE.Vector3();
+  const Y_AXIS = new THREE.Vector3(0, 1, 0);
   let lastTime = 0;
   const meshes = [];
   let rest = [0, 0, 0, 0]; // where each slab sits when the sandwich is built
@@ -231,7 +239,7 @@ export function createMascot(root) {
         }
       }
       belowY = y;
-      mesh.position.y = y;
+      mesh.position.set(0, y, 0);
       mesh.rotation.set(p.x, p.turn, p.z + Math.sin(time * 1.1 + i) * 0.06 * floating);
     });
     turntable.rotation.y = spin.angle;
@@ -266,6 +274,29 @@ export function createMascot(root) {
       target.y += over * (camera.top / camera.zoom) / Math.cos(ELEVATION);
       camera.position.copy(target).addScaledVector(viewDir, 30);
       camera.lookAt(target);
+    }
+    // The tapped layer: slide it to the middle of the screen, pull it in front of the others and make it
+    // a little bigger (never wider than the screen). Everything else stays exactly where it was.
+    meshes.forEach((mesh, i) => mesh.scale.setScalar(LAYERS[i].size));
+    if (focus.i >= 0 && focus.amount > 0 && meshes[focus.i]) {
+      const mesh = meshes[focus.i];
+      const a = focus.amount;
+      const box = mesh.geometry.boundingBox;
+      const widthPx = (box.max.x - box.min.x) * LAYERS[focus.i].size * ppu * camera.zoom;
+      const grow = Math.max(1, Math.min(1.3, (size.w * 0.9) / widthPx));
+      mesh.scale.setScalar(LAYERS[focus.i].size * (1 + (grow - 1) * a));
+      camera.updateMatrixWorld(true);
+      mesh.updateMatrixWorld(true);
+      box.getCenter(v1);
+      mesh.localToWorld(v1); // the layer's middle, in the world
+      v2.copy(v1).applyMatrix4(camera.matrixWorldInverse); // ...and as seen by the camera (x, y = on screen)
+      const right = v3.setFromMatrixColumn(camera.matrixWorld, 0);
+      const up = v1.setFromMatrixColumn(camera.matrixWorld, 1);
+      const move = new THREE.Vector3()
+        .addScaledVector(right, -v2.x * a)
+        .addScaledVector(up, -v2.y * a)
+        .addScaledVector(viewDir, FOCUS_DEPTH * a);
+      mesh.position.add(move.applyAxisAngle(Y_AXIS, -spin.angle)); // the move, in the spinning turntable's own directions
     }
     renderer.render(scene, camera);
   }
@@ -351,9 +382,53 @@ export function createMascot(root) {
   new IntersectionObserver(([entry]) => (visible = entry.isIntersecting)).observe(root);
   gsap.ticker.add((time) => visible && draw(time));
 
-  // ---- Click or tap: the whole sandwich hops ----
-  root.addEventListener("click", () => {
-    gsap.fromTo(hop[0], { v: 0 }, { v: 1, duration: 0.16, yoyo: true, repeat: 1, ease: "power2.out", overwrite: "auto" });
+  // ---- Tap a layer: it floats out to the front. Tap anywhere (or scroll) to put it back. ----
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  const layerAt = (clientX, clientY) => {
+    const rect = root.getBoundingClientRect();
+    pointer.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+    raycaster.setFromCamera(pointer, camera);
+    const hit = raycaster.intersectObjects(meshes, false)[0];
+    return hit ? meshes.indexOf(hit.object) : -1;
+  };
+
+  let scrollAtFocus = 0;
+  const release = () => {
+    if (focus.i < 0) return;
+    gsap.to(focus, { amount: 0, duration: 0.5, ease: "power2.inOut", overwrite: true, onComplete: () => (focus.i = -1) });
+  };
+  const bringToFront = (i) => {
+    scrollAtFocus = window.scrollY;
+    const go = () => {
+      focus.i = i;
+      gsap.to(focus, { amount: 1, duration: 0.75, ease: "power3.inOut", overwrite: true });
+    };
+    if (focus.i >= 0 && focus.i !== i) {
+      gsap.to(focus, { amount: 0, duration: 0.35, ease: "power2.inOut", overwrite: true, onComplete: go });
+    } else go();
+  };
+  // Scrolling puts the layer back, so the sandwich can carry on building itself
+  window.addEventListener("scroll", () => {
+    if (focus.i >= 0 && Math.abs(window.scrollY - scrollAtFocus) > 12) release();
+  }, { passive: true });
+
+  // A tap is a quick press that barely moves. A scroll or drag is not a tap.
+  let down = null;
+  root.addEventListener("pointerdown", (e) => (down = { x: e.clientX, y: e.clientY, t: performance.now() }));
+  root.addEventListener("pointerup", (e) => {
+    if (!down) return;
+    const tap = Math.hypot(e.clientX - down.x, e.clientY - down.y) < 10 && performance.now() - down.t < 600;
+    down = null;
+    if (!tap) return;
+    const i = layerAt(e.clientX, e.clientY);
+    if (i < 0 || i === focus.i) release();
+    else bringToFront(i);
+  });
+  root.addEventListener("pointercancel", () => (down = null));
+  // Show a pointing hand over the layers (mouse only)
+  root.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "mouse") root.style.cursor = layerAt(e.clientX, e.clientY) >= 0 ? "pointer" : "default";
   });
 
   return { resize };
