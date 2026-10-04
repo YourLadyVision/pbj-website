@@ -28,18 +28,19 @@ const TILTS = [
 // fallback side colour, a size fix (the jelly photo is bigger than the others), and a tiny size
 // difference so no two layers' walls sit exactly on top of each other (that makes them flicker)
 const LAYERS = [
-  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, key: 0.3 },
+  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, key: 0.3, shear: 0.095 },
   { src: "/mascot/jelly.webp", wall: 26, side: "#8c0f1c", size: 0.88, bevel: 0.012 },
   { src: "/mascot/peanut-butter.webp", wall: 34, side: "#b87f3a", size: 1.012, bevel: 0.016 },
-  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, key: 0.3 },
+  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, key: 0.3, shear: 0.095 },
 ];
 // The colour wash behind a layer when it comes out front: bold, from the brand colours, chosen so each
-// layer pops (bread on strawberry, peanut butter on grape, jelly on honey)
+// layer pops (bread on brown, peanut butter on grape, jelly on honey)
+const BREAD_WASH = "radial-gradient(ellipse at 50% 45%, #c08a52 0%, #8b5a2b 48%, #4a2a14 100%)"; // light to dark brown
 const WASH = [
-  "radial-gradient(ellipse at 50% 45%, #e8384d 0%, #d7263d 45%, #a8182c 100%)",
+  BREAD_WASH,
   "radial-gradient(ellipse at 50% 45%, #f0b95e 0%, #e2a64f 45%, #c68b3e 100%)",
   "radial-gradient(ellipse at 50% 45%, #8a3d77 0%, #6b2d5c 45%, #3b1f2b 100%)",
-  "radial-gradient(ellipse at 50% 45%, #e8384d 0%, #d7263d 45%, #a8182c 100%)",
+  BREAD_WASH,
 ];
 const GAP = 0.004; // tiny space between layers so touching surfaces never fight over the same pixels
 
@@ -52,6 +53,7 @@ const vertexShader = /* glsl */ `
   uniform float uKey;   // 0..1: how much of the perspective fix is applied (only when a layer is out front)
   uniform vec3 uKeyBox; // the layer's middle x, front-most z and depth
   uniform float uKeyQ;  // how much wider the near edge is than the far edge in the photo
+  uniform vec2 uShear;  // half the layer's width, and how far (in world units) the crown corners are levelled
   attribute float wallU;
   varying float vWallU;
   varying vec2 vUv;
@@ -70,6 +72,9 @@ const vertexShader = /* glsl */ `
     vec3 shown = position;
     float v = clamp((position.z - uKeyBox.y + uKeyBox.z) / uKeyBox.z, 0.0, 1.0); // 0 = far edge, 1 = near edge
     shown.x = uKeyBox.x + (position.x - uKeyBox.x) * mix(1.0, 1.0 / (1.0 + uKeyQ * (v - 0.5)), uKey);
+    // The crown (the rounded top of a slice) was photographed a little lopsided: its right shoulder sits
+    // higher than the left. Level it by moving the right side down and the left side up, only up in the crown.
+    shown.z += uShear.y * clamp((position.x - uKeyBox.x) / uShear.x, -1.0, 1.0) * smoothstep(0.42, 0.18, v) * uKey;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(shown, 1.0);
   }
 `;
@@ -425,6 +430,7 @@ export function createMascot(root) {
       const kb = geometry.boundingBox;
       own.uniforms.uKey = { value: 0 };
       own.uniforms.uKeyQ = { value: layer.key || 0 };
+      own.uniforms.uShear = { value: new THREE.Vector2((kb.max.x - kb.min.x) / 2, (layer.shear || 0) * (kb.max.z - kb.min.z)) };
       own.uniforms.uKeyBox = { value: new THREE.Vector3((kb.min.x + kb.max.x) / 2, kb.max.z, kb.max.z - kb.min.z) };
       const mesh = new THREE.Mesh(geometry, own);
       mesh.scale.setScalar(layer.size);
