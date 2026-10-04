@@ -13,7 +13,7 @@
   - Page background: soft warm off-white (`#F9F9F7`), the same as Claude's light-mode background
   - Bread: soft cream (e.g. `#FFF4DC`) for cards and accents
   - Crust: toasted brown (e.g. `#8B5A2B`) for text and outlines
-- **Typography (same as noartmusic.com):** Chivo Mono (free) for body text and labels, all caps and justified; big, bold, tight all-caps headlines. Their headline font is Neue Haas Grotesk (paid), so we use Inter Tight as the free stand-in. If a licence for Neue Haas Grotesk is bought later, swap it in (`--display` in `src/style.css`).
+- **Typography (copied exactly from noartmusic.com):** Chivo Mono 400 for text and labels (no letter-spacing, line-height 1.2, all caps, justified paragraphs), headlines 700 with a fixed -1.44px letter-spacing and line-height 1, left-aligned. All sizes are multiples of one unit `--u` that scales with screen width (computers: width/90, tablets: width/52.125, phones: width/23.4375): text 0.75em, headlines 3em (2em on tablets and phones). Their headline font is Neue Haas Grotesk (paid, cannot be copied), so we use Helvetica Neue where installed, then Inter Tight. If a licence is bought, swap it in (`--display` in `src/style.css`).
 - Keep text readable: dark text on light backgrounds, good contrast.
 - Respect users who turn off motion (reduce animations when "reduced motion" is on).
 
