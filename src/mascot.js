@@ -194,7 +194,7 @@ export function createMascot(root) {
     .fromTo(cam, { target: () => 0.9 * spread }, { target: () => stackCenter, duration: 3.2, ease: "none" }, 0)
     .fromTo(cam, { zoom: 1 }, { zoom: 1 / 0.82, duration: 1.2, ease: "power2.inOut" }, 3.2);
 
-  if (import.meta.env.DEV) window.mascotDebug = { focus, spin, cam, piece, tl, turntable, renderer, scene, camera, draw: (t, snap) => draw(t, snap), tune }; // handy for testing in the browser
+  if (import.meta.env.DEV) window.mascotDebug = { gsap, focus, spin, cam, piece, tl, turntable, renderer, scene, camera, draw: (t, snap) => draw(t, snap), tune }; // handy for testing in the browser
 
   function resize() {
     const { clientWidth: cw, clientHeight: ch } = root;
@@ -480,25 +480,30 @@ export function createMascot(root) {
   };
 
   let scrollAtFocus = 0;
+  // The order matters for a seamless look. Going out: the other layers fade away first, THEN the tapped
+  // layer travels (it is drawn in front of everything while it moves, which is only safe once the others
+  // are gone). Coming back: it travels home first, and only then do the others fade back in around it.
+  let focusTl = null;
   const release = () => {
     if (focus.i < 0) return;
-    // Travel back first, then the other layers come back to full strength
-    gsap.timeline({ onComplete: () => (focus.i = -1) })
-      .to(focus, { amount: 0, duration: 0.6, ease: "power2.inOut", overwrite: true })
-      .to(focus, { dim: 0, duration: 0.25, ease: "power1.out" }, 0.35);
+    focusTl?.kill();
+    focusTl = gsap.timeline({ onComplete: () => (focus.i = -1) })
+      .to(focus, { amount: 0, duration: 0.8, ease: "power2.inOut" })
+      .to(focus, { dim: 0, duration: 0.3, ease: "power1.inOut" });
   };
   const bringToFront = (i) => {
     scrollAtFocus = window.scrollY;
     const go = () => {
       focus.i = i;
       if (backdrop) backdrop.style.background = WASH[i];
-      // The others fade back first, then the tapped layer glides out, so nothing pops
-      gsap.timeline()
-        .to(focus, { dim: 1, duration: 0.3, ease: "power1.out", overwrite: true })
-        .to(focus, { amount: 1, duration: 0.9, ease: "power3.inOut" }, 0.12);
+      focusTl?.kill();
+      focusTl = gsap.timeline()
+        .to(focus, { dim: 1, duration: 0.3, ease: "power1.inOut" })
+        .to(focus, { amount: 1, duration: 1, ease: "power2.inOut" });
     };
     if (focus.i >= 0 && focus.i !== i) {
-      gsap.to(focus, { amount: 0, duration: 0.4, ease: "power2.inOut", overwrite: true, onComplete: go });
+      focusTl?.kill();
+      focusTl = gsap.timeline({ onComplete: go }).to(focus, { amount: 0, duration: 0.5, ease: "power2.inOut" });
     } else go();
   };
   // Scrolling puts the layer back, so the sandwich can carry on building itself
