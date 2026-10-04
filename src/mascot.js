@@ -15,13 +15,13 @@ import { buildSlab, PHOTO_W, PHOTO_H } from "./slab.js";
 const ELEVATION = (50 * Math.PI) / 180; // how high above the sandwich we look from (matches the photos)
 
 // Heights of each slab's top face (bread width = 2 units), up is positive
-const APART = [-0.8, 0.35, 1.45, 2.6];
-// Tilts while floating apart (x, y, z radians), then they settle to flat
+const APART = [-0.8, 0.3, 1.4, 2.5]; // evenly spaced
+// Tilts while floating apart (x, y, z radians). Zero: every layer stays level with the others
 const TILTS = [
-  [0.05, 0, -0.08],
-  [-0.25, 0.3, 0.18],
-  [0.22, -0.35, -0.2],
-  [-0.3, 0.5, 0.25],
+  [0, 0, 0],
+  [0, 0, 0],
+  [0, 0, 0],
+  [0, 0, 0],
 ];
 
 // bread, jelly, peanut butter, bread: the photo, how tall its visible wall is (photo pixels), its
@@ -134,6 +134,7 @@ export function createMascot(root) {
     OMEGA = omega;
     DAMPING = 2 * zeta * omega;
   };
+  const corner = new THREE.Vector3();
   let lastTime = 0;
   const meshes = [];
   let rest = [0, 0, 0, 0]; // where each slab sits when the sandwich is built
@@ -159,7 +160,7 @@ export function createMascot(root) {
     );
   });
   tl.fromTo(spin, { angle: 0 }, { angle: Math.PI * 2, duration: 1.2, ease: "power3.inOut" }, 3.2)
-    .fromTo(cam, { target: () => 0.9 * spread + 0.13 }, { target: () => stackCenter, duration: 3.2, ease: "none" }, 0)
+    .fromTo(cam, { target: () => 0.9 * spread }, { target: () => stackCenter, duration: 3.2, ease: "none" }, 0)
     .fromTo(cam, { zoom: 1 }, { zoom: 1 / 0.82, duration: 1.2, ease: "power2.inOut" }, 3.2);
 
   if (import.meta.env.DEV) window.mascotDebug = { spin, cam, piece, tl, turntable, renderer, scene, camera, draw: (t, snap) => draw(t, snap), tune }; // handy for testing in the browser
@@ -175,7 +176,7 @@ export function createMascot(root) {
     const W = Math.min(cw * 0.95, ch * 0.8); // width of the whole photo on screen
     ppu = W / PHOTO_W;
     // Keep the whole floating-apart stack inside the hero, even on short screens
-    spread = Math.min(1, Math.max(0.35, (0.84 * ch / W - 0.54) / 0.73));
+    spread = Math.min(1, Math.max(0.35, (0.97 * ch / W - 0.54) / 0.73));
     camera.left = -cw / 2 / ppu;
     camera.right = cw / 2 / ppu;
     camera.top = ch / 2 / ppu;
@@ -240,6 +241,31 @@ export function createMascot(root) {
     camera.lookAt(target);
     camera.zoom = cam.zoom;
     camera.updateProjectionMatrix();
+    // Keep the whole sandwich inside the frame: if any layer would poke out of the top or bottom, slide
+    // the camera just enough to bring it back (smooth, because the layers themselves move smoothly)
+    const LIMIT = 0.96;
+    const frameShift = () => {
+      camera.updateMatrixWorld(true);
+      let hi = -Infinity;
+      let lo = Infinity;
+      meshes.forEach((mesh) => {
+        mesh.updateMatrixWorld(true);
+        const b = mesh.geometry.boundingBox;
+        for (let k = 0; k < 8; k++) {
+          corner.set(k & 1 ? b.max.x : b.min.x, k & 2 ? b.max.y : b.min.y, k & 4 ? b.max.z : b.min.z).applyMatrix4(mesh.matrixWorld).project(camera);
+          hi = Math.max(hi, corner.y);
+          lo = Math.min(lo, corner.y);
+        }
+      });
+      return hi > LIMIT && lo > -LIMIT ? hi - LIMIT : lo < -LIMIT && hi < LIMIT ? lo + LIMIT : 0;
+    };
+    for (let pass = 0; pass < 2; pass++) {
+      const over = frameShift(); // in screen units: positive = too high
+      if (!over) break;
+      target.y += over * (camera.top / camera.zoom) / Math.cos(ELEVATION);
+      camera.position.copy(target).addScaledVector(viewDir, 30);
+      camera.lookAt(target);
+    }
     renderer.render(scene, camera);
   }
 
@@ -287,6 +313,7 @@ export function createMascot(root) {
     rest = [0, 0, 0, 0];
     LAYERS.forEach((layer, i) => {
       const { geometry, material, thickness } = slabs.get(layer.src);
+      geometry.computeBoundingBox();
       const mesh = new THREE.Mesh(geometry, material);
       mesh.scale.setScalar(layer.size);
       meshes.push(mesh);
