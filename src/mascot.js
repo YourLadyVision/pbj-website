@@ -65,6 +65,7 @@ const fragmentShader = /* glsl */ `
   uniform vec3 toCamera;
   uniform vec3 lightDir;
   uniform vec3 sideColor;
+  uniform float uAlpha;
   varying float vWallU;
   varying vec2 vUv;
   varying vec3 vPos;
@@ -91,7 +92,7 @@ const fragmentShader = /* glsl */ `
 
     // Same light as at rest (so the photo is untouched), brighter or darker as the slab turns
     col *= clamp(light(vNormalWorld) / light(n), 0.5, 1.3);
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = vec4(col, uAlpha);
     #include <colorspace_fragment>
   }
 `;
@@ -137,8 +138,8 @@ export function createMascot(root) {
   const corner = new THREE.Vector3();
   // Tap a layer and it floats out to the front of the screen. focus.i is which layer (-1 = none) and
   // focus.amount goes 0 -> 1 as it travels out
-  const focus = { i: -1, amount: 0 };
-  const FOCUS_DEPTH = 8; // how far it is pulled toward the viewer (so it passes in front of the others)
+  const focus = { i: -1, amount: 0, dim: 0 };
+  const squareYaw = []; // per layer: the turn that makes its edges run level with the screen
   const v1 = new THREE.Vector3();
   const v2 = new THREE.Vector3();
   const v3 = new THREE.Vector3();
@@ -171,7 +172,7 @@ export function createMascot(root) {
     .fromTo(cam, { target: () => 0.9 * spread }, { target: () => stackCenter, duration: 3.2, ease: "none" }, 0)
     .fromTo(cam, { zoom: 1 }, { zoom: 1 / 0.82, duration: 1.2, ease: "power2.inOut" }, 3.2);
 
-  if (import.meta.env.DEV) window.mascotDebug = { spin, cam, piece, tl, turntable, renderer, scene, camera, draw: (t, snap) => draw(t, snap), tune }; // handy for testing in the browser
+  if (import.meta.env.DEV) window.mascotDebug = { focus, spin, cam, piece, tl, turntable, renderer, scene, camera, draw: (t, snap) => draw(t, snap), tune }; // handy for testing in the browser
 
   function resize() {
     const { clientWidth: cw, clientHeight: ch } = root;
@@ -278,33 +279,55 @@ export function createMascot(root) {
     // The tapped layer: slide it to the middle of the screen, pull it in front of the others and make it
     // a little bigger (never wider than the screen). Everything else stays exactly where it was.
     meshes.forEach((mesh, i) => mesh.scale.setScalar(LAYERS[i].size));
-    if (focus.i >= 0 && focus.amount > 0 && meshes[focus.i]) {
+    const showing = focus.i >= 0 && focus.amount > 0.001 && meshes[focus.i];
+    if (showing) {
       const mesh = meshes[focus.i];
+      const size_ = LAYERS[focus.i].size;
       const a = focus.amount;
       const box = mesh.geometry.boundingBox;
-      // Turn it to face the viewer straight on: the camera looks down at 50 degrees, so tip the slab up by
-      // the other 40 and its top face points right at us (and any little sway settles out)
+      // Tip it up so its top faces us, and straighten it so its edges run level with the screen
+      mesh.rotation.y += squareYaw[focus.i] * a;
       mesh.rotation.x += (Math.PI / 2 - ELEVATION) * a;
       mesh.rotation.z *= 1 - a;
-      // Facing us, its on-screen height is its real depth. Grow it a little, but keep it inside the screen
-      const widthPx = (box.max.x - box.min.x) * LAYERS[focus.i].size * ppu * camera.zoom;
-      const heightPx = (box.max.z - box.min.z) * LAYERS[focus.i].size * ppu * camera.zoom;
+      // Facing us its on-screen height is its real depth. Grow a little, but stay inside the screen
+      const widthPx = (box.max.x - box.min.x) * size_ * ppu * camera.zoom;
+      const heightPx = (box.max.z - box.min.z) * size_ * ppu * camera.zoom;
       const grow = Math.min(1.3, (size.w * 0.88) / widthPx, (size.h * 0.88) / heightPx);
-      mesh.scale.setScalar(LAYERS[focus.i].size * (1 + (grow - 1) * a));
+      mesh.scale.setScalar(size_ * (1 + (grow - 1) * a));
       camera.updateMatrixWorld(true);
       mesh.updateMatrixWorld(true);
       box.getCenter(v1);
       mesh.localToWorld(v1); // the layer's middle, in the world
       v2.copy(v1).applyMatrix4(camera.matrixWorldInverse); // ...and as seen by the camera (x, y = on screen)
+      // Glide to the middle of the screen, staying level with the camera (it only moves across the screen)
       const right = v3.setFromMatrixColumn(camera.matrixWorld, 0);
       const up = v1.setFromMatrixColumn(camera.matrixWorld, 1);
-      const move = new THREE.Vector3()
-        .addScaledVector(right, -v2.x * a)
-        .addScaledVector(up, -v2.y * a)
-        .addScaledVector(viewDir, FOCUS_DEPTH * a);
-      mesh.position.add(move.applyAxisAngle(Y_AXIS, -spin.angle)); // the move, in the spinning turntable's own directions
+      const move = new THREE.Vector3().addScaledVector(right, -v2.x * a).addScaledVector(up, -v2.y * a);
+      mesh.position.add(move.applyAxisAngle(Y_AXIS, -spin.angle)); // in the spinning turntable's own directions
     }
-    renderer.render(scene, camera);
+    // The other layers fade back a little while one is out front
+    meshes.forEach((mesh, i) => {
+      const alpha = i === focus.i ? 1 : 1 - 0.7 * focus.dim;
+      mesh.material.uniforms.uAlpha.value = alpha;
+      mesh.material.transparent = alpha < 0.999;
+    });
+    if (showing) {
+      // Draw the sandwich, then the tapped layer on top of everything, so it can never be cut by
+      // (or cut through) the layers it is travelling past
+      const front = meshes[focus.i];
+      renderer.autoClear = false;
+      renderer.clear();
+      front.visible = false;
+      renderer.render(scene, camera);
+      renderer.clearDepth();
+      meshes.forEach((mesh) => (mesh.visible = false));
+      front.visible = true;
+      renderer.render(scene, camera);
+      meshes.forEach((mesh) => (mesh.visible = true));
+      renderer.autoClear = true;
+    } else {
+      renderer.render(scene, camera);
+    }
   }
 
   // ---- Build the slabs once the photos have loaded ----
@@ -352,7 +375,35 @@ export function createMascot(root) {
     LAYERS.forEach((layer, i) => {
       const { geometry, material, thickness } = slabs.get(layer.src);
       geometry.computeBoundingBox();
-      const mesh = new THREE.Mesh(geometry, material);
+      if (squareYaw[i] === undefined) {
+        // Find the turn (up to 45 degrees either way) that makes the layer's outline the snuggest rectangle
+        const pos = geometry.attributes.position;
+        let best = 0;
+        let bestArea = Infinity;
+        for (let deg = -45; deg <= 45; deg += 0.5) {
+          const c = Math.cos((deg * Math.PI) / 180);
+          const sn = Math.sin((deg * Math.PI) / 180);
+          let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+          for (let v = 0; v < pos.count; v += 3) {
+            const x = pos.getX(v) * c + pos.getZ(v) * sn;
+            const z = -pos.getX(v) * sn + pos.getZ(v) * c;
+            if (x < x0) x0 = x;
+            if (x > x1) x1 = x;
+            if (z < z0) z0 = z;
+            if (z > z1) z1 = z;
+          }
+          if ((x1 - x0) * (z1 - z0) < bestArea) {
+            bestArea = (x1 - x0) * (z1 - z0);
+            best = deg;
+          }
+        }
+        squareYaw[i] = (best * Math.PI) / 180;
+      }
+      // Each layer gets its own copy of the material (sharing the textures), so one can fade on its own
+      const own = material.clone();
+      Object.keys(material.uniforms).forEach((k) => (own.uniforms[k] = material.uniforms[k]));
+      own.uniforms.uAlpha = { value: 1 };
+      const mesh = new THREE.Mesh(geometry, own);
       mesh.scale.setScalar(layer.size);
       meshes.push(mesh);
       turntable.add(mesh);
@@ -402,16 +453,22 @@ export function createMascot(root) {
   let scrollAtFocus = 0;
   const release = () => {
     if (focus.i < 0) return;
-    gsap.to(focus, { amount: 0, duration: 0.5, ease: "power2.inOut", overwrite: true, onComplete: () => (focus.i = -1) });
+    // Travel back first, then the other layers come back to full strength
+    gsap.timeline({ onComplete: () => (focus.i = -1) })
+      .to(focus, { amount: 0, duration: 0.6, ease: "power2.inOut", overwrite: true })
+      .to(focus, { dim: 0, duration: 0.25, ease: "power1.out" }, 0.35);
   };
   const bringToFront = (i) => {
     scrollAtFocus = window.scrollY;
     const go = () => {
       focus.i = i;
-      gsap.to(focus, { amount: 1, duration: 0.75, ease: "power3.inOut", overwrite: true });
+      // The others fade back first, then the tapped layer glides out, so nothing pops
+      gsap.timeline()
+        .to(focus, { dim: 1, duration: 0.3, ease: "power1.out", overwrite: true })
+        .to(focus, { amount: 1, duration: 0.9, ease: "power3.inOut" }, 0.12);
     };
     if (focus.i >= 0 && focus.i !== i) {
-      gsap.to(focus, { amount: 0, duration: 0.35, ease: "power2.inOut", overwrite: true, onComplete: go });
+      gsap.to(focus, { amount: 0, duration: 0.4, ease: "power2.inOut", overwrite: true, onComplete: go });
     } else go();
   };
   // Scrolling puts the layer back, so the sandwich can carry on building itself
