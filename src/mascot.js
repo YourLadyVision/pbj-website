@@ -159,7 +159,7 @@ export function createMascot(root) {
     );
   });
   tl.fromTo(spin, { angle: 0 }, { angle: Math.PI * 2, duration: 1.2, ease: "power3.inOut" }, 3.2)
-    .fromTo(cam, { target: () => 0.9 * spread }, { target: () => stackCenter, duration: 3.2, ease: "none" }, 0)
+    .fromTo(cam, { target: () => 0.9 * spread + 0.13 }, { target: () => stackCenter, duration: 3.2, ease: "none" }, 0)
     .fromTo(cam, { zoom: 1 }, { zoom: 1 / 0.82, duration: 1.2, ease: "power2.inOut" }, 3.2);
 
   if (import.meta.env.DEV) window.mascotDebug = { spin, cam, piece, tl, turntable, renderer, scene, camera, draw: (t, snap) => draw(t, snap), tune }; // handy for testing in the browser
@@ -172,10 +172,10 @@ export function createMascot(root) {
     if (cw === size.w && ch === size.h) return;
     renderer.setSize(cw, ch, false);
     size = { w: cw, h: ch };
-    const W = Math.min(cw * 0.95, ch * 0.64); // width of the whole photo on screen
+    const W = Math.min(cw * 0.95, ch * 0.8); // width of the whole photo on screen
     ppu = W / PHOTO_W;
     // Keep the whole floating-apart stack inside the hero, even on short screens
-    spread = Math.min(1, Math.max(0.35, (0.62 * ch / W - 0.54) / 0.73));
+    spread = Math.min(1, Math.max(0.35, (0.84 * ch / W - 0.54) / 0.73));
     camera.left = -cw / 2 / ppu;
     camera.right = cw / 2 / ppu;
     camera.top = ch / 2 / ppu;
