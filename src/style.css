@@ -224,6 +224,7 @@ h2 { max-width: 22ch; }
 .hero-sub { max-width: 32ch; margin: 0 0 2rem; }
 
 .focus-backdrop {
+  display: none; /* switched off for now: the colour washes (see WASH in mascot.js) come back later */
   position: absolute;
   inset: 0;
   opacity: 0;
