@@ -216,10 +216,6 @@ h2 { max-width: 22ch; }
 .hero {
   position: relative;
   height: 100vh;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  align-items: center;
-  padding: 0 clamp(1.5rem, 5vw, 5rem);
   overflow: hidden;
 }
 
@@ -228,9 +224,8 @@ h2 { max-width: 22ch; }
 .hero-sub { max-width: 32ch; margin: 0 0 2rem; }
 
 .mascot {
-  position: relative;
-  height: 100%;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
   cursor: pointer;
 }
 .mascot canvas {
@@ -329,9 +324,6 @@ h2 { max-width: 22ch; }
 
   .hero {
     height: calc(100svh - var(--bar));
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-    padding-top: 1.5rem;
   }
   .hero-sub { margin-bottom: 1.25rem; }
 }

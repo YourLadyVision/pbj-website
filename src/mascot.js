@@ -172,10 +172,10 @@ export function createMascot(root) {
     if (cw === size.w && ch === size.h) return;
     renderer.setSize(cw, ch, false);
     size = { w: cw, h: ch };
-    const W = Math.min(cw * 0.95, ch * 0.58); // width of the whole photo on screen
+    const W = Math.min(cw * 0.95, ch * 0.64); // width of the whole photo on screen
     ppu = W / PHOTO_W;
     // Keep the whole floating-apart stack inside the hero, even on short screens
-    spread = Math.min(1, Math.max(0.35, (0.7 * ch / W - 0.54) / 0.73));
+    spread = Math.min(1, Math.max(0.35, (0.62 * ch / W - 0.54) / 0.73));
     camera.left = -cw / 2 / ppu;
     camera.right = cw / 2 / ppu;
     camera.top = ch / 2 / ppu;
