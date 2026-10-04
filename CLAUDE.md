@@ -13,6 +13,7 @@
   - Page background: soft warm off-white (`#F9F9F7`), the same as Claude's light-mode background
   - Bread: soft cream (e.g. `#FFF4DC`) for cards and accents
   - Crust: toasted brown (e.g. `#8B5A2B`) for text and outlines
+- **Typography (same as noartmusic.com):** Chivo Mono (free) for body text and labels, all caps and justified; big, bold, tight all-caps headlines. Their headline font is Neue Haas Grotesk (paid), so we use Inter Tight as the free stand-in. If a licence for Neue Haas Grotesk is bought later, swap it in (`--display` in `src/style.css`).
 - Keep text readable: dark text on light backgrounds, good contrast.
 - Respect users who turn off motion (reduce animations when "reduced motion" is on).
 

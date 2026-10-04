@@ -16,8 +16,10 @@
   /* Paper grain: a small tile of noise, multiplied over each folder's colour */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='.3 0 0 0 .8 .3 0 0 0 .8 .3 0 0 0 .8 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --radius: 22px;
-  --display: "Baloo 2", system-ui, sans-serif;
-  --mono: "Space Mono", ui-monospace, monospace;
+  /* Same type as noartmusic.com: Chivo Mono for text, and Inter Tight standing in for their (paid)
+     Neue Haas Grotesk for headlines */
+  --display: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: "Chivo Mono", ui-monospace, monospace;
 }
 
 * { box-sizing: border-box; }
@@ -28,21 +30,32 @@ body {
   background: var(--page);
   color: var(--ink);
   font-family: var(--mono);
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.2;
+  text-transform: uppercase;
   overflow-x: hidden;
 }
+input { text-transform: none; } /* emails are typed in lower case */
 
+/* Big, bold, tight, all-caps headlines and justified text, like noartmusic.com */
 h1, h2 {
   font-family: var(--display);
-  font-weight: 800;
-  line-height: 1;
+  font-weight: 700;
+  line-height: 0.95;
   margin: 0;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.04em;
+  text-align: justify;
+  hyphens: none;
 }
 
-h1 { font-size: clamp(2.8rem, 6.5vw, 6rem); }
-h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
+h1 { font-size: clamp(2.6rem, 6.2vw, 5.6rem); }
+h2 { font-size: clamp(2rem, 4.2vw, 3.6rem); max-width: 22ch; }
+
+.hero-sub, .placeholder {
+  text-align: justify;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
 
 .kicker {
   font-size: 0.8rem;
@@ -56,9 +69,11 @@ h2 { font-size: clamp(2rem, 4vw, 3.4rem); max-width: 18ch; }
 /* ---------- Buttons ---------- */
 .btn {
   display: inline-block;
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: 1.15rem;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--bread);
   background: var(--strawberry);
   border: 0;
