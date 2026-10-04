@@ -223,6 +223,12 @@ h2 { max-width: 22ch; }
 .hero-text h1 { margin-bottom: 1.25rem; }
 .hero-sub { max-width: 32ch; margin: 0 0 2rem; }
 
+.focus-backdrop {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
 .mascot {
   position: absolute;
   inset: 0;

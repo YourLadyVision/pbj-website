@@ -28,10 +28,18 @@ const TILTS = [
 // fallback side colour, a size fix (the jelly photo is bigger than the others), and a tiny size
 // difference so no two layers' walls sit exactly on top of each other (that makes them flicker)
 const LAYERS = [
-  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035 },
+  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, key: 0.3 },
   { src: "/mascot/jelly.webp", wall: 26, side: "#8c0f1c", size: 0.88, bevel: 0.012 },
   { src: "/mascot/peanut-butter.webp", wall: 34, side: "#b87f3a", size: 1.012, bevel: 0.016 },
-  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035 },
+  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, key: 0.3 },
+];
+// The colour wash behind a layer when it comes out front: bold, from the brand colours, chosen so each
+// layer pops (bread on strawberry, peanut butter on grape, jelly on honey)
+const WASH = [
+  "radial-gradient(ellipse at 50% 45%, #e8384d 0%, #d7263d 45%, #a8182c 100%)",
+  "radial-gradient(ellipse at 50% 45%, #f0b95e 0%, #e2a64f 45%, #c68b3e 100%)",
+  "radial-gradient(ellipse at 50% 45%, #8a3d77 0%, #6b2d5c 45%, #3b1f2b 100%)",
+  "radial-gradient(ellipse at 50% 45%, #e8384d 0%, #d7263d 45%, #a8182c 100%)",
 ];
 const GAP = 0.004; // tiny space between layers so touching surfaces never fight over the same pixels
 
@@ -41,6 +49,9 @@ const vertexShader = /* glsl */ `
   uniform vec3 photoRight;
   uniform vec3 photoUp;
   uniform vec2 photoSize;
+  uniform float uKey;   // 0..1: how much of the perspective fix is applied (only when a layer is out front)
+  uniform vec3 uKeyBox; // the layer's middle x, front-most z and depth
+  uniform float uKeyQ;  // how much wider the near edge is than the far edge in the photo
   attribute float wallU;
   varying float vWallU;
   varying vec2 vUv;
@@ -54,7 +65,12 @@ const vertexShader = /* glsl */ `
     vWallU = wallU;
     vNormalObj = normal;
     vNormalWorld = normalize(mat3(modelMatrix) * normal);
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    // The photo was taken in perspective, so the near edge of a slice looks wider than the far edge. When
+    // the slice faces us, squeeze the near end and stretch the far end so its sides run straight.
+    vec3 shown = position;
+    float v = clamp((position.z - uKeyBox.y + uKeyBox.z) / uKeyBox.z, 0.0, 1.0); // 0 = far edge, 1 = near edge
+    shown.x = uKeyBox.x + (position.x - uKeyBox.x) * mix(1.0, 1.0 / (1.0 + uKeyQ * (v - 0.5)), uKey);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(shown, 1.0);
   }
 `;
 const fragmentShader = /* glsl */ `
@@ -135,6 +151,7 @@ export function createMascot(root) {
     OMEGA = omega;
     DAMPING = 2 * zeta * omega;
   };
+  const backdrop = root.parentElement.querySelector(".focus-backdrop");
   const corner = new THREE.Vector3();
   // Tap a layer and it floats out to the front of the screen. focus.i is which layer (-1 = none) and
   // focus.amount goes 0 -> 1 as it travels out
@@ -305,9 +322,11 @@ export function createMascot(root) {
       const move = new THREE.Vector3().addScaledVector(right, -v2.x * a).addScaledVector(up, -v2.y * a);
       mesh.position.add(move.applyAxisAngle(Y_AXIS, -spin.angle)); // in the spinning turntable's own directions
     }
-    // The other layers fade back a little while one is out front
+    // A colour wash behind the tapped layer, and the other layers fade right back
+    if (backdrop) backdrop.style.opacity = focus.dim.toFixed(3);
     meshes.forEach((mesh, i) => {
-      const alpha = i === focus.i ? 1 : 1 - 0.7 * focus.dim;
+      const alpha = i === focus.i ? 1 : 1 - 0.82 * focus.dim;
+      mesh.material.uniforms.uKey.value = i === focus.i ? focus.amount : 0;
       mesh.material.uniforms.uAlpha.value = alpha;
       mesh.material.transparent = alpha < 0.999;
     });
@@ -403,6 +422,10 @@ export function createMascot(root) {
       const own = material.clone();
       Object.keys(material.uniforms).forEach((k) => (own.uniforms[k] = material.uniforms[k]));
       own.uniforms.uAlpha = { value: 1 };
+      const kb = geometry.boundingBox;
+      own.uniforms.uKey = { value: 0 };
+      own.uniforms.uKeyQ = { value: layer.key || 0 };
+      own.uniforms.uKeyBox = { value: new THREE.Vector3((kb.min.x + kb.max.x) / 2, kb.max.z, kb.max.z - kb.min.z) };
       const mesh = new THREE.Mesh(geometry, own);
       mesh.scale.setScalar(layer.size);
       meshes.push(mesh);
@@ -462,6 +485,7 @@ export function createMascot(root) {
     scrollAtFocus = window.scrollY;
     const go = () => {
       focus.i = i;
+      if (backdrop) backdrop.style.background = WASH[i];
       // The others fade back first, then the tapped layer glides out, so nothing pops
       gsap.timeline()
         .to(focus, { dim: 1, duration: 0.3, ease: "power1.out", overwrite: true })
