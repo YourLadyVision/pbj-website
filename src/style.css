@@ -1,14 +1,14 @@
 /* PB&J palette — placeholders until the final palette arrives (see CLAUDE.md) */
 :root {
   --peanut: #c68b3e;
-  --honey: #e2a64f;
+  --honey: #e8af45; /* test palette: primary */
   --grape: #6b2d5c;
-  --strawberry: #d7263d;
+  --strawberry: #c82828; /* test palette: secondary */
   --bread: #fff4dc;
-  --crust: #8b5a2b;
+  --crust: #563201; /* test palette: accent */
   --night: #3b1f2b;
-  --ink: #3b2414;
-  --page: #f9f9f7; /* soft warm off-white, the same as Claude's light-mode background */
+  --ink: #1f1200; /* test palette: text */
+  --page: #fff8eb; /* test palette: background (realtimecolors.com, light mode) */
 
   --tab-size: 80px;
   --body-w: 14px;
