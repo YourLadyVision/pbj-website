@@ -302,33 +302,32 @@ export function createMascot(root) {
     // The tapped layer: slide it to the middle of the screen, pull it in front of the others and make it
     // a little bigger (never wider than the screen). Everything else stays exactly where it was.
     meshes.forEach((mesh, i) => mesh.scale.setScalar(LAYERS[i].size));
-    // The tapped layer travels in three smooth parts, all in one continuous motion:
-    //  1. it slides out sideways, level with where it was (so it can never touch the other layers),
-    //  2. once clear, it swings round in a half-circle toward the front of the screen, drawn nearer to us
-    //     than everything else (so it passes in front, never through),
-    //  3. as it arrives it turns to face us square-on and grows.
-    // Coming back is exactly the same path in reverse.
+    // The tapped layer flows out to the front in one continuous, curving motion:
+    //  - it swings out to the side just far enough to clear the stack (a half-circle lobe), then curves
+    //    back in to the middle of the screen,
+    //  - at the far side of the swing it is moved nearer to us than everything else (nothing on screen
+    //    changes when that happens, because it is already clear of the stack), so it passes in front,
+    //  - as it comes round it turns to face us square-on.
+    // Coming back is the same motion in reverse. Sizes never change (except on a very narrow screen,
+    // where the whole view eases out a touch so the swing fits).
     if (focus.i >= 0 && focus.amount > 0.0005 && meshes[focus.i]) {
       const mesh = meshes[focus.i];
       const size_ = LAYERS[focus.i].size;
-      const a = focus.amount;
+      const u = focus.amount;
       const ease = (x) => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
-      const p1 = ease(a / 0.28); // slide out
-      const p2 = ease((a - 0.28) / 0.5); // half-circle to the front
-      const turn = ease((a - 0.3) / 0.7); // turn square-on and grow
+      const lobe = Math.sin(Math.PI * u); // 0 at both ends, 1 at the far side of the swing
+      const sm = ease(u); // 0 -> 1 across the whole trip
+      const turn = ease((u - 0.35) / 0.65);
       const box = mesh.geometry.boundingBox;
       const L = (box.max.x - box.min.x) * size_;
       let stackW = 0;
       meshes.forEach((m, j) => (stackW = Math.max(stackW, (m.geometry.boundingBox.max.x - m.geometry.boundingBox.min.x) * LAYERS[j].size)));
-      // The view breathes out a little while a layer is out at the side, so there is room for it on any
-      // screen (a lot of room is needed on a phone), and breathes back in as the layer arrives in front
-      const halfW0 = ((size.w / 2) / (ppu * cam.zoom)) * 0.8; // half the screen width in world units (leaving a margin)
-      const zMin = Math.min(1, Math.max(0.55, halfW0 / (0.65 * stackW + 1.15 * L)));
-      const zf = 1 - (1 - zMin) * p1 * (1 - p2);
-      camera.zoom = cam.zoom * zf;
+      const clearX = 0.52 * (stackW + L); // far enough out to be clear of the stack
+      // Only on a narrow screen: ease the view out a little so the swing fits (desktop stays at 1)
+      const halfW0 = ((size.w / 2) / (ppu * cam.zoom)) * 0.9;
+      const zMin = Math.min(1, Math.max(0.4, halfW0 / (clearX + L / 2)));
+      camera.zoom = cam.zoom * (1 - (1 - zMin) * lobe);
       camera.updateProjectionMatrix();
-      const k = Math.min(1, Math.max(0.3, (halfW0 / zMin - 0.65 * stackW) / (1.15 * L)));
-      const slide = 0.65 * (stackW + k * L);
       // Where the layer's middle is on screen to begin with
       mesh.scale.setScalar(size_);
       camera.updateMatrixWorld(true);
@@ -338,28 +337,20 @@ export function createMascot(root) {
       v2.copy(v1).applyMatrix4(camera.matrixWorldInverse);
       const x0 = v2.x;
       const y0 = v2.y;
-      // Turn it to face us (tip up, and straighten its edges) and size it
+      // Turn it to face us (tip up, and straighten its edges)
       mesh.rotation.y += squareYaw[focus.i] * turn;
       mesh.rotation.x += (Math.PI / 2 - ELEVATION) * turn;
       mesh.rotation.z *= 1 - turn;
-      const widthPx = L * ppu * cam.zoom;
-      const heightPx = (box.max.z - box.min.z) * size_ * ppu * cam.zoom;
-      const grow = Math.min(1.3, (size.w * 0.88) / widthPx, (size.h * 0.88) / heightPx);
-      mesh.scale.setScalar(size_ * (k * p1 + (1 - p1)) * (1 - turn) + size_ * grow * turn);
       mesh.updateMatrixWorld(true);
       box.getCenter(v1);
       mesh.localToWorld(v1);
-      v2.copy(v1).applyMatrix4(camera.matrixWorldInverse); // the middle now (after turning and sizing)
-      // The path on screen: slide to the side, then a half-circle to the middle of the screen
-      const sideX = x0 + slide;
-      const dist = Math.hypot(sideX, y0);
-      const arc = Math.sin(Math.PI * p2);
-      const t = (1 - Math.cos(Math.PI * p2)) / 2;
-      const wantX = x0 + slide * p1 + (0 - sideX) * t;
-      // Swing out toward the side of the screen with more room (down for the upper layers, up for the lower ones)
-      const wantY = y0 + (0 - y0) * t + (y0 < 0 ? 0.35 : -0.35) * dist * arc;
-      // Pulled toward the viewer once it is out at the side (clear of the stack), so it passes in front
-      const toward = FOCUS_DEPTH * ease(p2 / 0.4);
+      v2.copy(v1).applyMatrix4(camera.matrixWorldInverse); // the middle now (after turning)
+      // The path on screen: out to the side and round into the middle
+      const swing = clearX * lobe;
+      const wantX = x0 * (1 - sm) + swing;
+      const wantY = y0 * (1 - sm) + (y0 < 0 ? 0.1 : -0.1) * clearX * lobe;
+      // Nearer to us once it is out at the side and clear of the stack (invisible when it happens)
+      const toward = FOCUS_DEPTH * (u >= 0.5 ? 1 : ease((swing / clearX - 0.85) / 0.15)); // and it stays in front from then on
       const right = v3.setFromMatrixColumn(camera.matrixWorld, 0);
       const up = v1.setFromMatrixColumn(camera.matrixWorld, 1);
       const move = new THREE.Vector3()
@@ -503,7 +494,7 @@ export function createMascot(root) {
   const release = () => {
     if (focus.i < 0) return;
     focusTl?.kill();
-    focusTl = gsap.timeline({ onComplete: () => (focus.i = -1) }).to(focus, { amount: 0, duration: 1.4, ease: "power1.inOut" });
+    focusTl = gsap.timeline({ onComplete: () => (focus.i = -1) }).to(focus, { amount: 0, duration: 1.2, ease: "sine.inOut" });
   };
   const bringToFront = (i) => {
     scrollAtFocus = window.scrollY;
@@ -511,7 +502,7 @@ export function createMascot(root) {
       focus.i = i;
       if (backdrop) backdrop.style.background = WASH[i];
       focusTl?.kill();
-      focusTl = gsap.timeline().to(focus, { amount: 1, duration: 1.6, ease: "power1.inOut" });
+      focusTl = gsap.timeline().to(focus, { amount: 1, duration: 1.4, ease: "sine.inOut" });
     };
     if (focus.i >= 0 && focus.i !== i) {
       focusTl?.kill();
