@@ -28,10 +28,10 @@ const TILTS = [
 // fallback side colour, a size fix (the jelly photo is bigger than the others), and a tiny size
 // difference so no two layers' walls sit exactly on top of each other (that makes them flicker)
 const LAYERS = [
-  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, shine: [0.14, 22, 1.2] },
-  { src: "/mascot/jelly.webp", wall: 26, side: "#8c0f1c", size: 0.88, bevel: 0.012, shine: [0.75, 90, 3.5] },
-  { src: "/mascot/peanut-butter.webp", wall: 34, side: "#b87f3a", size: 1.012, bevel: 0.016, shine: [0.4, 40, 2.4] },
-  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, shine: [0.14, 22, 1.2] },
+  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, shine: [0.07, 22, 1.2] },
+  { src: "/mascot/jelly.webp", wall: 26, side: "#8c0f1c", size: 0.88, bevel: 0.012, shine: [0.4, 80, 3] },
+  { src: "/mascot/peanut-butter.webp", wall: 34, side: "#b87f3a", size: 1.012, bevel: 0.016, shine: [0.18, 40, 2] },
+  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, shine: [0.07, 22, 1.2] },
 ];
 // The colour wash behind a layer when it comes out front: bold, from the brand colours, chosen so each
 // layer pops (bread on brown, peanut butter on grape, jelly on honey)
@@ -61,6 +61,8 @@ const vertexShader = /* glsl */ `
   varying vec3 vNormalObj;
   varying vec3 vNormalWorld;
   varying vec3 vNormalView;
+  varying vec3 vPhotoRightV;
+  varying vec3 vPhotoUpV;
   void main() {
     vec2 screen = vec2(dot(position, photoRight), dot(position, photoUp));
     vUv = screen / photoSize + 0.5;
@@ -69,6 +71,8 @@ const vertexShader = /* glsl */ `
     vNormalObj = normal;
     vNormalWorld = normalize(mat3(modelMatrix) * normal);
     vNormalView = normalize(normalMatrix * normal);
+    vPhotoRightV = normalize(normalMatrix * photoRight);
+    vPhotoUpV = normalize(normalMatrix * photoUp);
     // The photo was taken in perspective, so the near edge of a slice looks wider than the far edge. When
     // the slice faces us, squeeze the near end and stretch the far end so its sides run straight.
     vec3 shown = position;
@@ -92,7 +96,10 @@ const fragmentShader = /* glsl */ `
   uniform float uDim; // 0..1: darkens a layer that is behind the highlighted one
   uniform float uGloss; // 0..1: how much of the 3D shine is switched on (only for a layer that has left the stack)
   uniform vec3 uShine;  // how glossy this food is: strength, sharpness, bumpiness
+  uniform vec2 photoSize;
   varying vec3 vNormalView;
+  varying vec3 vPhotoRightV;
+  varying vec3 vPhotoUpV;
   varying float vWallU;
   varying vec2 vUv;
   varying vec3 vPos;
@@ -119,21 +126,39 @@ const fragmentShader = /* glsl */ `
 
     // Same light as at rest (so the photo is untouched), brighter or darker as the slab turns
     col *= clamp(light(vNormalWorld) / light(n), 0.5, 1.3);
-    // The 3D look for a layer that is out of the stack: soft light that rolls round the rounded edges, a
-    // glossy highlight that catches the surface texture, and a glint along the rim. It is all worked out
-    // from the camera's point of view, so it stays the same however the layer is turning or travelling.
+    // The 3D look for a layer that is out of the stack. It only ever darkens, brightens or tints the food's
+    // own colour (never washes it out with white), and the flat face keeps exactly its photo colour.
+    //  - the rounded edge catches the light on one side and falls into shade on the other
+    //  - a small, tight glossy highlight catches the surface texture
+    // It is all worked out from the camera's point of view, so it is the same however the layer travels.
     if (uGloss > 0.001) {
       vec3 V = vec3(0.0, 0.0, 1.0);
       vec3 L = normalize(vec3(-0.45, 0.65, 0.62));
+      vec3 ng = normalize(vNormalView); // the shape's own normal: flat on the face
+      // Round the rim: look at how much of the food is around this spot. Near the outline there is food on
+      // one side only, so tilt the surface outward there, as if the edge curved over like a real rounded lip.
+      vec2 around = vec2(0.0);
+      float seen = 0.0;
+      for (int k = 0; k < 8; k++) {
+        float ang = float(k) * 0.7853982;
+        vec2 dir = vec2(cos(ang), sin(ang));
+        float a = texture2D(map, vUv + dir * 0.075 / photoSize).a;
+        around += dir * a;
+        seen += a;
+      }
+      float rimAmt = 1.0 - smoothstep(0.5, 1.0, seen / 8.0); // 0 inside, 1 right on the outline
+      vec2 out2 = -normalize(around + vec2(1e-4));
+      vec3 outward = normalize(vPhotoRightV * out2.x + vPhotoUpV * out2.y);
+      ng = normalize(ng + vec3(outward.xy, 0.0) * rimAmt * 1.5);
+      float flatLit = 0.45 + 0.7 * L.z;
+      float lit = 0.45 + 0.7 * max(dot(ng, L), 0.0);
+      float edge = 1.0 - clamp(ng.z, 0.0, 1.0); // 0 on the flat face, up to 1 at the very edge
+      col *= mix(1.0, lit / flatLit, uGloss);
+      col *= 1.0 - 0.35 * edge * edge * uGloss; // a soft shadow where the edge curves away
       float lum = dot(photo, vec3(0.299, 0.587, 0.114));
-      vec2 grad = vec2(dFdx(lum), dFdy(lum));
-      vec3 nv = normalize(normalize(vNormalView) + vec3(-grad * uShine.z, 0.0)); // the surface texture gives it tiny bumps
-      float flatLit = 0.55 + 0.6 * max(dot(vec3(0.0, 0.0, 1.0), L), 0.0);
-      float lit = 0.55 + 0.6 * max(dot(nv, L), 0.0);
-      col *= mix(1.0, lit / flatLit, 0.9 * uGloss); // edges turn toward or away from the light
+      vec3 nv = normalize(ng + vec3(-vec2(dFdx(lum), dFdy(lum)) * uShine.z, 0.0)); // texture gives tiny bumps
       float spec = pow(max(dot(nv, normalize(L + V)), 0.0), uShine.y) * uShine.x;
-      float rim = pow(1.0 - clamp(normalize(vNormalView).z, 0.0, 1.0), 2.0) * 0.5;
-      col += (spec + rim * uShine.x) * vec3(1.0, 0.97, 0.9) * uGloss;
+      col += spec * mix(vec3(1.0), col, 0.55) * uGloss; // highlight tinted by the food's own colour
     }
     col *= 1.0 - uDim;
     gl_FragColor = vec4(col, uAlpha);
