@@ -63,6 +63,7 @@ const vertexShader = /* glsl */ `
   varying vec3 vNormalView;
   varying vec3 vPhotoRightV;
   varying vec3 vPhotoUpV;
+  varying vec3 vFaceN;
   void main() {
     vec2 screen = vec2(dot(position, photoRight), dot(position, photoUp));
     vUv = screen / photoSize + 0.5;
@@ -73,6 +74,7 @@ const vertexShader = /* glsl */ `
     vNormalView = normalize(normalMatrix * normal);
     vPhotoRightV = normalize(normalMatrix * photoRight);
     vPhotoUpV = normalize(normalMatrix * photoUp);
+    vFaceN = normalize(normalMatrix * vec3(0.0, 1.0, 0.0)); // which way the layer's flat top is facing
     // The photo was taken in perspective, so the near edge of a slice looks wider than the far edge. When
     // the slice faces us, squeeze the near end and stretch the far end so its sides run straight.
     vec3 shown = position;
@@ -100,6 +102,7 @@ const fragmentShader = /* glsl */ `
   varying vec3 vNormalView;
   varying vec3 vPhotoRightV;
   varying vec3 vPhotoUpV;
+  varying vec3 vFaceN;
   varying float vWallU;
   varying vec2 vUv;
   varying vec3 vPos;
@@ -151,12 +154,13 @@ const fragmentShader = /* glsl */ `
       vec2 out2 = -normalize(around + vec2(1e-4));
       vec3 outward = normalize(vPhotoRightV * out2.x + vPhotoUpV * out2.y);
       ng = normalize(ng + vec3(outward.xy, 0.0) * rimAmt * 1.5);
-      float flatLit = 0.45 + 0.7 * L.z;
+      float flatLit = 0.45 + 0.7 * max(dot(normalize(vFaceN), L), 0.0); // the flat face is the reference, however it is turned
       float lit = 0.45 + 0.7 * max(dot(ng, L), 0.0);
       float edge = 1.0 - clamp(ng.z, 0.0, 1.0); // 0 on the flat face, up to 1 at the very edge
       col *= mix(1.0, clamp(lit / flatLit, 0.96, 1.3), uGloss); // edges facing the light glow a little; none go dark
       float lum = dot(photo, vec3(0.299, 0.587, 0.114));
-      vec3 nv = normalize(ng + vec3(-vec2(dFdx(lum), dFdy(lum)) * uShine.z, 0.0)); // texture gives tiny bumps
+      // the flat face always counts as facing us, so the shine never flares as the layer turns; only the edge and the texture's tiny bumps change it
+      vec3 nv = normalize(ng - normalize(vFaceN) + vec3(0.0, 0.0, 1.0) + vec3(-vec2(dFdx(lum), dFdy(lum)) * uShine.z, 0.0));
       float spec = pow(max(dot(nv, normalize(L + V)), 0.0), uShine.y) * uShine.x;
       col += spec * mix(vec3(1.0), col, 0.55) * uGloss; // highlight tinted by the food's own colour
     }
