@@ -31,15 +31,8 @@
     <div class="intro-overlay" aria-hidden="true"><p>■ Ooze the fun</p></div>
 
     <div id="site">
-    <!-- Folder tabs: right edge on computers, stacked at the top on phones -->
-    <nav class="tabs" aria-label="Sections">
-      <button class="tab" data-tab="home" style="--tab: #f1dcb0; --on: var(--ink); --top: 2vh; --len: 12vh">Home</button>
-      <button class="tab" data-tab="events" style="--tab: var(--strawberry); --on: var(--page); --top: 16vh; --len: 12vh">Events</button>
-      <button class="tab" data-tab="about" style="--tab: var(--honey); --on: var(--ink); --top: 30vh; --len: 12vh">About</button>
-      <button class="tab" data-tab="list" style="--tab: var(--crust); --on: var(--page); --top: 44vh; --len: 16vh">List Your Event</button>
-      <button class="tab" data-tab="partner" style="--tab: #8f1f1f; --on: var(--page); --top: 62vh; --len: 16vh">Be Our Partner</button>
-      <button class="tab" data-tab="secret" style="--tab: var(--ink); --on: var(--page); --top: 80vh; --len: 14vh">Our Secret</button>
-    </nav>
+    <!-- Folder stack along the top (built by src/tabs.js) -->
+    <nav class="stack" id="stack" aria-label="Sections"></nav>
 
     <main class="folder">
       <!-- HOME -->
