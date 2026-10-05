@@ -161,6 +161,7 @@ export function createMascot(root) {
   // Tap a layer and it floats out to the front of the screen. focus.i is which layer (-1 = none) and
   // focus.amount goes 0 -> 1 as it travels out
   const focus = { i: -1, amount: 0, dim: 0 };
+  const FOCUS_DEPTH = 8; // how far a tapped layer is pulled toward the viewer while it swings round
   const squareYaw = []; // per layer: the turn that makes its edges run level with the screen
   const v1 = new THREE.Vector3();
   const v2 = new THREE.Vector3();
@@ -301,57 +302,73 @@ export function createMascot(root) {
     // The tapped layer: slide it to the middle of the screen, pull it in front of the others and make it
     // a little bigger (never wider than the screen). Everything else stays exactly where it was.
     meshes.forEach((mesh, i) => mesh.scale.setScalar(LAYERS[i].size));
-    const showing = focus.i >= 0 && focus.amount > 0.001 && meshes[focus.i];
-    if (showing) {
+    // The tapped layer travels in three smooth parts, all in one continuous motion:
+    //  1. it slides out sideways, level with where it was (so it can never touch the other layers),
+    //  2. once clear, it swings round in a half-circle toward the front of the screen, drawn nearer to us
+    //     than everything else (so it passes in front, never through),
+    //  3. as it arrives it turns to face us square-on and grows.
+    // Coming back is exactly the same path in reverse.
+    if (focus.i >= 0 && focus.amount > 0.0005 && meshes[focus.i]) {
       const mesh = meshes[focus.i];
       const size_ = LAYERS[focus.i].size;
       const a = focus.amount;
+      const ease = (x) => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
+      const p1 = ease(a / 0.28); // slide out
+      const p2 = ease((a - 0.28) / 0.5); // half-circle to the front
+      const turn = ease((a - 0.3) / 0.7); // turn square-on and grow
       const box = mesh.geometry.boundingBox;
-      // Tip it up so its top faces us, and straighten it so its edges run level with the screen
-      mesh.rotation.y += squareYaw[focus.i] * a;
-      mesh.rotation.x += (Math.PI / 2 - ELEVATION) * a;
-      mesh.rotation.z *= 1 - a;
-      // Facing us its on-screen height is its real depth. Grow a little, but stay inside the screen
-      const widthPx = (box.max.x - box.min.x) * size_ * ppu * camera.zoom;
-      const heightPx = (box.max.z - box.min.z) * size_ * ppu * camera.zoom;
-      const grow = Math.min(1.3, (size.w * 0.88) / widthPx, (size.h * 0.88) / heightPx);
-      mesh.scale.setScalar(size_ * (1 + (grow - 1) * a));
+      const L = (box.max.x - box.min.x) * size_;
+      let stackW = 0;
+      meshes.forEach((m, j) => (stackW = Math.max(stackW, (m.geometry.boundingBox.max.x - m.geometry.boundingBox.min.x) * LAYERS[j].size)));
+      // The view breathes out a little while a layer is out at the side, so there is room for it on any
+      // screen (a lot of room is needed on a phone), and breathes back in as the layer arrives in front
+      const halfW0 = ((size.w / 2) / (ppu * cam.zoom)) * 0.8; // half the screen width in world units (leaving a margin)
+      const zMin = Math.min(1, Math.max(0.55, halfW0 / (0.65 * stackW + 1.15 * L)));
+      const zf = 1 - (1 - zMin) * p1 * (1 - p2);
+      camera.zoom = cam.zoom * zf;
+      camera.updateProjectionMatrix();
+      const k = Math.min(1, Math.max(0.3, (halfW0 / zMin - 0.65 * stackW) / (1.15 * L)));
+      const slide = 0.65 * (stackW + k * L);
+      // Where the layer's middle is on screen to begin with
+      mesh.scale.setScalar(size_);
       camera.updateMatrixWorld(true);
       mesh.updateMatrixWorld(true);
       box.getCenter(v1);
-      mesh.localToWorld(v1); // the layer's middle, in the world
-      v2.copy(v1).applyMatrix4(camera.matrixWorldInverse); // ...and as seen by the camera (x, y = on screen)
-      // Glide to the middle of the screen, staying level with the camera (it only moves across the screen)
+      mesh.localToWorld(v1);
+      v2.copy(v1).applyMatrix4(camera.matrixWorldInverse);
+      const x0 = v2.x;
+      const y0 = v2.y;
+      // Turn it to face us (tip up, and straighten its edges) and size it
+      mesh.rotation.y += squareYaw[focus.i] * turn;
+      mesh.rotation.x += (Math.PI / 2 - ELEVATION) * turn;
+      mesh.rotation.z *= 1 - turn;
+      const widthPx = L * ppu * cam.zoom;
+      const heightPx = (box.max.z - box.min.z) * size_ * ppu * cam.zoom;
+      const grow = Math.min(1.3, (size.w * 0.88) / widthPx, (size.h * 0.88) / heightPx);
+      mesh.scale.setScalar(size_ * (k * p1 + (1 - p1)) * (1 - turn) + size_ * grow * turn);
+      mesh.updateMatrixWorld(true);
+      box.getCenter(v1);
+      mesh.localToWorld(v1);
+      v2.copy(v1).applyMatrix4(camera.matrixWorldInverse); // the middle now (after turning and sizing)
+      // The path on screen: slide to the side, then a half-circle to the middle of the screen
+      const sideX = x0 + slide;
+      const dist = Math.hypot(sideX, y0);
+      const arc = Math.sin(Math.PI * p2);
+      const t = (1 - Math.cos(Math.PI * p2)) / 2;
+      const wantX = x0 + slide * p1 + (0 - sideX) * t;
+      // Swing out toward the side of the screen with more room (down for the upper layers, up for the lower ones)
+      const wantY = y0 + (0 - y0) * t + (y0 < 0 ? 0.35 : -0.35) * dist * arc;
+      // Pulled toward the viewer once it is out at the side (clear of the stack), so it passes in front
+      const toward = FOCUS_DEPTH * ease(p2 / 0.4);
       const right = v3.setFromMatrixColumn(camera.matrixWorld, 0);
       const up = v1.setFromMatrixColumn(camera.matrixWorld, 1);
-      const move = new THREE.Vector3().addScaledVector(right, -v2.x * a).addScaledVector(up, -v2.y * a);
+      const move = new THREE.Vector3()
+        .addScaledVector(right, wantX - v2.x)
+        .addScaledVector(up, wantY - v2.y)
+        .addScaledVector(viewDir, toward);
       mesh.position.add(move.applyAxisAngle(Y_AXIS, -spin.angle)); // in the spinning turntable's own directions
     }
-    // A colour wash behind the tapped layer, and the other layers fade right back
-    if (backdrop) backdrop.style.opacity = focus.dim.toFixed(3);
-    meshes.forEach((mesh, i) => {
-      const alpha = i === focus.i ? 1 : 1 - 0.94 * focus.dim;
-      mesh.material.uniforms.uKey.value = i === focus.i ? focus.amount : 0;
-      mesh.material.uniforms.uAlpha.value = alpha;
-      mesh.material.transparent = alpha < 0.999;
-    });
-    if (showing) {
-      // Draw the sandwich, then the tapped layer on top of everything, so it can never be cut by
-      // (or cut through) the layers it is travelling past
-      const front = meshes[focus.i];
-      renderer.autoClear = false;
-      renderer.clear();
-      front.visible = false;
-      renderer.render(scene, camera);
-      renderer.clearDepth();
-      meshes.forEach((mesh) => (mesh.visible = false));
-      front.visible = true;
-      renderer.render(scene, camera);
-      meshes.forEach((mesh) => (mesh.visible = true));
-      renderer.autoClear = true;
-    } else {
-      renderer.render(scene, camera);
-    }
+    renderer.render(scene, camera);
   }
 
   // ---- Build the slabs once the photos have loaded ----
@@ -480,16 +497,13 @@ export function createMascot(root) {
   };
 
   let scrollAtFocus = 0;
-  // The order matters for a seamless look. Going out: the other layers fade away first, THEN the tapped
-  // layer travels (it is drawn in front of everything while it moves, which is only safe once the others
-  // are gone). Coming back: it travels home first, and only then do the others fade back in around it.
+  // The layer travels out along its path (slide, half-circle, turn) as `amount` goes 0 -> 1, and home again
+  // along the same path as it goes 1 -> 0.
   let focusTl = null;
   const release = () => {
     if (focus.i < 0) return;
     focusTl?.kill();
-    focusTl = gsap.timeline({ onComplete: () => (focus.i = -1) })
-      .to(focus, { amount: 0, duration: 0.8, ease: "power2.inOut" })
-      .to(focus, { dim: 0, duration: 0.3, ease: "power1.inOut" });
+    focusTl = gsap.timeline({ onComplete: () => (focus.i = -1) }).to(focus, { amount: 0, duration: 1.4, ease: "power1.inOut" });
   };
   const bringToFront = (i) => {
     scrollAtFocus = window.scrollY;
@@ -497,13 +511,11 @@ export function createMascot(root) {
       focus.i = i;
       if (backdrop) backdrop.style.background = WASH[i];
       focusTl?.kill();
-      focusTl = gsap.timeline()
-        .to(focus, { dim: 1, duration: 0.3, ease: "power1.inOut" })
-        .to(focus, { amount: 1, duration: 1, ease: "power2.inOut" });
+      focusTl = gsap.timeline().to(focus, { amount: 1, duration: 1.6, ease: "power1.inOut" });
     };
     if (focus.i >= 0 && focus.i !== i) {
       focusTl?.kill();
-      focusTl = gsap.timeline({ onComplete: go }).to(focus, { amount: 0, duration: 0.5, ease: "power2.inOut" });
+      focusTl = gsap.timeline({ onComplete: go }).to(focus, { amount: 0, duration: 1, ease: "power1.inOut" });
     } else go();
   };
   // Scrolling puts the layer back, so the sandwich can carry on building itself
