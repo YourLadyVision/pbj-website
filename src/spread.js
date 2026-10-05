@@ -1,4 +1,4 @@
-// Layout section: a thick slab of peanut butter. The cursor (or a finger) acts like a finger pressed
+// Layout section: a layer of peanut butter. The cursor (or a finger) acts like a finger pressed
 // into it: it pushes the butter along, swirls it and leaves impressions that slowly settle.
 // WebGL2: a small "state" texture (push + dent height) is updated every frame, then drawn as lit butter.
 
@@ -18,97 +18,39 @@ out vec4 o;
 void main(){
   vec2 px = gl_FragCoord.xy;
   vec2 uv = px / uSize;
-  vec2 e = 1.0 / uSize;
-  vec4 s = texture(uPrev, uv);
-  vec4 avg = (texture(uPrev, uv + vec2(e.x, 0.0)) + texture(uPrev, uv - vec2(e.x, 0.0))
-            + texture(uPrev, uv + vec2(0.0, e.y)) + texture(uPrev, uv - vec2(0.0, e.y))) * 0.25;
-  s = mix(s, avg, 0.1) * uDecay;
+  // finger flow at this pixel: pushes along its path and curls around it
+  vec2 u = vec2(0.0);
   vec2 v = uSeg.zw - uSeg.xy;
   float len = length(v);
   if (uAmt > 0.0 && len > 0.0) {
-    float step = clamp(len / 8.0 / (uR * 0.35), 0.0, 1.0);
     for (int i = 0; i < 8; i++) {
       float t = (float(i) + 0.5) / 8.0;
       vec2 d = px - mix(uSeg.xy, uSeg.zw, t);
-      float r2 = dot(d, d) / (uR * uR);
-      float g = exp(-r2 * 1.6);
-      float g2 = exp(-r2 * 0.45);
-      s.xy += (v / 8.0) / uSize * g * 0.9;
-      s.xy += vec2(-d.y, d.x) / uR * (len / 8.0 / uSize) * g * 0.7;
-      s.z += (-g + 0.26 * g2) * 0.2 * step;
+      float g = exp(-dot(d, d) / (uR * uR) * 1.4);
+      u += (v / 8.0) / uSize * g * 1.0;
+      u += vec2(-d.y, d.x) / uR * (len / 8.0 / uSize) * g * 0.9;
     }
   }
-  s.xy = clamp(s.xy, -0.3, 0.3);
-  s.z = clamp(s.z, -1.6, 1.6);
-  o = s;
+  // advect: the butter at this spot came from where it was one step ago
+  vec2 s = texture(uPrev, uv - u).xy - u;
+  s = clamp(s * uDecay, -0.6, 0.6);
+  o = vec4(s, 0.0, 1.0);
 }`;
 
 const DRAW_FS = `#version 300 es
 precision highp float;
 uniform sampler2D uPhoto, uState;
 uniform vec2 uRes;
-uniform vec4 uRect;
-uniform float uRad, uBevel, uDepth, uDpr, uPhotoAspect;
-uniform vec3 uPage;
+uniform float uPhotoAspect;
 out vec4 o;
-
-float sdIn(vec2 p){
-  vec2 c = uRect.xy + uRect.zw * 0.5;
-  vec2 q = abs(p - c) - (uRect.zw * 0.5 - uRad);
-  return -(length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - uRad);
-}
-float prof(float t){ t = clamp(t, 0.0, 1.0); return sqrt(1.0 - (1.0 - t) * (1.0 - t)); }
-float hb(vec2 p){ return prof(sdIn(p) / uBevel); }
-float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
-
 void main(){
-  vec2 P = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
-  float d = sdIn(P);
-  // soft shadow of the slab on the page
-  float sh = 1.0 - smoothstep(-6.0 * uDpr, 34.0 * uDpr, -sdIn(P - vec2(5.0, 16.0) * uDpr));
-  vec3 col = uPage * (1.0 - 0.30 * sh * sh);
-  float alpha = smoothstep(-0.5, 1.0, d);
-  if (alpha <= 0.0) { o = vec4(col, 1.0); return; }
-
-  vec2 ruv = (P - uRect.xy) / uRect.zw;
-  vec2 epsUV = 2.0 * uDpr / uRect.zw;
-  vec2 st = texture(uState, ruv).xy;
-  float hL = texture(uState, ruv - vec2(epsUV.x, 0.0)).z;
-  float hR = texture(uState, ruv + vec2(epsUV.x, 0.0)).z;
-  float hU = texture(uState, ruv - vec2(0.0, epsUV.y)).z;
-  float hD = texture(uState, ruv + vec2(0.0, epsUV.y)).z;
-  float ep = 2.0 * uDpr;
-  vec2 ex = vec2(ep, 0.0), ey = vec2(0.0, ep);
-  float bh = uBevel * 0.55;
-  float gx = (hb(P + ex) - hb(P - ex)) / (2.0 * ep) * bh + (hR - hL) / (2.0 * ep) * uDepth;
-  float gy = (hb(P + ey) - hb(P - ey)) / (2.0 * ep) * bh + (hD - hU) / (2.0 * ep) * uDepth;
-  vec3 n = normalize(vec3(-gx, -gy, 1.0));
-
-  // the picture rides with the pushed butter and tucks in around the rounded edge
-  float t = clamp(d / uBevel, 0.0, 1.0);
-  vec2 src = ruv - st;
-  src = vec2(0.5) + (src - vec2(0.5)) * (1.0 - 0.05 * (1.0 - t));
-  src += vec2(gx, gy) * 0.0015;
-  float ra = uRect.z / uRect.w;
+  vec2 ruv = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uRes;
+  vec2 src = ruv - texture(uState, ruv).xy;
+  float ra = uRes.x / uRes.y;
   vec2 sc = ra > uPhotoAspect ? vec2(1.0, uPhotoAspect / ra) : vec2(ra / uPhotoAspect, 1.0);
   vec2 uv = (src - 0.5) * sc + 0.5;
   uv = 1.0 - abs(1.0 - mod(uv, 2.0));
-  vec3 base = texture(uPhoto, uv).rgb;
-  base *= 1.0 + (hash(P) - 0.5) * 0.03;
-
-  vec3 L = normalize(vec3(-0.55, -0.65, 0.75));
-  vec3 V = vec3(0.0, 0.0, 1.0);
-  vec3 H = normalize(L + V);
-  float flatD = L.z;
-  float diff = clamp(dot(n, L) / flatD, 0.45, 1.45);
-  float lit = mix(1.0, diff, 0.8);
-  float spec = pow(max(dot(n, H), 0.0), 70.0) * 0.55 + pow(max(dot(n, H), 0.0), 18.0) * 0.1;
-  float specFlat = pow(H.z, 70.0) * 0.55 + pow(H.z, 18.0) * 0.1;
-  spec = max(spec - specFlat, 0.0);
-  float edgeShade = mix(0.88, 1.0, smoothstep(0.0, 0.7, t));
-  vec3 c = base * lit * edgeShade + vec3(1.0, 0.93, 0.78) * spec;
-  c = mix(c, c * c * 1.0 + c * 0.0, 0.0);
-  o = vec4(mix(col, c, alpha), 1.0);
+  o = vec4(texture(uPhoto, uv).rgb, 1.0);
 }`;
 
 function makeProgram(gl, fs) {
@@ -152,7 +94,6 @@ export function setupSpread() {
   const sim = makeProgram(gl, SIM_FS);
   const draw = makeProgram(gl, DRAW_FS);
   gl.bindVertexArray(gl.createVertexArray());
-  const page = hexToRgb(getComputedStyle(document.documentElement).getPropertyValue("--page") || "#fffdf8");
 
   // photo
   const photoTex = gl.createTexture();
@@ -205,8 +146,8 @@ export function setupSpread() {
     const ch = Math.max(2, Math.round(stage.clientHeight * dpr));
     canvas.width = cw;
     canvas.height = ch;
-    const gap = Math.max(12 * dpr, cw * 0.018);
-    const w = cw - gap * 2, h = ch - gap * 2;
+    const gap = 0;
+    const w = cw, h = ch;
     L = {
       x: gap, y: gap, w, h, dpr,
       rad: Math.min(w, h) * 0.06,
@@ -261,7 +202,7 @@ export function setupSpread() {
     gl.uniform4f(sim.u.uSeg, seg[0], seg[1], seg[2], seg[3]);
     gl.uniform1f(sim.u.uR, r);
     gl.uniform1f(sim.u.uAmt, amt);
-    gl.uniform1f(sim.u.uDecay, Math.pow(0.5, dt / 5));
+    gl.uniform1f(sim.u.uDecay, Math.pow(0.5, dt / 25));
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     cur = 1 - cur;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -279,13 +220,7 @@ export function setupSpread() {
     gl.uniform1i(draw.u.uPhoto, 0);
     gl.uniform1i(draw.u.uState, 1);
     gl.uniform2f(draw.u.uRes, canvas.width, canvas.height);
-    gl.uniform4f(draw.u.uRect, L.x, L.y, L.w, L.h);
-    gl.uniform1f(draw.u.uRad, L.rad);
-    gl.uniform1f(draw.u.uBevel, L.bevel);
-    gl.uniform1f(draw.u.uDepth, L.w * 0.02);
-    gl.uniform1f(draw.u.uDpr, L.dpr);
     gl.uniform1f(draw.u.uPhotoAspect, photoAspect);
-    gl.uniform3f(draw.u.uPage, page[0], page[1], page[2]);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
