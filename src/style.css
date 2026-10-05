@@ -95,7 +95,7 @@ h2 { max-width: 22ch; }
 .btn:hover { transform: translateY(-3px) rotate(-2deg); box-shadow: 0 9px 0 var(--grape); }
 .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--grape); }
 
-/* ---------- Folder tabs: paper file folders stacked along the right edge ----------
+/* ---------- Folder tabs: flat, solid-colour folders stacked along the right edge (like mosbyfiles.com) ----------
    Each folder is a coloured strip (the "body", ::before) running down the edge with a tab sticking
    out of it. Later folders sit in front of earlier ones. A curved shoulder (::after) joins each tab
    to its body, soft shadows fall on the folders behind, and the open folder is page-coloured so it
@@ -129,13 +129,10 @@ h2 { max-width: 22ch; }
   text-transform: uppercase;
   text-wrap: balance;
   color: var(--on, var(--bread));
-  background: var(--grain), var(--fill);
-  background-blend-mode: multiply, normal;
+  background: var(--fill);
   border: 0;
   border-radius: 0 var(--r) var(--r) 0;
   cursor: pointer;
-  -webkit-filter: drop-shadow(0 -3px 4px rgba(45, 25, 12, 0.3));
-  filter: drop-shadow(0 -3px 4px rgba(45, 25, 12, 0.3));
   transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   -webkit-tap-highlight-color: transparent;
 }
@@ -147,9 +144,7 @@ h2 { max-width: 22ch; }
   top: 0;
   width: var(--body-w);
   height: 100vh;
-  background: var(--grain), var(--fill);
-  background-blend-mode: multiply, normal;
-  box-shadow: inset 7px 0 7px -5px rgba(45, 25, 12, 0.32);
+  background: var(--fill);
 }
 /* The curved shoulder where the tab's lower edge meets the body */
 .tab::after {
@@ -284,8 +279,6 @@ h2 { max-width: 22ch; }
     white-space: nowrap;
     font-size: 0.75em;
     border-radius: var(--r) var(--r) 0 0;
-    -webkit-filter: drop-shadow(-3px -1px 4px rgba(45, 25, 12, 0.3));
-    filter: drop-shadow(-3px -1px 4px rgba(45, 25, 12, 0.3));
     transition: top 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   /* The folder's body: a full-width sheet under the tab, reaching the bottom of the bar */
@@ -295,8 +288,7 @@ h2 { max-width: 22ch; }
     width: 100vw;
     height: calc(var(--bar) - 6px - var(--i) * var(--step) - var(--tab-h) + 1px);
     box-shadow: none;
-    background: var(--sh) 0 100% / 100% 10px no-repeat, var(--grain), var(--fill);
-    background-blend-mode: normal, multiply, normal;
+    background: var(--fill);
   }
   /* Curved shoulders where the tab meets its body (one on each side) */
   .tab::after {
