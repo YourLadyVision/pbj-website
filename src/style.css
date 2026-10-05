@@ -367,10 +367,10 @@ html.intro .intro-swirl {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
 
-/* ---------- Layout section: peanut butter spread by a knife ---------- */
+/* ---------- Layout section: thick peanut butter you can push around ---------- */
 .spread-section { background: var(--page); }
 .spread-stage { position: relative; height: 100svh; overflow: hidden; }
-.spread-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.spread-stage canvas { touch-action: pan-y; cursor: grab; position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .knife {
   position: absolute;
   left: 0;
