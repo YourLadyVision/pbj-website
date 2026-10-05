@@ -30,7 +30,7 @@ const TILTS = [
 const LAYERS = [
   { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, shine: [0.07, 22, 1.2] },
   { src: "/mascot/jelly.webp", wall: 26, side: "#8c0f1c", size: 0.88, bevel: 0.012, shine: [0.4, 80, 3] },
-  { src: "/mascot/peanut-butter.webp", wall: 34, side: "#b87f3a", size: 1.012, bevel: 0.016, shine: [0.18, 40, 2] },
+  { src: "/mascot/peanut-butter.webp", wall: 34, side: "#b87f3a", size: 1.012, bevel: 0.016, soften: 5, shine: [0.18, 40, 2] },
   { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, shine: [0.07, 22, 1.2] },
 ];
 // The colour wash behind a layer when it comes out front: bold, from the brand colours, chosen so each
@@ -125,7 +125,8 @@ const fragmentShader = /* glsl */ `
     vec3 col = mix(wall, photo, usePhoto);
 
     // Same light as at rest (so the photo is untouched), brighter or darker as the slab turns
-    col *= clamp(light(vNormalWorld) / light(n), 0.5, 1.3);
+    // (a layer out front keeps its brightness however it tilts, so its lower edges never darken)
+    col *= mix(clamp(light(vNormalWorld) / light(n), 0.5, 1.3), 1.0, uGloss);
     // The 3D look for a layer that is out of the stack. It only ever darkens, brightens or tints the food's
     // own colour (never washes it out with white), and the flat face keeps exactly its photo colour.
     //  - the rounded edge catches the light on one side and falls into shade on the other
@@ -153,8 +154,7 @@ const fragmentShader = /* glsl */ `
       float flatLit = 0.45 + 0.7 * L.z;
       float lit = 0.45 + 0.7 * max(dot(ng, L), 0.0);
       float edge = 1.0 - clamp(ng.z, 0.0, 1.0); // 0 on the flat face, up to 1 at the very edge
-      col *= mix(1.0, lit / flatLit, uGloss);
-      col *= 1.0 - 0.35 * edge * edge * uGloss; // a soft shadow where the edge curves away
+      col *= mix(1.0, clamp(lit / flatLit, 0.96, 1.3), uGloss); // edges facing the light glow a little; none go dark
       float lum = dot(photo, vec3(0.299, 0.587, 0.114));
       vec3 nv = normalize(ng + vec3(-vec2(dFdx(lum), dFdy(lum)) * uShine.z, 0.0)); // texture gives tiny bumps
       float spec = pow(max(dot(nv, normalize(L + V)), 0.0), uShine.y) * uShine.x;
@@ -438,6 +438,7 @@ export function createMascot(root) {
           elevation: ELEVATION,
           bevel: layer.bevel,
           sideColor: layer.side,
+          soften: layer.soften || 0,
         });
         const wallTexture = new THREE.CanvasTexture(wallBand.canvas);
         wallTexture.colorSpace = THREE.SRGBColorSpace;

@@ -173,7 +173,7 @@ function smoothClosed(points, rounds) {
 }
 
 // thickness: how tall the visible side wall is in the photo, in photo pixels (of 1024)
-export function buildSlab(img, { thickness, elevation, bevel = 0.03, sideColor = "#c98a43" }) {
+export function buildSlab(img, { thickness, elevation, bevel = 0.03, sideColor = "#c98a43", soften = 0 }) {
   const scale = 0.4;
   const w = Math.round(img.naturalWidth * scale);
   const h = Math.round(img.naturalHeight * scale);
@@ -191,6 +191,33 @@ export function buildSlab(img, { thickness, elevation, bevel = 0.03, sideColor =
       // Part of the top face: opaque here, and still opaque one wall-height further down
       if (alpha[(y * w + x) * 4 + 3] > 128 && alpha[((y + wall) * w + x) * 4 + 3] > 128) top[y * w + x] = 1;
     }
+  }
+
+  // Optional: round off sharp corners and spikes by blurring the mask a little and cutting it again at
+  // half strength (a corner loses its tip; a smooth edge stays where it is)
+  if (soften > 0) {
+    let cur = Float32Array.from(top);
+    const tmp = new Float32Array(w * h);
+    for (let pass = 0; pass < 2; pass++) {
+      // horizontal then vertical box blur
+      for (let y = 0; y < h; y++) {
+        let sum = 0;
+        for (let x = -soften; x <= soften; x++) sum += cur[y * w + Math.min(w - 1, Math.max(0, x))];
+        for (let x = 0; x < w; x++) {
+          tmp[y * w + x] = sum / (2 * soften + 1);
+          sum += cur[y * w + Math.min(w - 1, x + soften + 1)] - cur[y * w + Math.max(0, x - soften)];
+        }
+      }
+      for (let x = 0; x < w; x++) {
+        let sum = 0;
+        for (let y = -soften; y <= soften; y++) sum += tmp[Math.min(h - 1, Math.max(0, y)) * w + x];
+        for (let y = 0; y < h; y++) {
+          cur[y * w + x] = sum / (2 * soften + 1);
+          sum += tmp[Math.min(h - 1, y + soften + 1) * w + x] - tmp[Math.max(0, y - soften) * w + x];
+        }
+      }
+    }
+    for (let i = 0; i < top.length; i++) top[i] = cur[i] > 0.5 ? 1 : 0;
   }
 
   const outline = smoothClosed(simplify(traceOutline(top, w, h), 1.1), 2);
