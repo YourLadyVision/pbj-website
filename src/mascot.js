@@ -28,10 +28,10 @@ const TILTS = [
 // fallback side colour, a size fix (the jelly photo is bigger than the others), and a tiny size
 // difference so no two layers' walls sit exactly on top of each other (that makes them flicker)
 const LAYERS = [
-  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035 },
-  { src: "/mascot/jelly.webp", wall: 26, side: "#8c0f1c", size: 0.88, bevel: 0.012 },
-  { src: "/mascot/peanut-butter.webp", wall: 34, side: "#b87f3a", size: 1.012, bevel: 0.016 },
-  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035 },
+  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, shine: [0.14, 22, 1.2] },
+  { src: "/mascot/jelly.webp", wall: 26, side: "#8c0f1c", size: 0.88, bevel: 0.012, shine: [0.75, 90, 3.5] },
+  { src: "/mascot/peanut-butter.webp", wall: 34, side: "#b87f3a", size: 1.012, bevel: 0.016, shine: [0.4, 40, 2.4] },
+  { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, shine: [0.14, 22, 1.2] },
 ];
 // The colour wash behind a layer when it comes out front: bold, from the brand colours, chosen so each
 // layer pops (bread on brown, peanut butter on grape, jelly on honey)
@@ -60,6 +60,7 @@ const vertexShader = /* glsl */ `
   varying vec3 vPos;
   varying vec3 vNormalObj;
   varying vec3 vNormalWorld;
+  varying vec3 vNormalView;
   void main() {
     vec2 screen = vec2(dot(position, photoRight), dot(position, photoUp));
     vUv = screen / photoSize + 0.5;
@@ -67,6 +68,7 @@ const vertexShader = /* glsl */ `
     vWallU = wallU;
     vNormalObj = normal;
     vNormalWorld = normalize(mat3(modelMatrix) * normal);
+    vNormalView = normalize(normalMatrix * normal);
     // The photo was taken in perspective, so the near edge of a slice looks wider than the far edge. When
     // the slice faces us, squeeze the near end and stretch the far end so its sides run straight.
     vec3 shown = position;
@@ -88,6 +90,9 @@ const fragmentShader = /* glsl */ `
   uniform vec3 sideColor;
   uniform float uAlpha;
   uniform float uDim; // 0..1: darkens a layer that is behind the highlighted one
+  uniform float uGloss; // 0..1: how much of the 3D shine is switched on (only for a layer that has left the stack)
+  uniform vec3 uShine;  // how glossy this food is: strength, sharpness, bumpiness
+  varying vec3 vNormalView;
   varying float vWallU;
   varying vec2 vUv;
   varying vec3 vPos;
@@ -114,6 +119,22 @@ const fragmentShader = /* glsl */ `
 
     // Same light as at rest (so the photo is untouched), brighter or darker as the slab turns
     col *= clamp(light(vNormalWorld) / light(n), 0.5, 1.3);
+    // The 3D look for a layer that is out of the stack: soft light that rolls round the rounded edges, a
+    // glossy highlight that catches the surface texture, and a glint along the rim. It is all worked out
+    // from the camera's point of view, so it stays the same however the layer is turning or travelling.
+    if (uGloss > 0.001) {
+      vec3 V = vec3(0.0, 0.0, 1.0);
+      vec3 L = normalize(vec3(-0.45, 0.65, 0.62));
+      float lum = dot(photo, vec3(0.299, 0.587, 0.114));
+      vec2 grad = vec2(dFdx(lum), dFdy(lum));
+      vec3 nv = normalize(normalize(vNormalView) + vec3(-grad * uShine.z, 0.0)); // the surface texture gives it tiny bumps
+      float flatLit = 0.55 + 0.6 * max(dot(vec3(0.0, 0.0, 1.0), L), 0.0);
+      float lit = 0.55 + 0.6 * max(dot(nv, L), 0.0);
+      col *= mix(1.0, lit / flatLit, 0.9 * uGloss); // edges turn toward or away from the light
+      float spec = pow(max(dot(nv, normalize(L + V)), 0.0), uShine.y) * uShine.x;
+      float rim = pow(1.0 - clamp(normalize(vNormalView).z, 0.0, 1.0), 2.0) * 0.5;
+      col += (spec + rim * uShine.x) * vec3(1.0, 0.97, 0.9) * uGloss;
+    }
     col *= 1.0 - uDim;
     gl_FragColor = vec4(col, uAlpha);
     #include <colorspace_fragment>
@@ -313,6 +334,7 @@ export function createMascot(root) {
     // Coming back is the same motion in reverse. On the way it only grows as it arrives (except on a very narrow screen,
     // where the whole view eases out a touch so the swing fits).
     let dimAmount = 0;
+    let glossAmount = 0;
     if (focus.i >= 0 && focus.amount > 0.0005 && meshes[focus.i]) {
       const mesh = meshes[focus.i];
       const size_ = LAYERS[focus.i].size;
@@ -342,7 +364,10 @@ export function createMascot(root) {
       const y0 = v2.y;
       // Turn it to face us (tip up, and straighten its edges)
       mesh.rotation.y += squareYaw[focus.i] * turn;
-      mesh.rotation.x += (Math.PI / 2 - ELEVATION) * turn;
+      // Not quite dead flat: it leans back about 10 degrees and rocks very gently, so you can see it has
+      // thickness and rounded edges, and the light moves across it
+      mesh.rotation.x += (Math.PI / 2 - ELEVATION - 0.17 + Math.sin(time * 1.3) * 0.03) * turn;
+      mesh.rotation.y += Math.sin(time * 0.9) * 0.05 * turn;
       mesh.rotation.z *= 1 - turn;
       // Arriving at the front it grows to take a proper share of the screen (it is the star now), a touch
       // past its final size on the way for a soft "breath", and never bigger than the screen allows
@@ -351,6 +376,7 @@ export function createMascot(root) {
       const grow = Math.min(1.7, (size.w * 0.86) / widthPx, (size.h * 0.8) / heightPx);
       const arrive = ease((u - 0.4) / 0.6);
       mesh.scale.setScalar(size_ * (1 + (grow - 1) * arrive));
+      glossAmount = ease(u / 0.2); // the 3D shine switches on as it leaves the stack and stays on
       dimAmount = 0.55 * arrive; // the stack behind it settles back in brightness
       mesh.updateMatrixWorld(true);
       box.getCenter(v1);
@@ -370,7 +396,10 @@ export function createMascot(root) {
         .addScaledVector(viewDir, toward);
       mesh.position.add(move.applyAxisAngle(Y_AXIS, -spin.angle)); // in the spinning turntable's own directions
     }
-    meshes.forEach((mesh, i) => (mesh.material.uniforms.uDim.value = i === focus.i ? 0 : dimAmount));
+    meshes.forEach((mesh, i) => {
+      mesh.material.uniforms.uDim.value = i === focus.i ? 0 : dimAmount;
+      mesh.material.uniforms.uGloss.value = i === focus.i ? glossAmount : 0;
+    });
     renderer.render(scene, camera);
   }
 
@@ -448,6 +477,8 @@ export function createMascot(root) {
       Object.keys(material.uniforms).forEach((k) => (own.uniforms[k] = material.uniforms[k]));
       own.uniforms.uAlpha = { value: 1 };
       own.uniforms.uDim = { value: 0 };
+      own.uniforms.uGloss = { value: 0 };
+      own.uniforms.uShine = { value: new THREE.Vector3(...(layer.shine || [0.2, 30, 1])) };
       const kb = geometry.boundingBox;
       own.uniforms.uKey = { value: 0 };
       own.uniforms.uKeyQ = { value: layer.key || 0 };
