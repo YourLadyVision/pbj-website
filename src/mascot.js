@@ -87,6 +87,7 @@ const fragmentShader = /* glsl */ `
   uniform vec3 lightDir;
   uniform vec3 sideColor;
   uniform float uAlpha;
+  uniform float uDim; // 0..1: darkens a layer that is behind the highlighted one
   varying float vWallU;
   varying vec2 vUv;
   varying vec3 vPos;
@@ -113,6 +114,7 @@ const fragmentShader = /* glsl */ `
 
     // Same light as at rest (so the photo is untouched), brighter or darker as the slab turns
     col *= clamp(light(vNormalWorld) / light(n), 0.5, 1.3);
+    col *= 1.0 - uDim;
     gl_FragColor = vec4(col, uAlpha);
     #include <colorspace_fragment>
   }
@@ -308,8 +310,9 @@ export function createMascot(root) {
     //  - at the far side of the swing it is moved nearer to us than everything else (nothing on screen
     //    changes when that happens, because it is already clear of the stack), so it passes in front,
     //  - as it comes round it turns to face us square-on.
-    // Coming back is the same motion in reverse. Sizes never change (except on a very narrow screen,
+    // Coming back is the same motion in reverse. On the way it only grows as it arrives (except on a very narrow screen,
     // where the whole view eases out a touch so the swing fits).
+    let dimAmount = 0;
     if (focus.i >= 0 && focus.amount > 0.0005 && meshes[focus.i]) {
       const mesh = meshes[focus.i];
       const size_ = LAYERS[focus.i].size;
@@ -341,10 +344,18 @@ export function createMascot(root) {
       mesh.rotation.y += squareYaw[focus.i] * turn;
       mesh.rotation.x += (Math.PI / 2 - ELEVATION) * turn;
       mesh.rotation.z *= 1 - turn;
+      // Arriving at the front it grows to take a proper share of the screen (it is the star now), a touch
+      // past its final size on the way for a soft "breath", and never bigger than the screen allows
+      const widthPx = L * ppu * cam.zoom;
+      const heightPx = (box.max.z - box.min.z) * size_ * ppu * cam.zoom;
+      const grow = Math.min(1.7, (size.w * 0.86) / widthPx, (size.h * 0.8) / heightPx);
+      const arrive = ease((u - 0.4) / 0.6);
+      mesh.scale.setScalar(size_ * (1 + (grow - 1) * arrive));
+      dimAmount = 0.55 * arrive; // the stack behind it settles back in brightness
       mesh.updateMatrixWorld(true);
       box.getCenter(v1);
       mesh.localToWorld(v1);
-      v2.copy(v1).applyMatrix4(camera.matrixWorldInverse); // the middle now (after turning)
+      v2.copy(v1).applyMatrix4(camera.matrixWorldInverse); // the middle now (after turning and growing)
       // The path on screen: out to the side and round into the middle
       const swing = clearX * lobe;
       const wantX = x0 * (1 - sm) + swing;
@@ -359,6 +370,7 @@ export function createMascot(root) {
         .addScaledVector(viewDir, toward);
       mesh.position.add(move.applyAxisAngle(Y_AXIS, -spin.angle)); // in the spinning turntable's own directions
     }
+    meshes.forEach((mesh, i) => (mesh.material.uniforms.uDim.value = i === focus.i ? 0 : dimAmount));
     renderer.render(scene, camera);
   }
 
@@ -435,6 +447,7 @@ export function createMascot(root) {
       const own = material.clone();
       Object.keys(material.uniforms).forEach((k) => (own.uniforms[k] = material.uniforms[k]));
       own.uniforms.uAlpha = { value: 1 };
+      own.uniforms.uDim = { value: 0 };
       const kb = geometry.boundingBox;
       own.uniforms.uKey = { value: 0 };
       own.uniforms.uKeyQ = { value: layer.key || 0 };
