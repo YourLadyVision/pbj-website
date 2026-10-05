@@ -146,7 +146,7 @@ const fragmentShader = /* glsl */ `
       for (int k = 0; k < 8; k++) {
         float ang = float(k) * 0.7853982;
         vec2 dir = vec2(cos(ang), sin(ang));
-        float a = texture2D(map, vUv + dir * 0.075 / photoSize).a;
+        float a = texture2D(map, vUv + dir * 0.1 / photoSize).a;
         around += dir * a;
         seen += a;
       }
@@ -154,6 +154,11 @@ const fragmentShader = /* glsl */ `
       vec2 out2 = -normalize(around + vec2(1e-4));
       vec3 outward = normalize(vPhotoRightV * out2.x + vPhotoUpV * out2.y);
       ng = normalize(ng + vec3(outward.xy, 0.0) * rimAmt * 1.5);
+      // No dark outline: right at the edge, show the food's own colour from just inside it, and never let the
+      // edge be much darker than the surface next to it (like the jelly, which has no border at all)
+      vec3 inside = texture2D(map, vUv + normalize(around + vec2(1e-4)) * 0.14 / photoSize).rgb;
+      col = mix(col, inside, rimAmt * uGloss);
+      col = max(col, inside * 0.9 * rimAmt * uGloss);
       float flatLit = 0.45 + 0.7 * max(dot(normalize(vFaceN), L), 0.0); // the flat face is the reference, however it is turned
       float lit = 0.45 + 0.7 * max(dot(ng, L), 0.0);
       float edge = 1.0 - clamp(ng.z, 0.0, 1.0); // 0 on the flat face, up to 1 at the very edge
