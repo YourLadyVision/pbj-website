@@ -552,8 +552,7 @@ export function createMascot(root) {
   ScrollTrigger.create({
     trigger: hero,
     // On phones the folder tabs sit at the top, so pin the hero just below them
-    // The folder stack is fixed along the top, so pin the hero just below it
-    start: () => `top ${document.querySelector(".stack")?.offsetHeight || 0}`,
+    start: () => `top ${window.matchMedia("(max-width: 767px)").matches ? document.querySelector(".tabs").offsetHeight : 0}`,
     end: "+=180%",
     pin: true,
     scrub: 0.3, // light smoothing only: the page already smooths scrolling, and more would make it trail behind
