@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Commercial cut (preview and recorder)</title>
+    <style>
+      html, body { margin: 0; background: #fff; }
+      canvas { width: 100vw; height: auto; display: block; }
+      #status { position: fixed; left: 8px; top: 8px; font: 12px monospace; color: #333; background: #ffffffcc; padding: 4px 8px; }
+    </style>
+  </head>
+  <body>
+    <canvas id="c" width="1920" height="1080"></canvas>
+    <div id="status">loading…</div>
+    <script type="module">
+      import { createScene, recordVideo } from "/src/commercial.js";
+      const status = document.getElementById("status");
+      const canvas = document.getElementById("c");
+      const ctx = canvas.getContext("2d");
+      const params = new URLSearchParams(location.search);
+      const scene = await createScene();
+      window.__scene = scene;
+      window.__draw = (t) => scene.render(ctx, t);
+      if (params.has("t")) {
+        scene.render(ctx, parseFloat(params.get("t")));
+        status.textContent = "frame t=" + params.get("t");
+      } else if (params.has("record")) {
+        status.textContent = "recording…";
+        const { buffer, ext } = await recordVideo(scene, (p) => (status.textContent = "recording " + Math.round(p * 100) + "%"));
+        status.textContent = "saving…";
+        const res = await fetch("http://localhost:5198/save?name=peanut-butter-commercial." + ext, { method: "POST", body: buffer });
+        status.textContent = "done: " + (await res.text()) + " (" + ext + ")";
+        window.__done = true;
+      } else {
+        scene.render(ctx, 6);
+        status.textContent = "ready";
+      }
+    </script>
+  </body>
+</html>
