@@ -126,7 +126,8 @@ const fragmentShader = /* glsl */ `
     // Top faces and the walls we can see in the photo use the photo; the rest use the wrapped wall
     float facing = dot(n, toCamera);
     float usePhoto = max(smoothstep(0.55, 0.75, n.y), smoothstep(0.0, 0.3, facing));
-    usePhoto = max(usePhoto, uGloss * smoothstep(0.1, 0.45, n.y)); // out front, the rounded lip shows the photo's colour, not the dark side strip
+    float notFront = 1.0 - smoothstep(0.3, 0.7, n.z); // the front wall is the one the photo shows, so it is left exactly as photographed
+    usePhoto = max(usePhoto, uGloss * notFront * smoothstep(0.1, 0.45, n.y)); // out front, the rounded lip at the top and sides shows the photo's colour, not the dark side strip
     vec3 col = mix(wall, photo, usePhoto);
 
     // Same light as at rest (so the photo is untouched), brighter or darker as the slab turns
@@ -163,7 +164,7 @@ const fragmentShader = /* glsl */ `
       col = mix(col, inner, fringe * uGloss);
       // The thick side of the layer (seen when it leans or rocks) takes the surface's own colour, a touch
       // deeper, instead of the dark strip cut from the photo: it reads as the same food, just thicker
-      float sideAmt = 1.0 - smoothstep(0.05, 0.45, n.y);
+      float sideAmt = (1.0 - smoothstep(0.05, 0.45, n.y)) * (1.0 - smoothstep(0.3, 0.7, n.z)); // never the front wall
       vec3 surface = texture2D(map, vUv + normalize(around + vec2(1e-4)) * 0.06 / photoSize).rgb;
       col = mix(col, surface * 0.9, sideAmt * uGloss * uSideFromTop);
       float flatLit = 0.45 + 0.7 * max(dot(normalize(vFaceN), L), 0.0); // the flat face is the reference, however it is turned
