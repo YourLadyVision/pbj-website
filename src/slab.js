@@ -127,8 +127,15 @@ function buildWallBand(img, outline, scale, wall, sideColor) {
     }
   }
 
+  // Keep only the middle of the strip: the part of the edge that faces the camera most squarely, which is the
+  // cleanest and most even. The ends (where the edge turns away) are darker and streaky. The band is then
+  // repeated, mirrored, all the way round the slab, so every side matches the best part of the sandwich.
+  const from = Math.floor(samples.length * 0.3);
+  const to = Math.ceil(samples.length * 0.7);
+  const used = samples.length > 20 ? samples.slice(from, to) : samples;
+
   const bandH = Math.max(4, Math.round(wall));
-  const bandW = Math.max(16, samples.length);
+  const bandW = Math.max(16, used.length);
   const band = document.createElement("canvas");
   band.width = bandW;
   band.height = bandH;
@@ -137,8 +144,8 @@ function buildWallBand(img, outline, scale, wall, sideColor) {
   const fill = new THREE.Color(sideColor).convertLinearToSRGB();
   let length = 0;
   for (let j = 0; j < bandW; j++) {
-    const [sx, sy] = samples[Math.min(samples.length - 1, j)] || [0, 0];
-    if (j > 0 && samples[j]) length += Math.hypot(sx - samples[j - 1][0], sy - samples[j - 1][1]);
+    const [sx, sy] = used[Math.min(used.length - 1, j)] || [0, 0];
+    if (j > 0 && used[j]) length += Math.hypot(sx - used[j - 1][0], sy - used[j - 1][1]);
     for (let k = 0; k < bandH; k++) {
       const ix = Math.min(iw - 1, Math.max(0, Math.round(sx)));
       const iy = Math.min(ih - 1, Math.max(0, Math.round(sy) + 2 + k));
