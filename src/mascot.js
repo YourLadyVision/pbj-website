@@ -29,7 +29,7 @@ const TILTS = [
 // difference so no two layers' walls sit exactly on top of each other (that makes them flicker)
 const LAYERS = [
   { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, shine: [0.07, 22, 1.2] },
-  { src: "/mascot/jelly.webp", wall: 26, side: "#8c0f1c", size: 0.88, bevel: 0.012, shine: [0.4, 80, 3] },
+  { src: "/mascot/jelly.webp", wall: 26, side: "#8c0f1c", size: 0.91, bevel: 0.012, shine: [0.4, 80, 3] },
   { src: "/mascot/peanut-butter.webp", wall: 34, side: "#b87f3a", size: 1.012, bevel: 0.016, soften: 5, shine: [0.18, 40, 2] },
   { src: "/mascot/bread.webp", wall: 70, side: "#c98a43", size: 1, bevel: 0.035, shine: [0.07, 22, 1.2] },
 ];
