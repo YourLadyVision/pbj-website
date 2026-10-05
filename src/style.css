@@ -366,3 +366,20 @@ html.intro .intro-swirl {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* ---------- Layout section: peanut butter spread by a knife ---------- */
+.spread-section { background: var(--page); }
+.spread-stage { position: relative; height: 100svh; overflow: hidden; }
+.spread-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.knife {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+.knife svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+@media (max-width: 767px) { .spread-stage { height: calc(100svh - var(--bar)); } }
