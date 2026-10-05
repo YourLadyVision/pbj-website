@@ -125,6 +125,7 @@ const fragmentShader = /* glsl */ `
     // Top faces and the walls we can see in the photo use the photo; the rest use the wrapped wall
     float facing = dot(n, toCamera);
     float usePhoto = max(smoothstep(0.55, 0.75, n.y), smoothstep(0.0, 0.3, facing));
+    usePhoto = max(usePhoto, uGloss * smoothstep(0.1, 0.45, n.y)); // out front, the rounded lip shows the photo's colour, not the dark side strip
     vec3 col = mix(wall, photo, usePhoto);
 
     // Same light as at rest (so the photo is untouched), brighter or darker as the slab turns
@@ -154,6 +155,16 @@ const fragmentShader = /* glsl */ `
       vec2 out2 = -normalize(around + vec2(1e-4));
       vec3 outward = normalize(vPhotoRightV * out2.x + vPhotoUpV * out2.y);
       ng = normalize(ng + vec3(outward.xy, 0.0) * rimAmt * 1.5);
+      // The photo's outermost pixel or two are half see-through and come out as a thin dark line. Only
+      // those, and only a hair's width: paint them with the colour right beside them, from inside.
+      float fringe = 1.0 - smoothstep(0.55, 0.95, t.a);
+      vec3 inner = texture2D(map, vUv + normalize(around + vec2(1e-4)) * 0.03 / photoSize).rgb;
+      col = mix(col, inner, fringe * uGloss);
+      // The thick side of the layer (seen when it leans or rocks) takes the surface's own colour, a touch
+      // deeper, instead of the dark strip cut from the photo: it reads as the same food, just thicker
+      float sideAmt = 1.0 - smoothstep(0.05, 0.45, n.y);
+      vec3 surface = texture2D(map, vUv + normalize(around + vec2(1e-4)) * 0.06 / photoSize).rgb;
+      col = mix(col, surface * 0.9, sideAmt * uGloss);
       float flatLit = 0.45 + 0.7 * max(dot(normalize(vFaceN), L), 0.0); // the flat face is the reference, however it is turned
       float lit = 0.45 + 0.7 * max(dot(ng, L), 0.0);
       float edge = 1.0 - clamp(ng.z, 0.0, 1.0); // 0 on the flat face, up to 1 at the very edge
