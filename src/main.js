@@ -5,7 +5,6 @@ import Lenis from "lenis";
 import { setupTabs } from "./tabs.js";
 import { createMascot } from "./mascot.js";
 import { playIntro } from "./intro.js";
-import { setupSpread } from "./spread.js";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -17,7 +16,6 @@ gsap.ticker.lagSmoothing(0);
 if (import.meta.env.DEV) window.lenis = lenis; // handy for testing in the browser
 
 const mascot = createMascot(document.querySelector(".mascot"));
-setupSpread();
 playIntro({ lenis });
 
 setupTabs({
