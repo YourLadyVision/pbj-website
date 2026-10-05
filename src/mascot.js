@@ -98,6 +98,7 @@ const fragmentShader = /* glsl */ `
   uniform float uDim; // 0..1: darkens a layer that is behind the highlighted one
   uniform float uGloss; // 0..1: how much of the 3D shine is switched on (only for a layer that has left the stack)
   uniform vec3 uShine;  // how glossy this food is: strength, sharpness, bumpiness
+  uniform float uSideFromTop; // 1 for butter and jelly (their thick side looks like their surface); 0 for bread (its side is crust)
   uniform vec2 photoSize;
   varying vec3 vNormalView;
   varying vec3 vPhotoRightV;
@@ -164,7 +165,7 @@ const fragmentShader = /* glsl */ `
       // deeper, instead of the dark strip cut from the photo: it reads as the same food, just thicker
       float sideAmt = 1.0 - smoothstep(0.05, 0.45, n.y);
       vec3 surface = texture2D(map, vUv + normalize(around + vec2(1e-4)) * 0.06 / photoSize).rgb;
-      col = mix(col, surface * 0.9, sideAmt * uGloss);
+      col = mix(col, surface * 0.9, sideAmt * uGloss * uSideFromTop);
       float flatLit = 0.45 + 0.7 * max(dot(normalize(vFaceN), L), 0.0); // the flat face is the reference, however it is turned
       float lit = 0.45 + 0.7 * max(dot(ng, L), 0.0);
       float edge = 1.0 - clamp(ng.z, 0.0, 1.0); // 0 on the flat face, up to 1 at the very edge
@@ -519,6 +520,7 @@ export function createMascot(root) {
       own.uniforms.uAlpha = { value: 1 };
       own.uniforms.uDim = { value: 0 };
       own.uniforms.uGloss = { value: 0 };
+      own.uniforms.uSideFromTop = { value: layer.src.includes("bread") ? 0 : 1 };
       own.uniforms.uShine = { value: new THREE.Vector3(...(layer.shine || [0.2, 30, 1])) };
       const kb = geometry.boundingBox;
       own.uniforms.uKey = { value: 0 };
