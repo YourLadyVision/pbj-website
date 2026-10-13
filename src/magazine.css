@@ -1,0 +1,4 @@
+/* A blank magazine: just a full-screen canvas. Tap the right side to go forward, the left side to go back. */
+html, body { margin: 0; height: 100%; }
+.mag-body { background: radial-gradient(120% 100% at 50% 40%, #b9b9b9, #7c7c7c); overflow: hidden; }
+.mag-body canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: pointer; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }

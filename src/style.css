@@ -1,14 +1,24 @@
-/* PB&J palette — placeholders until the final palette arrives (see CLAUDE.md) */
+@font-face {
+  font-family: "TeX Gyre Heros";
+  src: local("TeX Gyre Heros Bold"), url("/fonts/texgyreheros-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* PB&J palette — Deep Jam (light), chosen by the owner (see CLAUDE.md) */
 :root {
-  --peanut: #c68b3e;
-  --honey: #e8af45; /* test palette: primary */
+  --peanut: #ffe386;
+  --honey: #ffe386; /* Deep Jam: bread */
+  --pop: #f0a830; /* optional extra pop, both themes */
   --grape: #6b2d5c;
-  --strawberry: #c82828; /* test palette: secondary */
-  --bread: #fff4dc;
-  --crust: #563201; /* test palette: accent */
+  --strawberry: #c2184f; /* Deep Jam (light): jam */
+  --bread: #f8f8f0;
+  --cream: #f8f8f0; /* fixed in both themes (for text on coloured tabs) */
+  --brown: #463721; /* fixed in both themes */
+  --crust: #8a4b1e; /* Deep Jam (light): crust */
   --night: #3b1f2b;
-  --ink: #1f1200; /* test palette: text */
-  --page: #fffdf8; /* test palette: background (realtimecolors.com, light mode) */
+  --ink: #463721; /* Deep Jam (light): text */
+  --page: #f8f8f0; /* Deep Jam (light): cream background */
 
   --tab-size: 80px;
   --body-w: 14px;
@@ -24,13 +34,23 @@
      with the screen width (their "1em"). Computers: width / 90. Tablets: width / 52.125. Phones: width / 23.4375 */
   --u: calc(clamp(992px, 100vw, 2560px) / 90);
 }
+/* Deep Jam (dark): switch by setting data-theme="dark" on <html>. Light is the default. */
+:root[data-theme="dark"] {
+  --page: #463721;
+  --ink: #f8f8f0;
+  --strawberry: #c2184f;
+}
+
 @media (min-width: 1921px) { :root { --u: 21.333px; } }
 @media (max-width: 991px) { :root { --u: calc(100vw / 52.125); } }
-@media (max-width: 767px) { :root { --u: calc(100vw / 23.4375); } }
+@media (max-width: 767px) { :root { --u: calc(100vw / 23.4375); } :root:not([data-theme="dark"]) { --page: #f3f0e0; } }
 
 * { box-sizing: border-box; }
 
 html, body { margin: 0; }
+/* The page colour on the page itself (not only on the body), so a phone's browser never shows white behind it */
+html { background: var(--page); color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }
 
 body {
   background: var(--page);
@@ -238,6 +258,97 @@ h2 { max-width: 22ch; }
   display: block;
 }
 
+/* ---------- Story words for a tapped layer (the top bread first) ----------
+   The layer comes to the middle, then slides to the right while the words type in down the left.
+   Bold justified headline (TeX Gyre Heros Bold) over justified Chivo Mono text. When the layer has
+   settled on the right, it sits on the vertical middle of the hero, and so does this block (it is centred
+   with top: 50%), so the layer and the words share one middle. */
+.story {
+  position: absolute;
+  left: 4%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+  pointer-events: none;
+  z-index: 2;
+}
+.story > * { margin: 0; }
+.story-title {
+  font-family: "TeX Gyre Heros", "Inter", sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: clamp(48px, 7vw, 96px);
+  line-height: 0.95; /* very tight lines */
+  letter-spacing: -0.01em;
+  max-width: none;
+  text-align: justify; /* creates the wide word gaps */
+  text-align-last: left;
+}
+.story-left, .story-right {
+  font-family: "Chivo Mono", monospace;
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: 18px;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-align: justify;
+  text-align-last: left; /* justified like the headline: full lines fill the column, the last line stays natural (same in every layer) */
+  hyphens: none;
+  color: var(--ink);
+}
+.story .roll-slot {
+  display: inline-block;
+  position: relative;
+  vertical-align: bottom;
+  width: calc(var(--n) * 1ch); /* as wide as the word it rolls into */
+  height: 1.35em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: left;
+}
+.story .roll-from .ch { display: inline-block; }
+.story .roll-to { color: var(--strawberry); }
+.story .rch { position: absolute; top: 0; white-space: pre; opacity: 0; } /* shown and rolled in by mascot.js */
+.story .w { white-space: nowrap; } /* a word never breaks in the middle (plain inline, so line breaks and justifying work as for normal text) */
+.story .ch { opacity: 0; }
+.story em { font-style: normal; color: var(--strawberry); }
+/* on the two bread layers the highlighted words are crust brown (#8a4b1e); [Coming soon] stays jam red */
+.story[data-layer="3"] em,
+.story[data-layer="0"] em { color: var(--crust); }
+/* peanut butter: highlighted words are the golden pop colour (#f0a830) */
+.story[data-layer="2"] em { color: var(--pop); }
+/* Phones: a compact headline on top, then the words wrapping around a big layer on the right (the way No Art's
+   phone page wraps its text): a first paragraph above, the second beside and below. The layer settles into
+   the invisible .story-slot. The whole group is centred in the frame. */
+.story-slot { display: none; }
+@media (max-width: 767px) {
+  .story { left: 5%; width: 90%; display: block; }
+  .story > * { margin: 0 0 1.15em; }
+  .story-title { font-size: clamp(36px, 13.6vw, 66px); line-height: 0.98; margin-bottom: 0.8em; letter-spacing: -0.02em; } /* a compact headline: every title fits on one line */
+  .story-left, .story-right { width: auto; font-size: clamp(12px, 3.7vw, 15px); line-height: 1.5; }
+  /* phones: left-aligned (no stretched word gaps in the narrow columns) */
+  .story-title, .story-left, .story-right { text-align: left; text-align-last: left; }
+  .story-slot {
+    display: block;
+    float: right;
+    width: 58%;
+    aspect-ratio: 1 / 0.9; /* replaced by the layer's real shape once it has arrived (see mascot.js) */
+    margin: 0.3em 0 0.5em 0;
+    shape-margin: 17px; /* the even gap between the words and the layer's edge */
+  }
+  /* the top bread bulges out on its left, so its words keep a little more room from its edge */
+  .story[data-layer="3"] .story-slot { shape-margin: 22px; }
+  /* and the top bread has the most words, so its lines sit a touch closer together, which keeps the text from running far below the layer */
+  .story[data-layer="3"] .story-left, .story[data-layer="3"] .story-right { line-height: 1.36; }
+  .story[data-layer="3"] .story-title { margin-bottom: 0.6em; }
+  .story[data-layer="3"] > * { margin-bottom: 0.95em; }
+  /* a little narrower, which leaves a wider column of words beside it, so the words don't run far below it */
+  .story[data-layer="3"] .story-slot { width: 53%; }
+}
+
 .scroll-hint {
   position: absolute;
   left: 50%;
@@ -264,6 +375,9 @@ h2 { max-width: 22ch; }
     bottom: auto;
     width: auto;
     height: var(--bar);
+    /* a solid page-coloured strip behind the folders, so nothing on the page shows through the gaps around the
+       tabs (or above them) as the page scrolls up under the bar */
+    background: var(--page);
   }
 
   .tab {
@@ -383,3 +497,40 @@ html.intro .intro-swirl {
 .knife svg { display: block; width: 100%; height: auto; overflow: visible; }
 
 @media (max-width: 767px) { .spread-stage { height: calc(100svh - var(--bar)); } }
+
+/* ---------- Meet Our Hosts: endless grid of magazine covers (a copy of the 197 Historias Ilustradas grid), and the opened magazine ---------- */
+.hosts-stage { position: relative; height: 100vh; overflow: hidden; background: var(--page); overscroll-behavior: contain; }
+.hosts-grid { position: absolute; inset: 0; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; visibility: hidden; }
+.hosts-grid.is-ready { visibility: visible; }
+.hg-content { position: relative; width: 100%; height: 100%; will-change: transform; }
+.hg-item {
+  position: absolute; top: 0; left: 0; width: var(--hg-w); padding: 0; margin: 0; border: 0; background: none; cursor: inherit;
+  font: inherit; color: var(--ink); text-align: left; text-transform: uppercase; -webkit-tap-highlight-color: transparent;
+  will-change: transform; user-select: none;
+}
+.hg-card { display: block; }
+.hg-cap { display: block; height: var(--hg-title); overflow: hidden; font-size: 0.75em; line-height: 1; white-space: nowrap; padding-top: calc(var(--hg-title) * 0.4); }
+.hg-line { display: flex; justify-content: space-between; gap: 0.5em; }
+.hg-media { display: block; position: relative; overflow: hidden; width: var(--hg-w); height: calc(var(--hg-w) * 1.34); }
+.hg-inner { display: block; width: 100%; height: 100%; overflow: hidden; }
+/* a blank cover: flat, no design, just a sheet with a fine edge so it shows on the page */
+.hg-face { display: block; width: 100%; height: 100%; background: #ececea; box-shadow: inset 0 0 0 1px rgba(31, 18, 0, 0.14), inset 5px 0 0 -3px rgba(31, 18, 0, 0.18); }
+.hosts-book-wrap { position: absolute; inset: 0; overflow: hidden; visibility: hidden; }
+.hosts-book { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: manipulation; user-select: none; cursor: pointer; }
+/* [ CLOSE ] top left, in our own text style: mono, capitals, with the fill sweeping across on hover */
+.hosts-hint { position: absolute; left: 0; right: 0; bottom: calc(var(--u) * 1.6); z-index: 4; margin: 0; text-align: center; text-align-last: center; pointer-events: none; font: inherit; font-size: 0.75em; text-transform: uppercase; color: var(--ink); }
+.hosts-hint span { display: inline-block; background: var(--page); padding: 0.45em 0.9em; border-radius: 999px; box-shadow: 0 2px 10px rgba(70, 55, 33, 0.18); }
+.hosts-hint .hint-phone { display: none; }
+@media (max-width: 767px) { .hosts-hint .hint-desktop { display: none; } .hosts-hint .hint-phone { display: inline; } }
+.hosts-close {
+  position: absolute; top: calc(var(--u) * 1.6); left: calc(var(--u) * 1.6); z-index: 5; display: flex; align-items: center; gap: 0.4em;
+  min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink); font: inherit; font-size: 0.75em; text-transform: uppercase; cursor: pointer;
+  opacity: 0; pointer-events: none; transition: opacity 0.5s;
+}
+.hosts-fill { position: relative; display: inline-flex; align-items: center; overflow: hidden; padding: 0.3em 0.45em; line-height: 1; }
+.hosts-fill::after { content: ""; position: absolute; inset: 0; background: var(--ink); transform: scaleX(0); transform-origin: left; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.hosts-fill > span { position: relative; z-index: 1; text-decoration: underline; text-underline-offset: 2px; transition: color 0.3s; }
+.hosts-close:hover .hosts-fill::after, .hosts-close:focus-visible .hosts-fill::after { transform: scaleX(1); }
+.hosts-close:hover .hosts-fill > span, .hosts-close:focus-visible .hosts-fill > span { color: var(--page); }
+.hosts-stage.is-open .hosts-close { opacity: 1; pointer-events: auto; }
+@media (max-width: 767px) { .hosts-stage { height: calc(100svh - var(--bar)); } }

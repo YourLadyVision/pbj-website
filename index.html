@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f3f0e0" />
+    <meta name="color-scheme" content="light" />
     <title>PeanutButterJelly.vip — Mining Hidden Gems Around You</title>
     <meta name="description" content="PeanutButterJelly.vip: mining hidden gems around you in Mumbai." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -33,12 +35,12 @@
     <div id="site">
     <!-- Folder tabs: right edge on computers, stacked at the top on phones -->
     <nav class="tabs" aria-label="Sections">
-      <button class="tab" data-tab="home" style="--tab: #f1dcb0; --on: var(--ink); --top: 2vh; --len: 12vh">Home</button>
-      <button class="tab" data-tab="events" style="--tab: var(--strawberry); --on: var(--page); --top: 16vh; --len: 12vh">Events</button>
-      <button class="tab" data-tab="about" style="--tab: var(--honey); --on: var(--ink); --top: 30vh; --len: 12vh">About</button>
-      <button class="tab" data-tab="list" style="--tab: var(--crust); --on: var(--page); --top: 44vh; --len: 16vh">List Your Event</button>
-      <button class="tab" data-tab="partner" style="--tab: #8f1f1f; --on: var(--page); --top: 62vh; --len: 16vh">Be Our Partner</button>
-      <button class="tab" data-tab="secret" style="--tab: var(--ink); --on: var(--page); --top: 80vh; --len: 14vh">Our Secret</button>
+      <button class="tab" data-tab="home" style="--tab: #fffffa; --on: var(--brown); --top: 2vh; --len: 12vh">Home</button>
+      <button class="tab" data-tab="events" style="--tab: var(--honey); --on: var(--brown); --top: 16vh; --len: 12vh">Events</button>
+      <button class="tab" data-tab="about" style="--tab: var(--crust); --on: var(--cream); --top: 30vh; --len: 12vh">About</button>
+      <button class="tab" data-tab="list" style="--tab: var(--strawberry); --on: var(--cream); --top: 44vh; --len: 16vh">List Your Event</button>
+      <button class="tab" data-tab="hosts" style="--tab: var(--brown); --on: var(--cream); --top: 62vh; --len: 17vh">Meet Our Hosts</button>
+      <button class="tab" data-tab="secret" style="--tab: var(--pop); --on: var(--brown); --top: 80vh; --len: 14vh">Our Secret</button>
     </nav>
 
     <main class="folder">
@@ -48,6 +50,27 @@
           <div class="focus-backdrop"></div>
           <div class="mascot" role="img" aria-label="A PB&J sandwich that builds itself as you scroll">
             <canvas></canvas>
+          </div>
+          <!-- The story: what each layer means. Appears as the top bread comes to the middle -->
+          <div class="story" data-layer="3">
+            <h2 class="story-title">The Binder Slice</h2>
+            <p class="story-left">This is the layer that lets everyone <em>discover</em>!</p>
+            <p class="story-right"><span class="story-slot" aria-hidden="true"></span>No one goes empty-handed. There is something for everyone. Lean back and scroll to find your <em>next best experience</em> while PBJ does the sticky business of mining <em>hidden gems</em> around <em>you</em>.</p>
+          </div>
+          <div class="story" data-layer="0">
+            <h2 class="story-title">The Fun Slice</h2>
+            <p class="story-left">This is the layer of extra ‘<em>OMPH!</em>’</p>
+            <p class="story-right"><span class="story-slot" aria-hidden="true"></span>Here <span class="roll" data-to="[Coming soon]">drops</span> <em>PBJ Originals</em>, where, with our pals: <em>sponsors, brands &amp; partners</em>, we bring together <em>exclusive nights</em> for the PBJ lovers.</p>
+          </div>
+          <div class="story" data-layer="1">
+            <h2 class="story-title">Jelly</h2>
+            <p class="story-left">This is the layer of <em>spontaneity</em>!</p>
+            <p class="story-right"><span class="story-slot" aria-hidden="true"></span>A place where friends, colleagues, and strangers make plans like it costs nothing <em>and it doesn't</em>! Not at PBJ! The <em>perfect</em> space to drip <em>fun</em> and <em>hey</em>! What better place to <em>jam</em>, right?</p>
+          </div>
+          <div class="story" data-layer="2">
+            <h2 class="story-title">Peanut Butter</h2>
+            <p class="story-left">This is the layer for our <em>shining stars</em>; our <em>hosts</em>.</p>
+            <p class="story-right"><span class="story-slot" aria-hidden="true"></span>The <em>spread</em> where all kinds of hosts take the <em>centre stage</em> and let you experience a bit of everything — <em>crunchy, buttery, nutty &amp; yummy</em>.</p>
           </div>
         </div>
 
@@ -113,11 +136,12 @@
           <p class="placeholder">Coming soon: who can list, how to list, a few rules and a host signup.</p>
         </div>
       </section>
-      <section class="panel" data-panel="partner" hidden>
-        <div class="block">
-          <p class="kicker">■ Be Our Partner</p>
-          <h2>Why partner with PBJ.</h2>
-          <p class="placeholder">Coming soon: what we offer venues, hosts and brands.</p>
+      <section class="panel" data-panel="hosts" hidden>
+        <div class="hosts-stage" data-lenis-prevent>
+          <div class="hosts-book-wrap"><canvas class="hosts-book" aria-label="A host's magazine: tap the right side for the next pages, the left side to go back"></canvas></div>
+          <div class="hosts-grid" aria-label="Our hosts' magazines: drag or scroll to explore, tap one to open it"><div class="hg-content"></div></div>
+          <p class="hosts-hint" aria-hidden="true"><span class="hint-desktop">[Left-click and scroll]</span><span class="hint-phone">[Use three fingers to scroll]</span></p>
+          <button class="hosts-close" type="button"><span class="hosts-br">[</span><span class="hosts-fill"><span>Close</span></span><span class="hosts-br">]</span></button>
         </div>
       </section>
       <section class="panel" data-panel="secret" hidden>

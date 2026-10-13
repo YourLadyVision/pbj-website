@@ -96,6 +96,20 @@ _What happens as people scroll down the page._
 - **End of story:** https://www.awwwards.com/inspiration/story-fade-197-historias-ilustradas — when someone scrolls to the end of an event's full story, a lineup of the next stories appears below and the story above fades out.
 - **Screenshot:** inspiration/
 
+### Shader on Scroll demo
+- **Link:** https://demos.gsap.com/demo/shader-on-scroll
+- **Code:** https://codepen.io/GreenSock/pen/EaVbXeM (uses GSAP's ScrollTrigger and Three.js)
+- **What I like:** The trippy scroll effect: the picture warps and distorts as you scroll, and the faster you scroll, the stronger it gets.
+- **Where I'd use it:** The Events section, on the event photos, as the trippy scroll effect (alternative or addition to the grid ideas above).
+- **Screenshot:** inspiration/
+
+#### How it would work
+1. Each event photo is drawn on a small graphics canvas (WebGL) instead of a normal image.
+2. A "shader" (a tiny program that bends the picture) warps it, driven by how fast the person is scrolling.
+3. When scrolling stops, the picture settles back to normal.
+
+**To plan for:** Needs a graphics library (Three.js) which adds weight on mobile data, so use it on a few images only and load it only when the section is near. Turn the warp off for people with "reduced motion" on, and fall back to plain images if their phone can't run it.
+
 ### Dynamic Morphing demo
 - **Link:** https://demos.gsap.com/demo/dynamic-morphing
 - **Code:** https://codepen.io/GreenSock/pen/qBedXpg (uses GSAP's MorphSVG plugin)

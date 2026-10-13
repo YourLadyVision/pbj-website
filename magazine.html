@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PB&J Host Magazine</title>
+    <meta name="description" content="A blank PB&J host magazine: tap to turn the pages." />
+  </head>
+  <body class="mag-body">
+    <canvas id="mag" aria-label="A magazine: tap the right side for the next pages, the left side to go back" role="img"></canvas>
+    <script type="module">
+      import "/src/magazine.css";
+      import { createMagazine } from "/src/magazine.js";
+      // ?pages=N sets how many inside pages there are (rounded up to an even number)
+      const inner = Number(new URLSearchParams(location.search).get("pages")) || 24;
+      const flipMs = Number(new URLSearchParams(location.search).get("ms")) || 1250;
+      window.magazine = createMagazine(document.getElementById("mag"), { inner, flipMs });
+    </script>
+  </body>
+</html>

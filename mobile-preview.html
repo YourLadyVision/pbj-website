@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PB&J — Phone Preview</title>
+    <style>
+      /* A helper page for the owner: the real site, shown inside a phone-sized frame.
+         It is not part of the website itself. */
+      :root {
+        --page: #f8f8f0;
+        --ink: #463721;
+        --jam: #c2184f;
+        --bread: #ffe386;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--page);
+        color: var(--ink);
+        font-family: "Chivo Mono", ui-monospace, Menlo, monospace;
+        text-transform: uppercase;
+        display: flex;
+        gap: 48px;
+        justify-content: safe center;
+        align-items: center;
+        padding: 24px;
+        flex-wrap: wrap;
+      }
+      .phone {
+        width: calc(var(--w) + 24px);
+        height: calc(var(--h) + 24px);
+        padding: 12px;
+        border-radius: 46px;
+        background: var(--ink);
+        box-shadow: 0 24px 60px rgba(70, 55, 33, 0.35);
+        transition: width 0.3s, height 0.3s;
+      }
+      iframe {
+        width: var(--w);
+        height: var(--h);
+        border: 0;
+        border-radius: 34px;
+        background: var(--page);
+        display: block;
+      }
+      .panel { width: 300px; font-size: 12px; line-height: 1.3; }
+      h1 { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 34px; line-height: 1; letter-spacing: -1.4px; margin: 0 0 14px; }
+      p { margin: 0 0 14px; }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+      button {
+        font: inherit;
+        text-transform: uppercase;
+        color: var(--ink);
+        background: var(--bread);
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        padding: 12px 18px;
+        min-height: 46px;
+        cursor: pointer;
+      }
+      button.on { background: var(--ink); color: var(--page); }
+      button.jam { background: var(--jam); color: var(--page); border-color: var(--jam); }
+      ol { padding-left: 18px; margin: 0 0 14px; }
+      li { margin-bottom: 6px; }
+    </style>
+  </head>
+  <body style="--w: 390px; --h: 780px">
+    <div class="phone"><iframe id="site" src="/" title="The site at phone size"></iframe></div>
+
+    <div class="panel">
+      <h1>Phone preview</h1>
+      <p>The real site in a phone-sized screen. Wait for the intro to finish, then use the buttons or scroll over the phone.</p>
+
+      <p>Do one step</p>
+      <div class="row">
+        <button class="jam" id="next">Next step ↓</button>
+        <button id="back">Back ↑</button>
+      </div>
+
+      <p>Phone size</p>
+      <div class="row" id="sizes">
+        <button data-w="360" data-h="740">Small</button>
+        <button data-w="390" data-h="780" class="on">Normal</button>
+        <button data-w="430" data-h="860">Large</button>
+      </div>
+
+      <div class="row"><button id="reload">Start again</button></div>
+
+      <p>Each step</p>
+      <ol>
+        <li>Next: the top bread comes up, then its words type in</li>
+        <li>Next: it goes back</li>
+        <li>…the same for peanut butter, jelly, bottom bread</li>
+        <li>After the last one goes back, Next scrolls the page and builds the sandwich</li>
+      </ol>
+      <p>To tell me what to change, say which layer and which step, e.g. "jelly, while the words are typing: make the text bigger".</p>
+    </div>
+
+    <script>
+      const frame = document.getElementById("site");
+      // Next / Back do exactly what one scroll of the wheel does
+      const step = (dy) => {
+        const w = frame.contentWindow;
+        const ev = new w.WheelEvent("wheel", { deltaY: dy, cancelable: true, bubbles: true });
+        w.document.body.dispatchEvent(ev);
+      };
+      document.getElementById("next").onclick = () => step(120);
+      document.getElementById("back").onclick = () => step(-120);
+      document.getElementById("reload").onclick = () => frame.contentWindow.location.reload();
+      document.getElementById("sizes").onclick = (e) => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        document.querySelectorAll("#sizes button").forEach((x) => x.classList.toggle("on", x === b));
+        document.body.style.setProperty("--w", b.dataset.w + "px");
+        document.body.style.setProperty("--h", b.dataset.h + "px");
+        setTimeout(() => frame.contentWindow.location.reload(), 350); // reload so the site lays itself out for the new size
+      };
+    </script>
+  </body>
+</html>

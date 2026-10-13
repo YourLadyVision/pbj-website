@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PB&J Palette Preview</title>
+<style>
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; background: #eee; color: #222; }
+  header { padding: 24px 5vw 8px; }
+  header h1 { margin: 0 0 4px; font-size: 28px; }
+  header p { margin: 0; color: #555; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px 5vw 60px; }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+  .sw span { font-size: 9px; }
+  .pal { background: var(--bg); color: var(--dark); border-radius: 22px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,.15); }
+  .pal.dark { color: var(--light); }
+  .sw { display: flex; height: 54px; }
+  .sw span { flex: 1; font-size: 10px; display: flex; align-items: flex-end; padding: 4px 6px; }
+  .body { padding: 22px; }
+  .tag { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+  h2 { margin: 6px 0 8px; font-size: 40px; line-height: 1; letter-spacing: -1.4px; }
+  p.lead { margin: 0 0 16px; line-height: 1.4; }
+  .btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+  .btn { border: 0; border-radius: 999px; padding: 14px 22px; font: inherit; font-weight: 700; cursor: pointer; transition: transform .2s; }
+  .btn:hover { transform: translateY(-3px) rotate(-1deg); }
+  .b1 { background: var(--jam); color: var(--light); }
+  .b2 { background: var(--bread); color: var(--dark); }
+  .b3 { background: var(--accent); color: var(--accentText); }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .card { border-radius: 16px; padding: 14px; font-size: 14px; line-height: 1.3; }
+  .c1 { background: var(--bread); color: var(--dark); }
+  .c2 { background: var(--crust); color: var(--light); }
+  .c3 { background: var(--jam); color: var(--light); }
+  .b4 { background: var(--pop); color: #463721; }
+  .c4 { background: var(--accent); color: var(--accentText); }
+  .card b { display: block; font-size: 16px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>PB&amp;J palette: light and dark</h1>
+  <p>The locked pair. Swatches: background, bread, crust, jam, accent, pop.</p>
+</header>
+<main class="grid" id="grid"></main>
+<script>
+const P = [
+  { n: "Deep Jam · Light", bg: "#F8F8F0", bread: "#FFE386", crust: "#8A4B1E", jam: "#C2184F", accent: "#463721", accentText: "#F8F8F0", pop: "#F0A830", dark: "#463721", light: "#F8F8F0" },
+  { n: "Deep Jam · Dark", dark_: 1, bg: "#463721", bread: "#FFE386", crust: "#8A4B1E", jam: "#C2184F", accent: "#F8F8F0", accentText: "#463721", pop: "#F0A830", dark: "#463721", light: "#F8F8F0" },
+];
+const keys = ["bg","bread","crust","jam","accent","pop"];
+document.getElementById("grid").innerHTML = P.map(p => `
+<section class="pal ${p.dark_ ? "dark" : ""}" style="--bg:${p.bg};--bread:${p.bread};--crust:${p.crust};--jam:${p.jam};--accent:${p.accent};--accentText:${p.accentText};--pop:${p.pop};--dark:${p.dark};--light:${p.light}">
+  <div class="sw">${keys.map(k => `<span style="background:${p[k]};color:${k==="bg"||k==="bread"||k==="pop"||(k==="accent"&&p.dark_) ? p.dark : p.light}">${p[k]}</span>`).join("")}</div>
+  <div class="body">
+    <div class="tag">${p.n}</div>
+    <h2>Mining hidden gems around you</h2>
+    <p class="lead">Fresh finds across Mumbai, from Bandra bakeries to Dadar chai stops.</p>
+    <div class="btns"><button class="btn b1">Explore</button><button class="btn b2">Near me</button><button class="btn b3">Join</button><button class="btn b4">New ★</button></div>
+    <div class="cards">
+      <div class="card c1"><b>Bread</b>Cream card, dark text</div>
+      <div class="card c2"><b>Crust</b>Brown card, light text</div>
+      <div class="card c3"><b>Jam</b>Raspberry card, light text</div>
+      <div class="card c4"><b>Accent</b>Cream / deep brown</div>
+    </div>
+  </div>
+</section>`).join("");
+</script>
+</body>
+</html>

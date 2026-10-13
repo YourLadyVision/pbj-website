@@ -5,6 +5,7 @@ import Lenis from "lenis";
 import { setupTabs } from "./tabs.js";
 import { createMascot } from "./mascot.js";
 import { playIntro } from "./intro.js";
+import { setupHosts } from "./hosts.js";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -18,9 +19,14 @@ if (import.meta.env.DEV) window.lenis = lenis; // handy for testing in the brows
 const mascot = createMascot(document.querySelector(".mascot"));
 playIntro({ lenis });
 
+const hosts = setupHosts(document.querySelector('[data-panel="hosts"]'));
+
 setupTabs({
   onSwitch(name) {
+    if (name === "hosts") hosts.show();
+    else hosts.hide();
     lenis.scrollTo(0, { immediate: true });
+    mascot.setActive(name === "home");
     if (name === "home") mascot.resize();
   },
 });

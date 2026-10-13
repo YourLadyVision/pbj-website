@@ -14,7 +14,7 @@ Build the skeleton of the full PeanutButterJelly.vip site (not a single page) so
 - Partner program: venues (free repeating listings, "PBJ Partner" badge, we fill their quiet weekday slots) and brands (sponsor "PBJ Originals" nights, priced per event)
 
 ## The Site, Tab by Tab
-Six folder tabs: **Home, Events, About, List Your Event, Be Our Partner, Our Secret.**
+Six folder tabs: **Home, Events, About, List Your Event, Meet Our Hosts, Our Secret.**
 - Computers: tabs along the right edge; hovering shows the full label.
 - Phones: tabs stacked close together at the top with part of each label showing. Tap to peek (the tab slides out to show its full label), tap again to open. Switching tabs feels like shuffling through folders.
 
@@ -38,7 +38,7 @@ Six folder tabs: **Home, Events, About, List Your Event, Be Our Partner, Our Sec
 
 **List Your Event:** who can list, a peek at "how to list" (design to be decided), a few rules (including outside venues only) and a host interest signup.
 
-**Be Our Partner:** why hosts, venues and brands should partner with us, what we offer, and a "reach out" button.
+**Meet Our Hosts:** an endless, draggable grid of 3D magazine covers, one per host. Tapping a cover grows it to the middle while the others drift away, then the magazine opens wide and people tap to flip its pages (cover, host profile, past events, current events, then teasers of future events; each host's page count varies). Built (blank) in `src/hosts.js` and `src/magazine.js`; the details and design come later. The partner-program pitch ("Be Our Partner") moves elsewhere for now.
 
 **Our Secret:** "What PBJ does differently: it's a secret we can share if you reach out." Helps hosts see why to choose us over other platforms, and sparks curiosity in guests. Ends with a "reach out" button.
 
@@ -55,7 +55,7 @@ Six folder tabs: **Home, Events, About, List Your Event, Be Our Partner, Our Sec
 - **Home:** at the bottom, plus a "Join the list" button in the hero that jumps to it (guest list)
 - **Events:** "Get notified about events like this" on each event card (guest list)
 - **List Your Event:** host interest signup (hosts and partners list)
-- **Be Our Partner** and **Our Secret:** a "reach out" contact button instead of a signup
+- **Our Secret:** a "reach out" contact button instead of a signup
 
 ## Building Steps
 - [x] 1. Starting project (Vite, GSAP, Lenis, Three.js)
