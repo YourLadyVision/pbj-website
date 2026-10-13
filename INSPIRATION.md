@@ -96,6 +96,25 @@ _What happens as people scroll down the page._
 - **End of story:** https://www.awwwards.com/inspiration/story-fade-197-historias-ilustradas — when someone scrolls to the end of an event's full story, a lineup of the next stories appears below and the story above fades out.
 - **Screenshot:** inspiration/
 
+### Dynamic Morphing demo
+- **Link:** https://demos.gsap.com/demo/dynamic-morphing
+- **Code:** https://codepen.io/GreenSock/pen/qBedXpg (uses GSAP's MorphSVG plugin)
+- **What I like:** Shapes that melt and change into other shapes, used as a page transition.
+- **Where I'd use it:** Page transitions between pages of the site, with a blobby shape (jelly or peanut butter) that morphs across the screen and reveals the next page.
+- **Screenshot:** inspiration/
+
+**Tried and set aside (for now):** We built the wavy-sheet version for switching folders (bread and jam sheets rise up, cover the page, then sweep off the top). It worked, but we went back to the folder-slide animation. Easy to bring back: the demo is just wavy shapes (no paid plugin), about a second long.
+
+**To plan for:** Shapes are lightweight, so this is easy on mobile data. Keep the transition quick so it never slows people down, and skip the morph for people with "reduced motion" on (a simple fade instead). Note: I couldn't see the demo run, so this is based on its title and tags.
+
+### GSAP Observer (swipe, touch and scroll input)
+- **Link:** https://cdn.jsdelivr.net/npm/gsap@3.15/dist/Observer.min.js
+- **What it is:** A small GSAP tool that notices swipes, drags, scrolls and touches in one tidy way. Already included with the GSAP we have installed, so nothing extra to download.
+- **Where I'd use it:** Opening the next folder automatically when you keep scrolling past the end of the current one (in use).
+- **Screenshot:** none (it's a tool, nothing to see)
+
+**To plan for:** It takes a deliberate extra scroll past the end so it never opens by accident, and the last folder has no next one.
+
 ## Email signup
 _Forms and boxes where people join the mailing list._
 
