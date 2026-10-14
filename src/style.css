@@ -446,7 +446,7 @@ h2 { max-width: 22ch; }
 .intro-swirl { display: none; }
 
 html.intro { overflow: hidden; }
-html.intro body { background: var(--night); } /* the dark "black hole" behind the swirl */
+html.intro body { background: var(--strawberry); } /* the "hole" behind the swirl: same palette red as the loading screen */
 html.intro #site { clip-path: circle(0px at 50% 50%); background: var(--page); }
 
 html.intro .intro-overlay {
