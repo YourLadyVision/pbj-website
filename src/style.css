@@ -238,6 +238,30 @@ h2 { max-width: 22ch; }
 .hero-text h1 { margin-bottom: 1.25rem; }
 .hero-sub { max-width: 32ch; margin: 0 0 2rem; }
 
+/* The opening title: sits behind the sandwich (the mascot is drawn after it). heroOpen.js sizes and moves the words. */
+.hero-title {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  z-index: 0;
+  pointer-events: none;
+  font-family: var(--display);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -1.44px;
+  text-transform: uppercase;
+  text-align: left;
+}
+.ht {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+}
+.ht-peanut { color: var(--pop); }    /* darker yellow */
+.ht-butter { color: var(--honey); }  /* light yellow */
+.ht-jelly { color: var(--strawberry); }
+
 .focus-backdrop {
   display: none; /* switched off for now: the colour washes (see WASH in mascot.js) come back later */
   position: absolute;
@@ -446,7 +470,7 @@ h2 { max-width: 22ch; }
 .intro-swirl { display: none; }
 
 html.intro { overflow: hidden; }
-html.intro body { background: var(--night); } /* the dark "black hole" behind the swirl */
+html.intro body { background: var(--honey); } /* the "hole" behind the swirl: same light yellow as the loading screen */
 html.intro #site { clip-path: circle(0px at 50% 50%); background: var(--page); }
 
 html.intro .intro-overlay {
@@ -456,8 +480,8 @@ html.intro .intro-overlay {
   z-index: 100;
   align-items: center;
   justify-content: center;
-  background: var(--grape);
-  color: var(--bread);
+  background: var(--honey); /* palette light yellow (bread) */
+  color: var(--brown); /* dark brown text so it stays readable on yellow */
 }
 .intro-overlay p {
   margin: 0;

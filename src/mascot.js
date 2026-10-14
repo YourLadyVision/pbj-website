@@ -213,6 +213,10 @@ export function createMascot(root) {
   // ---- The animated values (the timeline moves these; draw() puts them on screen) ----
   const piece = LAYERS.map((_, i) => ({ y: APART[i], x: TILTS[i][0], turn: TILTS[i][1], z: TILTS[i][2] }));
   const cam = { target: 0.9, zoom: 1 };
+  // The hero opening: the sandwich starts assembled and tiny (zoom ~0), grows out of the middle, then its layers
+  // float apart (apart 0 -> 1). Both are 1 for the rest of the visit.
+  const opening = { zoom: 1, apart: 1 };
+  const heroTitle = hero.querySelector(".hero-title"); // the big title behind the sandwich: fades while a layer is up front
   const spin = { angle: 0 };
   const hop = LAYERS.map(() => ({ v: 0 }));
   // Each layer follows its scroll position on a springy "string", so landing and lifting off are a
@@ -543,15 +547,15 @@ export function createMascot(root) {
         }
       }
       belowY = y;
-      mesh.position.set(0, y, 0);
+      mesh.position.set(0, rest[i] + (y - rest[i]) * opening.apart, 0);
       mesh.rotation.set(p.x, p.turn, p.z + Math.sin(time * 1.1 + i) * 0.06 * floating);
     });
     turntable.rotation.y = spin.angle;
     // The camera follows the stack down and zooms in, and the whole thing bobs a little
-    const target = new THREE.Vector3(0, cam.target - Math.sin(time * 1.2) * 0.05, 0);
+    const target = new THREE.Vector3(0, stackCenter + (cam.target - stackCenter) * opening.apart - Math.sin(time * 1.2) * 0.05, 0);
     camera.position.copy(target).addScaledVector(viewDir, 30);
     camera.lookAt(target);
-    camera.zoom = cam.zoom;
+    camera.zoom = cam.zoom * opening.zoom;
     camera.updateProjectionMatrix();
     // Keep the whole sandwich inside the frame: if any layer would poke out of the top or bottom, slide
     // the camera just enough to bring it back (smooth, because the layers themselves move smoothly)
@@ -595,6 +599,7 @@ export function createMascot(root) {
     // Which layer is up front (brought by a scroll step or a tap)
     const fi = focus.i;
     const fa = focus.amount;
+    if (heroTitle) heroTitle.style.opacity = String(1 - Math.min(1, fa * 1.5));
     const fs = story.shift;
     const storyOn = stories.has(fi);
     let mesh_;
@@ -1021,7 +1026,7 @@ export function createMascot(root) {
   // ...for the top bread, peanut butter, jelly and bottom bread in turn. After the last layer is back, the next
   // scroll lets the page scroll normally, which builds the sandwich and spins it (as it used to). Scrolling
   // back up to the top steps through it all in reverse.
-  let stepsOn = true; // switched off while another tab is showing
+  let stepsOn = true; // switched off while another tab is showing (or while the hero opening plays)
   let done = 0; // how many layers have had their turn (while none is up)
   let lockedUntil = 0;
   const hold = (seconds) => (lockedUntil = performance.now() + seconds * 1000);
@@ -1134,5 +1139,11 @@ export function createMascot(root) {
     setActive(on) {
       stepsOn = on;
     },
+    // The hero opening (see heroOpen.js): hide the sandwich now, play the rest later
+    opening,
+    hold(on) {
+      stepsOn = !on;
+    },
+
   };
 }

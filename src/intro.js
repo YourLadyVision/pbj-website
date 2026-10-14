@@ -55,9 +55,9 @@ const swirlShader = {
   `,
 };
 
-export function playIntro({ lenis }) {
+export function playIntro({ lenis, onDone = () => {} }) {
   const html = document.documentElement;
-  if (!html.classList.contains("intro")) return;
+  if (!html.classList.contains("intro")) return onDone();
 
   const site = document.getElementById("site");
   const overlay = document.querySelector(".intro-overlay");
@@ -107,6 +107,7 @@ export function playIntro({ lenis }) {
     } catch (e) {}
     lenis.start();
     ScrollTrigger.refresh();
+    onDone();
   };
 
   if (reduceMotion) {
