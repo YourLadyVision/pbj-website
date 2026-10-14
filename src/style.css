@@ -485,10 +485,15 @@ html.intro .intro-overlay {
 }
 .intro-overlay p {
   margin: 0;
-  font-family: var(--mono);
-  font-size: 0.75em;
+  font-family: var(--display); /* same look as our headlines */
+  font-weight: 700;
+  font-size: 3em;
+  line-height: 1;
+  letter-spacing: -1.44px;
+  text-align: center;
   text-transform: uppercase;
 }
+@media (max-width: 991px) { .intro-overlay p { font-size: 2em; } }
 /* The swirling copy of the loading screen (drawn by intro.js) */
 html.intro .intro-swirl {
   display: block;
