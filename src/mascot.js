@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { createCutLetter, cutFrame, cutRandom } from "./cutword.js";
 import { buildSlab, PHOTO_W, PHOTO_H } from "./slab.js";
 
 // The PB&J mascot: a real 3D sandwich wrapped in your four photos (bread, jelly, peanut butter, bread).
@@ -272,6 +273,43 @@ export function createMascot(root) {
   const Y_AXIS = new THREE.Vector3(0, 1, 0);
   let lastTime = 0;
   const meshes = [];
+  const halos = []; // the gap copies, one per layer (they wobble in step with the lettering)
+  const HALO = 1.045; // how much bigger the gap copy is (a little over 4%, about 9px around a bread slice on a laptop)
+  const haloMaterial = new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: new THREE.Vector3(1, 1, 1) } },
+    vertexShader: "void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+    fragmentShader: "uniform vec3 uColor; void main() { gl_FragColor = vec4(uColor, 1.0); }",
+    depthTest: false,
+    depthWrite: false,
+  });
+  // The gap takes a new little wobble 12 times a second, in the same rhythm as the paper-cut lettering: its size
+  // breathes a touch and it slides a hair, so the cut-out edge seems hand-trimmed along with the words.
+  let haloFrame = -1;
+  const wobbleHalos = () => {
+    const f = cutFrame();
+    if (f === haloFrame) return;
+    haloFrame = f;
+    halos.forEach((halo, i) => {
+      const k = HALO + (cutRandom(f, 300 + i) - 0.5) * 0.012;
+      const [cx, cy, cz] = halo.userData.centre;
+      const dx = (cutRandom(f, 400 + i) - 0.5) * 0.014;
+      const dz = (cutRandom(f, 500 + i) - 0.5) * 0.014;
+      halo.scale.setScalar(k);
+      halo.position.set(cx * (1 - k) + dx, cy * (1 - k), cz * (1 - k) + dz);
+    });
+  };
+  let haloKey = "";
+  const pageProbe = document.createElement("div"); // only here to read the page colour (the --page variable) as plain rgb
+  pageProbe.style.cssText = "display:none;background:var(--page)";
+  document.body.append(pageProbe);
+  // keep the gap the colour of the page, in light and dark
+  const updateHaloColour = () => {
+    const key = `${document.documentElement.dataset.theme}|${size.w}`; // theme or breakpoint changed (cheap check, so no style lookup every frame)
+    if (key === haloKey) return;
+    haloKey = key;
+    const [r, g, b] = getComputedStyle(pageProbe).backgroundColor.match(/\d+/g).map(Number);
+    haloMaterial.uniforms.uColor.value.set(r / 255, g / 255, b / 255);
+  };
   let rest = [0, 0, 0, 0]; // where each slab sits when the sandwich is built
   let stackCenter = 0.1;
   let ppu = 140; // pixels per world unit
@@ -353,6 +391,20 @@ export function createMascot(root) {
       return [i, [...el.children].map((child) => splitLetters(child))];
     })
   );
+  // Each layer's title is paper-cut lettering (see cutword.js): every typed-in letter holds a little vector letter, so the
+  // typing, the line breaks and the wrapping all work exactly as before. The letters wear the layer's own colour.
+  const TITLE_FACE = { 3: "var(--crust)", 0: "var(--crust)", 2: "var(--pop)", 1: "var(--strawberry)" };
+  stories.forEach((el, i) => {
+    const title = el.querySelector(".story-title");
+    if (!title) return;
+    title.setAttribute("aria-label", title.textContent.replace(/\u00a0/g, " ").trim());
+    title.querySelectorAll(".ch").forEach((span) => {
+      const letter = createCutLetter(span.textContent, { fill: TITLE_FACE[i] || "var(--pop)", shadow: "var(--brown)" });
+      if (!letter) return;
+      span.textContent = "";
+      span.append(letter.el);
+    });
+  });
 
   // ---- Scroll timeline ----
   // The build: the pieces drop in one by one, then the whole sandwich spins. It plays as you scroll,
@@ -794,6 +846,8 @@ export function createMascot(root) {
       if (gone > 0) u.uBg.value.set(pageColor.r, pageColor.g, pageColor.b);
       mesh.visible = gone < 0.995;
     });
+    updateHaloColour();
+    wobbleHalos();
     renderer.render(scene, camera);
   }
 
@@ -883,6 +937,15 @@ export function createMascot(root) {
       own.uniforms.uShear = { value: new THREE.Vector2((kb.max.x - kb.min.x) / 2, (layer.shear || 0) * (kb.max.z - kb.min.z)) };
       own.uniforms.uKeyBox = { value: new THREE.Vector3((kb.min.x + kb.max.x) / 2, kb.max.z, kb.max.z - kb.min.z) };
       const mesh = new THREE.Mesh(geometry, own);
+      // The gap the words leave around a layer: a flat page-coloured copy, a touch bigger, drawn first (so it is
+      // always behind every layer) and it rides along with the layer. Over the words it reads as clear space.
+      const halo = new THREE.Mesh(geometry, haloMaterial);
+      halo.renderOrder = -10;
+      halo.scale.setScalar(HALO);
+      halo.position.set(((kb.min.x + kb.max.x) / 2) * (1 - HALO), ((kb.min.y + kb.max.y) / 2) * (1 - HALO), ((kb.min.z + kb.max.z) / 2) * (1 - HALO));
+      halo.userData.centre = [(kb.min.x + kb.max.x) / 2, (kb.min.y + kb.max.y) / 2, (kb.min.z + kb.max.z) / 2];
+      halos.push(halo);
+      mesh.add(halo);
       mesh.scale.setScalar(layer.size);
       meshes.push(mesh);
       turntable.add(mesh);

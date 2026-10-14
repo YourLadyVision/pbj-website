@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { createCutWord, cutVersion, CAP_EM } from "./cutword.js";
 
 // Loading intro:
 // 1. Jelly-purple screen with "OOZE THE / FUN" in our headline style
@@ -62,6 +63,21 @@ export function playIntro({ lenis, onDone = () => {} }) {
   const site = document.getElementById("site");
   const overlay = document.querySelector(".intro-overlay");
   const text = overlay.querySelector("p");
+  // The loading text is paper-cut vector lettering (see cutword.js). The hidden <p> only tells us how big it should
+  // be (its font size comes from the CSS, per screen size); the same lettering is painted into the swirl below.
+  const fontPx = parseFloat(getComputedStyle(text).fontSize);
+  const NS = "http://www.w3.org/2000/svg";
+  const textSvg = document.createElementNS(NS, "svg");
+  textSvg.setAttribute("aria-hidden", "true");
+  textSvg.style.cssText = "position:absolute;inset:0;width:100%;height:100%;overflow:visible";
+  overlay.append(textSvg);
+  const cutLines = text.innerHTML.split(/<br\s*\/?>/i).map((line) => createCutWord(line.replace(/<[^>]+>/g, "").trim().toUpperCase(), { fill: "var(--cream)", shadow: "var(--brown)" }));
+  cutLines.forEach((w, i) => {
+    textSvg.append(w.el);
+    // two centred lines ("OOZE THE" / "FUN"), one font size apart like our headlines
+    const cy = window.innerHeight / 2 + (i - (cutLines.length - 1) / 2) * fontPx;
+    w.place(window.innerWidth / 2 - (w.widthEm * fontPx) / 2, cy - (CAP_EM * fontPx) / 2, fontPx);
+  });
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   lenis.stop();
@@ -98,6 +114,7 @@ export function playIntro({ lenis, onDone = () => {} }) {
 
   let cleanupSwirl = () => {};
   const finish = () => {
+    cutLines.forEach((w) => w.dispose());
     cleanupSwirl();
     html.classList.remove("intro");
     gsap.set(site, { clearProps: "clipPath" });
@@ -148,27 +165,21 @@ export function playIntro({ lenis, onDone = () => {} }) {
   // Paint the loading screen (purple + text, exactly where the real text sits) into the picture
   function paintPicture() {
     const ctx = pic.getContext("2d");
-    const style = getComputedStyle(text);
-    const box = text.getBoundingClientRect();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = getComputedStyle(overlay).backgroundColor;
     ctx.fillRect(0, 0, vw, vh);
-    ctx.fillStyle = style.color;
-    ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-    if ("letterSpacing" in ctx) ctx.letterSpacing = style.letterSpacing;
-    ctx.textBaseline = "middle";
-    ctx.textAlign = "center";
-    // Two centred lines ("OOZE THE" / "FUN"), line height 1 like our headlines
-    const lines = text.innerText.toUpperCase().split("\n");
-    const lh = parseFloat(style.fontSize);
-    lines.forEach((line, i) => {
-      ctx.fillText(line, box.left + box.width / 2, box.top + box.height / 2 + (i - (lines.length - 1) / 2) * lh);
-    });
+    cutLines.forEach((w) => w.paint(ctx));
     picTexture.needsUpdate = true;
   }
 
+  let paintedVersion = -1;
   const tick = (time) => {
     material.uniforms.time.value = time;
+    // the letters keep wobbling while the screen is sucked in: repaint the picture whenever they take a new wobble
+    if (canvas.style.visibility !== "hidden" && cutVersion() !== paintedVersion) {
+      paintedVersion = cutVersion();
+      paintPicture();
+    }
     if (canvas.style.visibility !== "hidden") renderer.render(scene, camera);
     drawHole(time);
   };

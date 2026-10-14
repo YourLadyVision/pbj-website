@@ -1,63 +1,76 @@
 import { gsap } from "gsap";
+import { createCutWord, CAP_EM } from "./cutword.js";
 
 // The hero opening, after the loading screen:
 // 1. "PEANUT BUTTER JELLY" sits in one line (dark yellow, light yellow, red)
 // 2. The words split into three lines, one under the other, and stretch across the hero with room on every edge
 // 3. The assembled sandwich grows out of the middle, in front of the words, then its layers float apart
 // After that the page works exactly as before (one scroll, one step).
+//
+// The words are paper-cut vector lettering (see cutword.js), drawn in an SVG behind the sandwich.
 
-const STEP = 0.84; // how far apart stacked words sit, in word-heights (line boxes are taller than capitals)
-const TOP_TRIM = 0.1; // capitals sit a little low inside their box; pull them up by this much
+const STEP = 0.84; // how far apart stacked words sit, in word-heights (a capital letter is shorter than its line)
+const NS = "http://www.w3.org/2000/svg";
+const WORDS = [
+  ["PEANUT", "var(--pop)"], // darker yellow
+  ["BUTTER", "var(--honey)"], // light yellow
+  ["JELLY", "var(--strawberry)"],
+];
 
 // Call it straight away (it lays the title out in one line, ready for the loading screen to reveal);
 // call the returned start() when the loading screen is done.
 export function playHeroOpen({ hero, mascot, lenis }) {
   const title = hero.querySelector(".hero-title");
   if (!title) return { start() {} };
-  const words = [...title.querySelectorAll(".ht")];
   const reduceMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)",
   ).matches;
   const { opening } = mascot;
-  let widths = [];
+
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("aria-hidden", "true");
+  svg.style.cssText =
+    "position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible";
+  title.append(svg);
+  const words = WORDS.map(([text, fill]) => {
+    const w = createCutWord(text, { fill, shadow: "var(--brown)" });
+    svg.append(w.el);
+    return w;
+  });
+
   let layoutA = [];
   let layoutB = [];
   let t = 0; // 0 = one line, 1 = three lines
 
   const measure = () => {
-    words.forEach((w) => {
-      w.style.fontSize = "100px";
-      w.style.letterSpacing = "-1.44px";
-    });
-    widths = words.map((w) => w.offsetWidth);
     const W = hero.clientWidth; // not getBoundingClientRect: the loading screen scales the page while it swirls out
     const H = hero.clientHeight;
     const mx = W * 0.06;
     const my = H * 0.07;
     const availW = W - 2 * mx;
     const availH = H - 2 * my;
+    const widths = words.map((w) => w.widthEm); // in font sizes
 
-    // 1. one line, centred
-    const gap = 28; // a word space at 100px
-    const total = widths.reduce((a, b) => a + b, 0) + gap * (words.length - 1);
-    const sA = Math.min((availW * 0.8) / total, 1.6);
-    let x = (W - total * sA) / 2;
+    // 1. one line, centred. Each entry: x, y = top of the capitals, s = font size in pixels
+    const gap = 0.28;
+    const totalEm =
+      widths.reduce((a, b) => a + b, 0) + gap * (words.length - 1);
+    const sA = Math.min((availW * 0.8) / totalEm, 160);
+    let x = (W - totalEm * sA) / 2;
     layoutA = widths.map((w) => {
-      const l = { x, y: H / 2 - 50 * sA, s: sA };
+      const l = { x, y: H / 2 - (CAP_EM * sA) / 2, s: sA };
       x += (w + gap) * sA;
       return l;
     });
 
-    // 3 lines, all the same size and evenly spaced: the widest word spans the full width, unless
-    // three lines would then be too tall for the hero, in which case the size is limited by the height
-    const sB = Math.min(
-      availW / Math.max(...widths),
-      availH / (words.length * 100 * STEP),
-    );
-    const usedH = words.length * sB * 100 * STEP;
+    // 3 lines, all the same size and evenly spaced, centred. The widest word spans the full width, unless three
+    // lines would then be too tall for the hero, in which case the size is limited by the height
+    const blockEm = (words.length - 1) * STEP + CAP_EM;
+    const sB = Math.min(availW / Math.max(...widths), availH / blockEm);
+    const top = my + (availH - blockEm * sB) / 2;
     layoutB = widths.map((w, i) => ({
       x: (W - w * sB) / 2,
-      y: my + (availH - usedH) / 2 + i * sB * 100 * STEP - sB * 100 * TOP_TRIM,
+      y: top + i * STEP * sB,
       s: sB,
     }));
   };
@@ -66,13 +79,11 @@ export function playHeroOpen({ hero, mascot, lenis }) {
     words.forEach((w, i) => {
       const a = layoutA[i];
       const b = layoutB[i];
-      const x = a.x + (b.x - a.x) * t;
-      const y = a.y + (b.y - a.y) * t;
-      const s = a.s + (b.s - a.s) * t;
-      // real font size (not a scale), so the letters are redrawn sharp at every size
-      w.style.fontSize = `${100 * s}px`;
-      w.style.letterSpacing = `${-1.44 * s}px`;
-      w.style.transform = `translate(${x}px, ${y}px)`;
+      w.place(
+        a.x + (b.x - a.x) * t,
+        a.y + (b.y - a.y) * t,
+        a.s + (b.s - a.s) * t,
+      );
     });
   };
 
@@ -81,14 +92,9 @@ export function playHeroOpen({ hero, mascot, lenis }) {
     apply();
   };
 
-  document.fonts.ready.then(() => {
-    relayout();
-    title.style.visibility = "visible";
-  });
-  title.style.visibility = "hidden";
   measure();
   apply();
-  window.addEventListener("resize", relayout);
+  new ResizeObserver(relayout).observe(hero); // re-measure whenever the hero itself changes size
 
   const start = () => {
     if (reduceMotion) {

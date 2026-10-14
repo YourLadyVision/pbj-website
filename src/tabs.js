@@ -60,19 +60,14 @@ export function setupTabs({ onSwitch } = {}) {
 
   // Keep scrolling past the end of a folder and the next one opens; keep scrolling up past the top and the previous one opens.
   // "Meet Our Hosts" is a draggable grid that never scrolls the page, so there plain scrolling changes folder as everywhere
-  // else, and moving the grid takes a deliberate gesture: computers hold the left mouse button and scroll (the grid handles that),
-  // phones use one finger to drag the grid and three fingers to change folder.
+  // else, and moving the grid takes a deliberate gesture: computers and laptops hold Shift and scroll (the grid handles
+  // that), phones use one finger to drag the grid and three fingers to change folder.
   const atTop = () => window.scrollY <= 2;
   const atBottom = () => window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
   const PUSH = 160; // how much extra scrolling it takes (so it never fires by accident)
   let push = 0; // positive = pushing down, negative = pushing up
   let edgeSince = 0; // when we reached the edge we are pushing against
   let lockedUntil = 0;
-  let leftHeld = false;
-
-  addEventListener("pointerdown", (e) => { if (e.pointerType === "mouse" && e.button === 0) leftHeld = true; }, true);
-  addEventListener("pointerup", (e) => { if (e.pointerType === "mouse" && e.button === 0) setTimeout(() => (leftHeld = false)); }, true);
-  addEventListener("blur", () => (leftHeld = false));
 
   Observer.create({
     target: window,
@@ -87,7 +82,7 @@ export function setupTabs({ onSwitch } = {}) {
       if (!dir) return;
 
       if (current === "hosts") {
-        const deliberate = isTouch ? (ev.touches?.length ?? 1) >= 3 : !leftHeld;
+        const deliberate = isTouch ? (ev.touches?.length ?? 1) >= 3 : !ev.shiftKey;
         if (!deliberate) { push = 0; return; }
       } else {
         const atEdge = dir > 0 ? atBottom() : atTop();

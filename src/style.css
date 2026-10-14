@@ -245,26 +245,7 @@ h2 { max-width: 22ch; }
   margin: 0;
   z-index: 0;
   pointer-events: none;
-  /* Inter Tight (a web font) rather than the Mac's own Helvetica Neue: Safari drew a thin streak off the Y of
-     JELLY while it moved when this big title used the system font */
-  font-family: "Inter Tight", var(--display);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -1.44px;
-  text-transform: uppercase;
-  text-align: left;
-  text-rendering: geometricPrecision; /* Safari: exact outlines, no spikes off sharp corners while the words move */
-  -webkit-font-smoothing: antialiased;
 }
-.ht {
-  position: absolute;
-  left: 0;
-  top: 0;
-  white-space: nowrap;
-}
-.ht-peanut { color: var(--pop); }    /* darker yellow */
-.ht-butter { color: var(--honey); }  /* light yellow */
-.ht-jelly { color: var(--strawberry); }
 
 .focus-backdrop {
   display: none; /* switched off for now: the colour washes (see WASH in mascot.js) come back later */
@@ -485,19 +466,21 @@ html.intro .intro-overlay {
   align-items: center;
   justify-content: center;
   background: var(--honey); /* palette light yellow (bread) */
-  color: var(--brown); /* dark brown text so it stays readable on yellow */
+  color: var(--cream); /* cream paper-cut letters; the brown shadow (see cutword.js) is what makes them readable */
 }
 .intro-overlay p {
+  visibility: hidden; /* only here to give the lettering its size (intro.js); the words themselves are drawn as vector shapes */
   margin: 0;
   font-family: var(--display); /* same look as our headlines */
   font-weight: 700;
-  font-size: 3em;
+  font-size: calc(var(--u) * 7.5); /* same size on screen as the "loading" lettering in the reference recording */
   line-height: 1;
   letter-spacing: -1.44px;
   text-align: center;
   text-transform: uppercase;
 }
-@media (max-width: 991px) { .intro-overlay p { font-size: 2em; } }
+@media (max-width: 991px) { .intro-overlay p { font-size: calc(var(--u) * 4.6); } }
+@media (max-width: 767px) { .intro-overlay p { font-size: calc(var(--u) * 3.5); } }
 /* The swirling copy of the loading screen (drawn by intro.js) */
 html.intro .intro-swirl {
   display: block;

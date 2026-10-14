@@ -125,7 +125,7 @@ _What happens as people scroll down the page._
 - **Link:** https://cdn.jsdelivr.net/npm/gsap@3.15/dist/Observer.min.js
 - **What it is:** A small GSAP tool that notices swipes, drags, scrolls and touches in one tidy way. Already included with the GSAP we have installed, so nothing extra to download.
 - **Where I'd use it (in use):** Moving between folders by scrolling. Scroll past the end of a folder and the next one opens; scroll up past the top and the previous one opens (you land at the end of it).
-- **Meet Our Hosts folder:** The page itself never scrolls, so plain scrolling changes folder there too. On computers, hold the left mouse button and scroll to move the loop of magazines (hint at the bottom: "[Left-click and scroll]"). On phones, one finger drags the magazines and three fingers change folder ("[Use three fingers to scroll]").
+- **Meet Our Hosts folder:** The page itself never scrolls, so plain scrolling changes folder there too. On computers and laptops, hold Shift and scroll to move the loop of magazines (hint at the bottom: "[Shift and scroll]"). On phones, one finger drags the magazines and three fingers change folder ("[Use three fingers to scroll]").
 - **Screenshot:** none (it's a tool, nothing to see)
 
 **To plan for:** It takes a deliberate extra scroll past the end so it never opens by accident, and the last folder has no next one.

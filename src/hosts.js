@@ -153,8 +153,16 @@ function createGrid(root) {
   root.addEventListener("wheel", (e) => {
     if (locked || frozen) return;
     e.preventDefault();
-    if (!(e.buttons & 1)) return; // only left-click and scroll moves the grid; plain scrolling changes folder (see tabs.js)
-    F.x -= 0.8 * e.deltaX; F.y -= 0.8 * e.deltaY;
+    if (!e.shiftKey) return; // only Shift and scroll moves the grid; plain scrolling changes folder (see tabs.js)
+    // With Shift held, browsers may turn an up/down scroll into a sideways one, so move by whatever arrives
+    const dx = 0.8 * e.deltaX, dy = 0.8 * e.deltaY;
+    F.x -= dx; F.y -= dy;
+    if (drag) {
+      // A held click is also a drag: move its starting point too, or the next tiny mouse move would snap the grid back
+      drag.fx -= dx; drag.fy -= dy;
+      if (!drag.moving) { clearTimeout(holdTimer); drag.moving = true; zoomOut(); }
+      dragged = true; // so letting go of the click does not open the cover under the mouse
+    }
   }, { passive: false });
   const touches = new Set();
   root.addEventListener("pointerdown", (e) => {
