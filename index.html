@@ -28,31 +28,9 @@
     </script>
   </head>
   <body>
-    <!-- Loading intro: a jelly-purple circle bursts open, a flower (placeholder icon) grows in the middle,
-         then it all closes to a dot and reveals the page -->
-    <div class="intro-overlay" aria-hidden="true">
-      <svg class="intro-flower" viewBox="-50 -50 100 100">
-        <defs>
-          <radialGradient id="petal" cx="50%" cy="25%" r="80%">
-            <stop offset="0" stop-color="#ffffff" />
-            <stop offset="1" stop-color="#f8f8f0" />
-          </radialGradient>
-          <radialGradient id="heart" cx="40%" cy="35%" r="70%">
-            <stop offset="0" stop-color="#f1ead4" />
-            <stop offset="1" stop-color="#ddd2b0" />
-          </radialGradient>
-        </defs>
-        <g fill="url(#petal)">
-          <path id="p" d="M0 0 C-7 -8 -18 -22 -13 -36 C-9 -47 9 -47 13 -36 C18 -22 7 -8 0 0Z" />
-          <use href="#p" transform="rotate(60)" />
-          <use href="#p" transform="rotate(120)" />
-          <use href="#p" transform="rotate(180)" />
-          <use href="#p" transform="rotate(240)" />
-          <use href="#p" transform="rotate(300)" />
-        </g>
-        <circle r="10" fill="url(#heart)" />
-      </svg>
-    </div>
+    <!-- Loading intro: jelly-purple screen with "ooze the fun" swirls into a gooey hole,
+         then the page swirls back out of it -->
+    <div class="intro-overlay" aria-hidden="true"><p>Ooze the<br />fun</p></div>
 
     <div id="site">
     <!-- Folder tabs: right edge on computers, stacked at the top on phones -->

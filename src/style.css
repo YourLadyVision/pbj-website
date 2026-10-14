@@ -441,25 +441,45 @@ h2 { max-width: 22ch; }
   .hero-sub { margin-bottom: 1.25rem; }
 }
 
-/* ---------- Loading intro (a circle bursts open, a flower grows in the middle, then it closes to reveal the page) ---------- */
-.intro-overlay { display: none; }
+/* ---------- Loading intro (jelly screen swirls into a hole, the page swirls out) ---------- */
+.intro-overlay,
+.intro-swirl { display: none; }
 
 html.intro { overflow: hidden; }
-html.intro body { background: var(--page); }
-html.intro #site { visibility: hidden; } /* put on show by intro.js while the circle covers the screen */
+html.intro body { background: var(--night); } /* the dark "black hole" behind the swirl */
+html.intro #site { clip-path: circle(0px at 50% 50%); background: var(--page); }
 
 html.intro .intro-overlay {
-  display: grid;
-  place-items: center;
+  display: flex;
   position: fixed;
   inset: 0;
   z-index: 100;
+  align-items: center;
+  justify-content: center;
   background: var(--strawberry); /* palette red (jam) */
-  clip-path: circle(0px at 50% 50%);
+  color: var(--bread);
+}
+.intro-overlay p {
+  margin: 0;
+  font-family: var(--display); /* same look as our headlines */
+  font-weight: 700;
+  font-size: 3em;
+  line-height: 1;
+  letter-spacing: -1.44px;
+  text-align: center;
+  text-transform: uppercase;
+}
+@media (max-width: 991px) { .intro-overlay p { font-size: 2em; } }
+/* The swirling copy of the loading screen (drawn by intro.js) */
+html.intro .intro-swirl {
+  display: block;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 101;
   pointer-events: none;
 }
-.intro-flower { width: clamp(64px, 7.6vw, 140px); height: auto; overflow: visible; }
-@media (max-width: 991px) { .intro-flower { width: 22vw; max-width: 120px; } }
 
 /* Respect people who turn off motion */
 @media (prefers-reduced-motion: reduce) {
