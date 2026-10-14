@@ -3,7 +3,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 // Loading intro:
-// 1. Jelly-purple screen with "■ OOZE THE FUN"
+// 1. Jelly-purple screen with "OOZE THE / FUN" in our headline style
 // 2. The whole screen twists and gets sucked into a gooey hole in the middle (like a jelly black hole)
 // 3. The page swirls back out of that hole, with a wobbly, gooey edge, until it fills the screen
 
@@ -156,7 +156,13 @@ export function playIntro({ lenis }) {
     ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
     if ("letterSpacing" in ctx) ctx.letterSpacing = style.letterSpacing;
     ctx.textBaseline = "middle";
-    ctx.fillText(text.textContent.toUpperCase(), box.left, box.top + box.height / 2);
+    ctx.textAlign = "center";
+    // Two centred lines ("OOZE THE" / "FUN"), line height 1 like our headlines
+    const lines = text.innerText.toUpperCase().split("\n");
+    const lh = parseFloat(style.fontSize);
+    lines.forEach((line, i) => {
+      ctx.fillText(line, box.left + box.width / 2, box.top + box.height / 2 + (i - (lines.length - 1) / 2) * lh);
+    });
     picTexture.needsUpdate = true;
   }
 
