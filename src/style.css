@@ -245,12 +245,16 @@ h2 { max-width: 22ch; }
   margin: 0;
   z-index: 0;
   pointer-events: none;
-  font-family: var(--display);
+  /* Inter Tight (a web font) rather than the Mac's own Helvetica Neue: Safari drew a thin streak off the Y of
+     JELLY while it moved when this big title used the system font */
+  font-family: "Inter Tight", var(--display);
   font-weight: 700;
   line-height: 1;
   letter-spacing: -1.44px;
   text-transform: uppercase;
   text-align: left;
+  text-rendering: geometricPrecision; /* Safari: exact outlines, no spikes off sharp corners while the words move */
+  -webkit-font-smoothing: antialiased;
 }
 .ht {
   position: absolute;

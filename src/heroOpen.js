@@ -98,7 +98,7 @@ export function playHeroOpen({ hero, mascot, lenis }) {
     }
     mascot.hold(true);
     lenis.stop();
-    gsap
+    const tl = gsap
       .timeline({
         delay: 0.5,
         onComplete() {
@@ -119,6 +119,7 @@ export function playHeroOpen({ hero, mascot, lenis }) {
       )
       .to(opening, { zoom: 1, duration: 1.1, ease: "back.out(1.3)" }, "+=0.15")
       .to(opening, { apart: 1, duration: 1.3, ease: "power2.inOut" }, "<0.65");
+    if (import.meta.env.DEV) window.heroOpenTl = tl; // handy for testing in the browser
   };
   return { start };
 }
