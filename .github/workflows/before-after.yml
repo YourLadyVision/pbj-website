@@ -25,7 +25,9 @@ jobs:
 
       - name: Build and shoot BEFORE (main)
         run: |
+          cp scripts/screenshots.mjs /tmp/screenshots.mjs
           git checkout -f origin/${{ github.base_ref }}
+          mkdir -p scripts && cp /tmp/screenshots.mjs scripts/screenshots.mjs
           npm ci
           npm run build
           node scripts/screenshots.mjs dist /tmp/shots/before
