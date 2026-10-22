@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>PBJ</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #F8F8F0; overflow: hidden; }
+  .row { position: fixed; inset: 0 0 18vh 0; display: flex; justify-content: center; align-items: stretch; gap: 0; }
+  .hit { position: absolute; inset: 0; z-index: 10; cursor: grab; touch-action: none; }
+  .hit:active { cursor: grabbing; }
+  iframe { --w: min(33vw, 560px); border: 0; width: var(--w); height: 100%; background: transparent; color-scheme: normal; flex: none; }
+  /* each letter is 1.75 wide in a 3.9-wide view; pull each frame back over the one before it so the letters sit a tight 0.15 apart */
+  iframe + iframe { margin-left: calc(var(--w) * -0.513); }
+  @media (max-width: 700px) { iframe { --w: 48vw; } }
+  iframe { position: relative; }
+  iframe:nth-of-type(1) { z-index: 3; } iframe:nth-of-type(2) { z-index: 2; } iframe:nth-of-type(3) { z-index: 1; }
+  #spin { position: fixed; left: 50%; bottom: 9vh; transform: translateX(-50%); font: 400 13px/1.2 "Chivo Mono", ui-monospace, monospace; text-transform: uppercase; color: #463721; background: #FFE386; border: 2px solid #463721; border-radius: 999px; padding: 14px 26px; cursor: pointer; box-shadow: 0 4px 0 #463721; transition: transform .15s; }
+  #spin:hover { transform: translateX(-50%) translateY(-2px) rotate(-2deg); }
+  #spin:active { transform: translateX(-50%) translateY(3px); box-shadow: 0 1px 0 #463721; }
+  .hint { position: fixed; left: 0; right: 0; bottom: 3vh; text-align: center; font: 400 12px/1.2 "Chivo Mono", ui-monospace, monospace; text-transform: uppercase; color: #463721; pointer-events: none; }
+  .inline, .inline body { background: transparent; } .inline .row { inset: 0; } .inline #spin, .inline .hint { display: none; }
+</style>
+</head>
+<body>
+<script>if (location.search.includes("inline")) document.documentElement.classList.add("inline");</script>
+<div class="row">
+  <div class="hit"></div>
+  <iframe src="/peanutp3d.html?embed" title="Peanut P"></iframe>
+  <iframe src="/butter3dglossy.html?embed" title="Butter B"></iframe>
+  <iframe src="/jellyhero3d.html?embed" title="Jelly J"></iframe>
+</div>
+<button id="spin" type="button">Spin all</button>
+<div class="hint">Drag to turn all three</div>
+<script>
+  // One angle for all three letters, set here and sent to each frame every frame, so they always turn together:
+  // same speed, same angle. The turn, the drag and the coasting are the same as in each letter alone.
+  let ready = 0; addEventListener("message", (e) => { if (e.data === "letter-ready" && ++ready === 3) parent.postMessage("pbj-ready", "*"); });
+  const frames = [...document.querySelectorAll("iframe")], hit = document.querySelector(".hit");
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), ease = (u) => (u < 0.5 ? 4 * u ** 3 : 1 - (-2 * u + 2) ** 3 / 2);
+  let yaw = 0, vel = 0, dragging = false, lastX = 0, lastT = 0, spin = null;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  hit.addEventListener("pointerdown", (e) => { dragging = true; lastX = e.clientX; lastT = e.timeStamp; vel = 0; spin = null; hit.setPointerCapture(e.pointerId); });
+  hit.addEventListener("pointermove", (e) => {
+    if (e.buttons === 0) dragging = false; // a drag only counts while the button is down
+    if (!dragging) return;
+    const dx = e.clientX - lastX, dt = Math.max(1, e.timeStamp - lastT) / 1000;
+    yaw += dx * 0.012; vel = clamp((dx * 0.012) / dt, -14, 14); lastX = e.clientX; lastT = e.timeStamp;
+  });
+  for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) hit.addEventListener(ev, () => { dragging = false; });
+  document.getElementById("spin").addEventListener("click", () => { if (!spin) { spin = { from: yaw, t0: performance.now() }; vel = 0; } });
+  let prev = 0;
+  requestAnimationFrame(function loop(t) {
+    const dt = Math.min(0.04, (t - prev) / 1000 || 0.016); prev = t;
+    if (spin) { const u = clamp((performance.now() - spin.t0) / (reduce ? 1 : 1500), 0, 1); yaw = spin.from + Math.PI * 2 * ease(u); if (u >= 1) spin = null; }
+    else if (!dragging) { yaw += vel * dt; vel *= Math.pow(0.04, dt); }
+    for (const f of frames) f.contentWindow && f.contentWindow.postMessage({ yaw }, "*");
+    requestAnimationFrame(loop);
+  });
+</script>
+</body>
+</html>
