@@ -135,3 +135,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 exports/
+
+# local screenshot output
+shots/
