@@ -101,67 +101,139 @@ function cutHeadings() {
   });
 }
 
-/* ---------- Your Events ---------- */
+/* ---------- My events ---------- */
+// Status of an event: what guests would see once PBJ has public event pages
+const STATUSES = {
+  published: { label: "Published", dot: "#2e9e4f", pick: "Publish", desc: "Live on PBJ and open for bookings" },
+  coming: { label: "Coming soon", dot: "#f0a830", pick: "Coming soon", desc: "Listed, but bookings aren't open yet" },
+  soldout: { label: "Sold out", dot: "#d33a3a", pick: "Sold out", desc: "Bookings closed, still listed" },
+  cancelled: { label: "Cancelled", dot: "#f08030", pick: "Cancelled", desc: "Called off, no bookings" },
+  draft: { label: "Drafted", dot: "#8c8a80", pick: "Save as draft", desc: "Hidden until you publish" },
+};
+const statusOf = (e) => (STATUSES[e.status] ? e.status : "draft"); // old "review" events count as drafts
+const isPast = (e) => { const end = e.dateTo || e.dateFrom; return !!end && end < iso(new Date()); };
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const dayLine = (e) => {
+  if (!e.dateFrom) return "Date not set";
+  const [y, m, d] = e.dateFrom.split("-").map(Number);
+  const first = `${WEEKDAYS[new Date(y, m - 1, d).getDay()]}, ${d} ${SHORT[m - 1]} ${y}`;
+  const more = e.dateTo && e.dateTo !== e.dateFrom ? ` → ${dmy(e.dateTo)}` : "";
+  return `${first}${more}${e.start && e.start.h && e.start.m ? ` · ${e.start.h}:${e.start.m}` : ""}`;
+};
+const eventLink = (e) => `peanutbutterjelly.vip/e/${e.id.replace(/^e/, "").slice(-7)}`;
+const TABS = [["all", "All"], ["published", "Published"], ["cancelled", "Cancelled"], ["soldout", "Sold out"], ["draft", "Drafts"], ["past", "Past"]];
+const inTab = (e, tab) => (tab === "all" ? true : tab === "past" ? isPast(e) : !isPast(e) && statusOf(e) === tab);
+const iconSvg = {
+  edit: '<path d="M12 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-7"/><path d="M18.4 2.6a2 2 0 0 1 3 3L12 15l-4 1 1-4z"/>',
+  eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  tag: '<path d="M20 12 12 20 4 12V4h8z"/><circle cx="8" cy="8" r="1.2"/>',
+  bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
+  link: '<path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
+  ticket: '<path d="M3 9a2 2 0 0 0 0 6v3a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-3a2 2 0 0 1 0-6V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1z"/><path d="M13 5v3M13 11v2M13 16v3"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  dots: '<circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/>',
+  chev: '<path d="m6 9 6 6 6-6"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+  check: '<path d="m5 12 5 5 9-10"/>',
+};
+const ic = (name, size = "1.3em") => svg(iconSvg[name], size);
+
 function renderList() {
-  document.title = "Your Events — PeanutButterJelly.vip";
+  document.title = "My events — PeanutButterJelly.vip";
   const events = load();
-  let filter = "all";
-  const stat = (n, label, cls = "") => `<div class="stat ${cls}"><b>${n}</b><span>${label}</span></div>`;
+  let tab = "all", query = "", openMenu = null;
   app.innerHTML = `
     <div class="dash-head">
-      <div><h1 class="cut">Your events</h1><p>Everything you host with PBJ lives here.</p></div>
-      <a class="btn" href="#/create/0">+ Create an event</a>
+      <div><h1 class="cut">My events</h1><p>Manage your events and see how they're doing.</p></div>
+      <div class="head-tools"><label class="search">${ic("search", "1.3em")}<input id="ev-q" type="text" placeholder="Search events…" aria-label="Search events" autocomplete="off" /></label>
+        <a class="btn create-btn" href="#/create/0">+ Create event</a></div>
     </div>
-    <div class="stats">
-      ${stat(events.length, "Total events", "pbj")}
-      ${stat(events.filter((e) => e.status === "draft").length, "Drafts")}
-      ${stat(events.filter((e) => e.status === "review").length, "In review")}
-      ${stat(0, "Tickets sold")}
-    </div>
-    <div class="tabs-row" role="tablist">
-      ${["all", "draft", "review"].map((f) => `<button class="chip ${f === "all" ? "on" : ""}" data-f="${f}">${{ all: "All", draft: "Drafts", review: "In review" }[f]}</button>`).join("")}
-    </div>
+    <div class="ev-tabs" role="tablist"></div>
     <div class="event-list"></div>`;
-  const listEl = app.querySelector(".event-list");
+  const tabsEl = app.querySelector(".ev-tabs"), listEl = app.querySelector(".event-list");
+  const card = (e) => {
+    const st = statusOf(e), S = STATUSES[st], past = isPast(e), done = !!e.submitted;
+    const paid = (e.tickets || []).some((t) => t.paid);
+    const img = (e.images || []).filter(Boolean)[0];
+    const menu = openMenu === `st-${e.id}`, kebab = openMenu === `k-${e.id}`;
+    return `<article class="ev-card ${past ? "past" : ""}" data-id="${e.id}">
+      <div class="ev-img" ${img ? `style="background-image:url(${img})"` : ""}>${img ? "" : `<span>${esc((e.title || "?").trim().slice(0, 1).toUpperCase())}</span>`}${past ? '<i class="ev-past">Past</i>' : ""}</div>
+      <div class="ev-main">
+        <div class="ev-top"><div><h3>${esc(e.title || "Untitled event")}</h3><p class="ev-date">${ic("cal", "1.1em")}${dayLine(e)}</p></div>
+          <div class="ev-ctl">
+            ${past ? "" : `<div class="st-wrap"><button type="button" class="st-btn" data-act="status" aria-haspopup="menu" aria-expanded="${menu}"><i class="dot" style="background:${S.dot}"></i>${S.label}${ic("chev", "1em")}</button>
+              <div class="st-menu" ${menu ? "" : "hidden"}><span class="st-h">Change status</span>
+                ${["published", "coming", "soldout", "cancelled"].map((k) => `<button type="button" data-set="${k}"><i class="dot" style="background:${STATUSES[k].dot}"></i><span><b>${STATUSES[k].pick}</b><small>${STATUSES[k].desc}</small></span>${st === k ? ic("check", "1.1em") : ""}</button>`).join("")}
+                <hr /><button type="button" data-set="draft" class="${st === "draft" ? "cur" : ""}"><i class="dot" style="background:${STATUSES.draft.dot}"></i><span><b>${STATUSES.draft.pick}</b><small>${STATUSES.draft.desc}</small></span>${st === "draft" ? ic("check", "1.1em") : ""}</button></div></div>`}
+            <div class="st-wrap"><button type="button" class="kebab" data-act="kebab" aria-label="More options" aria-haspopup="menu" aria-expanded="${kebab}">${ic("dots", "1.3em")}</button>
+              <div class="st-menu small" ${kebab ? "" : "hidden"}><button type="button" data-act="dup"><span><b>Duplicate</b></span></button><button type="button" data-act="del" class="dangerous"><span><b>Delete</b></span></button></div></div>
+          </div></div>
+        <div class="ev-tags"><span class="tag dark1">${esc(TYPE_SHORT[e.type] || "No type")}</span>${(e.tickets || []).length ? `<span class="tag ${paid ? "dark2" : "free"}">${paid ? "Paid" : "Free"}</span>` : ""}${!done ? `<span class="tag soft">Step ${Math.min(e.step ?? 0, STEPS.length - 1) + 1} of ${STEPS.length}</span>` : ""}${past ? '<span class="tag soft">Past</span>' : ""}</div>
+        <div class="sold">${ic("ticket", "1.2em")}<b>0</b> sold</div>
+        ${done ? `<div class="ev-link">${ic("link", "1.1em")}<span>${eventLink(e)}</span><button type="button" data-act="copy">${ic("copy", "1.1em")}Copy</button></div>` : ""}
+        <div class="ev-actions">
+          ${past ? "" : `<button type="button" class="act primary" data-act="edit">${ic("edit")}${done ? "Edit" : "Continue"}</button>`}
+          <button type="button" class="act" data-act="view">${ic("eye")}View event</button>
+          <button type="button" class="act outline" data-act="soon" data-what="Sales tracking">${ic("chart")}View sales</button>
+          ${past ? "" : `<button type="button" class="act" data-act="soon" data-what="Coupons">${ic("tag")}Coupons</button><button type="button" class="act boost" data-act="soon" data-what="Boost">${ic("bolt")}Boost</button>`}
+        </div></div></article>`;
+  };
   const paint = () => {
-    const shown = events.filter((e) => filter === "all" || e.status === filter);
+    tabsEl.innerHTML = TABS.map(([k, n]) => `<button type="button" role="tab" class="ev-tab ${tab === k ? "on" : ""}" data-tab="${k}" aria-selected="${tab === k}">${n}<b>${events.filter((e) => inTab(e, k)).length}</b></button>`).join("");
+    const q = query.trim().toLowerCase();
+    const shown = events.filter((e) => inTab(e, tab) && (!q || (e.title || "").toLowerCase().includes(q)));
     if (!shown.length) {
-      listEl.innerHTML = `<div class="empty">
-        <h2 class="cut">${events.length ? "Nothing here yet" : "No events yet"}</h2>
-        <p>${events.length ? "Try another filter." : "Got something worth finding? Create your first event and share it with Mumbai."}</p>
-        ${events.length ? "" : '<a class="btn" href="#/create/0">+ Create an event</a>'}
-      </div>`;
-      cutHeadings();
-      return;
-    }
-    listEl.innerHTML = shown.map((e) => {
-      const type = TYPES.find((t) => t.id === e.type);
-      return `<article class="event-row">
-        <div><h3>${esc(e.title || "Untitled event")}</h3>
-          <div class="meta">${type ? esc(type.name) : "No type yet"} · ${e.status === "review" ? "Submitted" : `Step ${Math.min(e.step ?? 0, STEPS.length - 1) + 1} of ${STEPS.length}`}</div></div>
-        <span class="badge ${e.status === "draft" ? "draft" : ""}">${e.status === "draft" ? "Draft" : "In review"}</span>
-        <div class="row-actions">
-          <a class="btn small" href="#/create/${e.step ?? 0}" data-edit="${e.id}">Continue</a>
-          <button class="btn small ghost" data-del="${e.id}" aria-label="Delete ${esc(e.title || "event")}">Delete</button>
-        </div></article>`;
-    }).join("");
+      listEl.innerHTML = `<div class="empty"><h2 class="cut">${events.length ? "Nothing here" : "No events yet"}</h2>
+        <p>${events.length ? "No events match this tab or search." : "Got something worth finding? Create your first event and share it with Mumbai."}</p>
+        ${events.length ? "" : '<a class="btn" href="#/create/0">+ Create event</a>'}</div>`;
+    } else listEl.innerHTML = shown.map(card).join("");
+    cutHeadings();
   };
   paint();
   cutHeadings();
-  app.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => {
-    filter = c.dataset.f;
-    app.querySelectorAll(".chip").forEach((x) => x.classList.toggle("on", x === c));
-    paint();
-  }));
+  app.querySelector("#ev-q").addEventListener("input", (e) => { query = e.target.value; paint(); });
+  tabsEl.addEventListener("click", (e) => { const b = e.target.closest("[data-tab]"); if (b) { tab = b.dataset.tab; paint(); } });
+  const find = (el) => events.find((x) => x.id === el.closest(".ev-card")?.dataset.id);
+  const outside = (e) => { if (!app.isConnected || !app.querySelector(".event-list")) { document.removeEventListener("click", outside); return; } if (openMenu && !e.target.closest(".st-wrap")) { openMenu = null; paint(); } };
+  document.addEventListener("click", outside);
   listEl.addEventListener("click", async (ev) => {
-    const edit = ev.target.closest("[data-edit]");
-    if (edit) draft = events.find((e) => e.id === edit.dataset.edit);
-    const del = ev.target.closest("[data-del]");
-    if (del && (await ask({ title: "Delete this event?", message: "This can't be undone.", ok: "Delete" }))) {
-      save(events.filter((e) => e.id !== del.dataset.del));
-      renderList();
-    }
+    const set = ev.target.closest("[data-set]"), act = ev.target.closest("[data-act]");
+    if (set) { const e = find(set); e.status = set.dataset.set; save(events); openMenu = null; paint(); toast(`Status: ${STATUSES[e.status].label}`); return; }
+    if (!act) return;
+    const e = find(act), what = act.dataset.act;
+    if (what === "status") { openMenu = openMenu === `st-${e.id}` ? null : `st-${e.id}`; paint(); }
+    else if (what === "kebab") { openMenu = openMenu === `k-${e.id}` ? null : `k-${e.id}`; paint(); }
+    else if (what === "edit") { draft = e; location.hash = `#/create/${e.submitted ? 1 : Math.min(e.step ?? 0, STEPS.length - 1)}`; }
+    else if (what === "view") { draft = e; location.hash = "#/create/7"; }
+    else if (what === "soon") toast(`${act.dataset.what} comes later`);
+    else if (what === "copy") { try { await navigator.clipboard.writeText(`https://${eventLink(e)}`); toast("Link copied"); } catch { toast(eventLink(e)); } }
+    else if (what === "dup") { const c = JSON.parse(JSON.stringify(e)); c.id = newId(); c.title = `${e.title || "Untitled event"} (copy)`; c.status = "draft"; c.submitted = false; c.step = 1; events.unshift(c); save(events); openMenu = null; paint(); toast("Event duplicated as a draft"); }
+    else if (what === "del") { openMenu = null; if (await ask({ title: "Delete this event?", message: "This can't be undone.", ok: "Delete" })) { save(events.filter((x) => x.id !== e.id)); renderList(); } else paint(); }
   });
+}
+
+// "Event created!" window: choose what status the new event starts with
+function openStatusModal(onDone) {
+  const OPTS = [["published", "Publish", "play", '<path d="M6 4l14 8-14 8z"/>'], ["draft", "Drafted", "doc", '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>'], ["coming", "Coming soon", "clock", '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'], ["soldout", "Sold out", "ban", '<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>']];
+  let choice = "";
+  const back = document.createElement("div");
+  back.className = "modal-back";
+  back.innerHTML = `<div class="modal small centered" role="dialog" aria-modal="true" aria-label="Event created">
+    <button type="button" class="x-plain" data-close aria-label="Close">×</button>
+    <div class="done-ico">${svg('<circle cx="12" cy="12" r="10"/><path d="m7 12.5 3.5 3.5L17 9"/>', "3em")}</div>
+    <h2 class="done-h">Event created!</h2><p class="done-p">Choose a status for your event</p>
+    <div class="opt-grid">${OPTS.map(([k, n, , d]) => `<button type="button" data-opt="${k}">${svg(d, "1.6em")}<span>${n}</span></button>`).join("")}</div>
+    <button type="button" class="btn" id="submit-ev" disabled>Submit event</button></div>`;
+  document.body.append(back);
+  document.body.style.overflow = "hidden";
+  const finish = (v) => { document.body.style.overflow = ""; document.removeEventListener("keydown", onKey); back.remove(); onDone(v); };
+  const onKey = (e) => { if (e.key === "Escape") finish(null); };
+  document.addEventListener("keydown", onKey);
+  back.querySelectorAll("[data-opt]").forEach((b) => b.addEventListener("click", () => { choice = b.dataset.opt; back.querySelectorAll("[data-opt]").forEach((x) => x.classList.toggle("on", x === b)); back.querySelector("#submit-ev").disabled = false; }));
+  back.querySelector("[data-close]").addEventListener("click", () => finish(null));
+  back.querySelector("#submit-ev").addEventListener("click", () => { if (choice) finish(choice); });
 }
 
 /* ---------- Create an event ---------- */
@@ -1334,15 +1406,22 @@ function stepReview(host) {
     ${section("Organizer & banking", 6, orgs.length ? orgs.map((o) => `<div class="rv-grid">${field("Organizer name", esc(o.holder))}${field("Email", `<span class="keep">${esc(o.email)}</span>`)}${field("Phone", esc(o.phone))}${field("Account number", "••••" + esc(o.account.slice(-4)))}${field("IFSC", esc(o.ifsc))}${o.gst ? field("GST no.", esc(o.gst)) : ""}</div>`).join("<hr />") : field("Organizer name", "—"))}
     ${missing.length
       ? `<p class="notice warn"><b>Almost there.</b> Still needed: ${missing.map((m) => `<button type="button" class="linkish" data-go-step="${m[2]}">${m[1]}</button>`).join(", ")}.</p>`
-      : `<p class="notice ready"><b>Ready to submit.</b> Your event will show as “In review” in Your events.</p>`}
+      : `<p class="notice ready"><b>Ready to submit.</b> After you create the event, you'll choose its status.</p>`}
     <div class="nav"><button class="btn dark prev" type="button" id="prev">Previous</button><button class="btn" type="button" id="create" ${missing.length ? "disabled" : ""}>Create event</button></div>`;
   host.addEventListener("click", (e) => { const b = e.target.closest("[data-go-step]"); if (b) { saveCurrent(); location.hash = `#/create/${b.dataset.goStep}`; } });
   saveCurrent = () => persist(7);
   host.querySelector("#prev").addEventListener("click", () => { saveCurrent(); location.hash = "#/create/6"; });
   host.querySelector("#create").addEventListener("click", () => {
     if (missing.length) return;
-    draft.status = "review"; draft.submittedAt = Date.now(); persist(7);
-    toast("Event submitted. It's now in review."); draft = null; location.hash = "#/";
+    draft.submitted = true; draft.submittedAt = Date.now();
+    if (!STATUSES[draft.status]) draft.status = "draft";
+    persist(7);
+    const made = draft;
+    openStatusModal((choice) => {
+      if (choice) { made.status = choice; draft = made; persist(7); }
+      toast(choice ? `Event created: ${STATUSES[choice].label}` : "Event created as a draft");
+      draft = null; location.hash = "#/";
+    });
   });
 }
 
