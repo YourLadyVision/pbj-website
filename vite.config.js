@@ -5,7 +5,7 @@ import { defineConfig } from "vite";
 export default defineConfig({
   build: {
     rollupOptions: {
-      input: { main: resolve(import.meta.dirname, "index.html"), magazine: resolve(import.meta.dirname, "magazine.html") },
+      input: { main: resolve(import.meta.dirname, "index.html"), magazine: resolve(import.meta.dirname, "magazine.html"), pbj: resolve(import.meta.dirname, "pbj.html"), peanutp3d: resolve(import.meta.dirname, "peanutp3d.html"), butter3dglossy: resolve(import.meta.dirname, "butter3dglossy.html"), jellyhero3d: resolve(import.meta.dirname, "jellyhero3d.html") },
     },
   },
 });
