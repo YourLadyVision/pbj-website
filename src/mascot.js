@@ -284,6 +284,15 @@ export function createMascot(root) {
   });
   // The gap takes a new little wobble 12 times a second, in the same rhythm as the paper-cut lettering: its size
   // breathes a touch and it slides a hair, so the cut-out edge seems hand-trimmed along with the words.
+  // Phones: the folder tabs cover the top of the screen, so the sandwich is slid down until it sits in the middle of the
+  // space left below them (measured from where its layers actually are, and eased in so it never jumps)
+  let phoneShift = 0; // pixels the picture is slid down
+  let measureTick = 0;
+  let seenHi = 0;
+  let seenLo = 0;
+  let extHi = 0;
+  let extLo = 0; // the top and bottom of the layers on screen, as measured last (-1..1, up is positive)
+  const tabBar = document.querySelector(".tabs");
   let haloFrame = -1;
   const wobbleHalos = () => {
     const f = cutFrame();
@@ -608,6 +617,9 @@ export function createMascot(root) {
     camera.position.copy(target).addScaledVector(viewDir, 30);
     camera.lookAt(target);
     camera.zoom = cam.zoom * opening.zoom;
+    const slide = isPhone ? phoneShift * (1 - Math.min(1, focus.amount * 2)) : 0; // a tapped layer comes to the true middle, so the slide eases out
+    if (slide > 0.05) camera.setViewOffset(size.w, size.h, 0, -slide, size.w, size.h);
+    else camera.clearViewOffset();
     camera.updateProjectionMatrix();
     // Keep the whole sandwich inside the frame: if any layer would poke out of the top or bottom, slide
     // the camera just enough to bring it back (smooth, because the layers themselves move smoothly)
@@ -625,6 +637,8 @@ export function createMascot(root) {
           lo = Math.min(lo, corner.y);
         }
       });
+      extHi = hi;
+      extLo = lo;
       // Too high pushes the view up, too low pushes it down. Always a smooth blend, never a sudden switch
       return Math.max(0, hi - LIMIT) + Math.min(0, lo + LIMIT);
     };
@@ -634,6 +648,31 @@ export function createMascot(root) {
       target.y += over * (camera.top / camera.zoom) / Math.cos(ELEVATION);
       camera.position.copy(target).addScaledVector(viewDir, 30);
       camera.lookAt(target);
+    }
+    if (isPhone && tabBar && focus.amount < 0.001) {
+      // where the layers really are on screen: every point of their outlines, looked at every 8th frame (the layers move
+      // smoothly, so the last answer stays good in between)
+      if (++measureTick % 8 === 1) {
+        let hi = -Infinity;
+        let lo = Infinity;
+        camera.updateMatrixWorld(true);
+        meshes.forEach((mesh) => {
+          mesh.updateMatrixWorld(true);
+          const pos = mesh.geometry.attributes.position;
+          for (let k = 0; k < pos.count; k++) {
+            corner.fromBufferAttribute(pos, k).applyMatrix4(mesh.matrixWorld).project(camera);
+            if (corner.y > hi) hi = corner.y;
+            if (corner.y < lo) lo = corner.y;
+          }
+        });
+        seenHi = hi;
+        seenLo = lo;
+      }
+      const hi = seenHi;
+      const lo = seenLo;
+      const nowY = ((1 - (hi + lo) / 2) / 2) * size.h; // where the middle of the layers is on screen right now
+      const wantY = (tabBar.offsetHeight + size.h) / 2 + size.h * 0.02; // the middle of the space below the tabs, a touch lower (the top bread's tilted edge makes the stack look higher than it measures)
+      phoneShift = Math.max(0, Math.min(size.h * 0.2, phoneShift + (wantY - nowY) * 0.06));
     }
     // The tapped layer: slide it to the middle of the screen, pull it in front of the others and make it
     // a little bigger (never wider than the screen). Everything else stays exactly where it was.

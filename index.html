@@ -119,15 +119,35 @@
       <section class="panel" data-panel="events" hidden>
         <div class="block">
           <p class="kicker">■ Events</p>
-          <h2>PBJ-approved events happening around you until we mine exclusive hidden gems for you.</h2>
-          <p class="placeholder">Coming soon: curated event cards with filters.</p>
+          <div class="events-intro">
+            <h2 class="story-title">PBJ-approved events happening around you until we mine exclusive hidden gems for you.</h2>
+            <p class="story-left">Hand-picked <em>nights out</em> around <em>Mumbai</em>. The first ones land <em>soon</em>.</p>
+          </div>
+        </div>
+        <div class="lineup" aria-label="Upcoming events">
+          <div class="lineup-bar">
+            <button class="lineup-prev" type="button" aria-label="Earlier events">←</button>
+            <button class="lineup-next" type="button" aria-label="Later events">→</button>
+          </div>
+          <div class="lineup-track"></div>
         </div>
       </section>
       <section class="panel" data-panel="about" hidden>
-        <div class="block">
-          <p class="kicker">■ About</p>
-          <h2>The story behind PBJ.</h2>
-          <p class="placeholder">Coming soon: our story and the founders.</p>
+        <div class="about-hero">
+          <div class="about-image">
+            <p class="about-pbj-note" aria-live="polite">Warming up the letters…</p>
+            <iframe class="about-pbj" title="P, B and J in 3D: a peanut P, a butter B and a jelly J. Drag to turn them." data-src="/pbj.html?inline"></iframe>
+          </div>
+          <div class="about-cols">
+            <div class="about-left">
+              <p class="kicker">■ About PBJ</p>
+              <h2>Peanut Butter Jelly is a platform where experiences are designed to be curated by artists, found by enthusiasts and indulged in by everyone</h2>
+            </div>
+            <div class="about-right">
+              <p>PBJ is a guide to the unexplored crowd and nooks of Mumbai that don't make the usual lists. Think odd corners, creative experiments, a roadmap to undercover artists and people with curated taste. Every week, we discover and present hidden gems worth leaving the house for.</p>
+              <p>The goal is to make you know where to come looking for after the boredom of a rinse-and-repeat weekend plan leaves you wanting something fresh.</p>
+            </div>
+          </div>
         </div>
       </section>
       <section class="panel" data-panel="list" hidden>
@@ -135,6 +155,7 @@
           <p class="kicker">■ List Your Event</p>
           <h2>Got something worth finding?</h2>
           <p class="placeholder">Coming soon: who can list, how to list, a few rules and a host signup.</p>
+          <p><a class="btn" href="/dashboard.html">Your events</a></p>
         </div>
       </section>
       <section class="panel" data-panel="hosts" hidden>
