@@ -73,6 +73,18 @@ export function playHeroOpen({ hero, mascot, lenis }) {
       y: top + i * STEP * sB,
       s: sB,
     }));
+
+    // Phones: there is plenty of room above and below the sandwich, so the words spread out into it. PEANUT sits just
+    // under the folder tabs and JELLY near the bottom edge; BUTTER goes exactly halfway between them, so the gap above
+    // it is the same as the gap below it.
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      const tabs = document.querySelector(".tabs");
+      const topY = (tabs ? tabs.offsetHeight : 0) + H * 0.012;
+      const bottomY = H - H * 0.035;
+      const cap = CAP_EM * sB;
+      const tops = [topY, (topY + bottomY - cap) / 2, bottomY - cap];
+      layoutB = layoutB.map((l, i) => ({ ...l, y: tops[i] }));
+    }
   };
 
   const apply = () => {

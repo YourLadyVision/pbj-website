@@ -550,3 +550,190 @@ html.intro .intro-swirl {
 .hosts-close:hover .hosts-fill > span, .hosts-close:focus-visible .hosts-fill > span { color: var(--page); }
 .hosts-stage.is-open .hosts-close { opacity: 1; pointer-events: auto; }
 @media (max-width: 767px) { .hosts-stage { height: calc(100svh - var(--bar)); } }
+
+/* ---------- Events: lineup of vintage tickets ---------- */
+.lineup { margin-top: 0; }
+[data-panel="events"] .block { padding-bottom: 1rem; } /* the tickets follow the headline closely */
+.lineup-bar { display: flex; justify-content: flex-end; gap: 0.75rem; padding: 0 1.5rem 1rem; }
+.lineup-bar button {
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 2px dashed var(--ink); background: transparent; color: var(--ink);
+  font: inherit; font-size: 1.4em; cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.lineup-bar button:hover { transform: scale(1.12) rotate(-6deg); }
+.lineup-track {
+  display: flex; gap: 24px; overflow-x: auto; padding: 2.5rem calc(var(--tab-size) + 1.5rem) 3rem 2.5rem;
+  scroll-snap-type: x proximity; scrollbar-width: none; cursor: grab;
+}
+.lineup-track::-webkit-scrollbar { display: none; }
+.lineup-track.dragging { cursor: grabbing; scroll-snap-type: none; }
+.lineup-track { scroll-padding-left: 2.5rem; }
+
+/* ---- Vintage tickets: one per event (see events.js). Paper with grain, punched notches where the stub tears off,
+   scalloped top and bottom edges, a rubber stamp, a barcode. Each sits at its own little angle and straightens on hover. ---- */
+.lineup-empty { margin: 0; padding: 3rem 0; text-transform: uppercase; }
+.tk {
+  --paper: #ffe386; --ink: #463721; --accent: #c2184f;
+  flex: 0 0 auto; width: calc(var(--u) * 21); min-width: 300px; scroll-snap-align: start;
+  display: flex; flex-direction: column; font-size: 0.8em; color: var(--ink); text-align: left;
+  rotate: var(--tilt);
+  filter: drop-shadow(0 9px 0 rgba(70, 55, 33, 0.15)) drop-shadow(0 16px 16px rgba(70, 55, 33, 0.18));
+  transition: rotate 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), translate 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tk:hover, .tk:focus-within { rotate: 0deg; translate: 0 -12px; }
+.tk-sun { --paper: #ffe386; --ink: #463721; --accent: #c2184f; }
+.tk-peanut { --paper: #f0a830; --ink: #463721; --accent: #f8f8f0; }
+.tk-jam { --paper: #c2184f; --ink: #f8f8f0; --accent: #ffe386; }
+.tk-cream { --paper: #efe4c4; --ink: #463721; --accent: #c2184f; }
+.tk-brown { --paper: #463721; --ink: #f8f8f0; --accent: #f0a830; }
+.tk-main, .tk-stub {
+  --bite: 0.42em; --notch: 1.15em;
+  position: relative; background: var(--grain), var(--paper); background-blend-mode: multiply, normal;
+}
+/* the thin printed frame inside the paper */
+.tk-main::before, .tk-stub::before { content: ""; position: absolute; inset: 0.7em; border: 1.5px solid var(--ink); opacity: 0.5; pointer-events: none; }
+.tk-main {
+  padding: 1.5em 1.5em 1.3em;
+  -webkit-mask:
+    radial-gradient(circle at 50% 0, #0000 var(--bite), #000 calc(var(--bite) + 0.5px)) 0 0 / calc(var(--bite) * 3) 51% repeat-x,
+    radial-gradient(circle at 0 100%, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) 0 100% / 51% 51% no-repeat,
+    radial-gradient(circle at 100% 100%, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 100% / 51% 51% no-repeat;
+  mask:
+    radial-gradient(circle at 50% 0, #0000 var(--bite), #000 calc(var(--bite) + 0.5px)) 0 0 / calc(var(--bite) * 3) 51% repeat-x,
+    radial-gradient(circle at 0 100%, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) 0 100% / 51% 51% no-repeat,
+    radial-gradient(circle at 100% 100%, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 100% / 51% 51% no-repeat;
+}
+.tk-stub {
+  padding: 1.1em 1.5em 1.6em; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0.6em 1em;
+  border-top: 2px dashed color-mix(in srgb, var(--ink) 55%, transparent);
+  -webkit-mask:
+    radial-gradient(circle at 50% 100%, #0000 var(--bite), #000 calc(var(--bite) + 0.5px)) 0 100% / calc(var(--bite) * 3) 51% repeat-x,
+    radial-gradient(circle at 0 0, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) 0 0 / 51% 51% no-repeat,
+    radial-gradient(circle at 100% 0, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 0 / 51% 51% no-repeat;
+  mask:
+    radial-gradient(circle at 50% 100%, #0000 var(--bite), #000 calc(var(--bite) + 0.5px)) 0 100% / calc(var(--bite) * 3) 51% repeat-x,
+    radial-gradient(circle at 0 0, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) 0 0 / 51% 51% no-repeat,
+    radial-gradient(circle at 100% 0, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 0 / 51% 51% no-repeat;
+}
+.tk-top { display: flex; justify-content: space-between; margin: 0 0 0.9em; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.04em; }
+.tk-art { position: relative; aspect-ratio: 200 / 128; background: var(--ink); border-radius: 2px; overflow: hidden; margin-bottom: 1em; }
+.tk-art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.tk-art .p { fill: var(--paper); }
+.tk-art .a { fill: var(--accent); }
+.tk-art .k { fill: var(--ink); }
+.tk-art .lp, .tk-art .la { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.tk-art .lp { stroke: var(--paper); }
+.tk-art .la { stroke: var(--accent); }
+.tk-art svg { color: var(--ink); }
+/* the round rubber stamp with the category */
+.tk-stamp {
+  position: absolute; top: 0.6em; right: 0.6em; display: grid; place-content: center; width: 5.8em; height: 5.8em;
+  border: 2px solid var(--accent); border-radius: 50%; outline: 1.5px solid var(--accent); outline-offset: -6px;
+  rotate: 12deg; color: var(--accent); background: color-mix(in srgb, var(--ink) 82%, transparent);
+  font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.02em; text-align: center; white-space: nowrap;
+}
+.tk h3 { font-family: var(--display); font-weight: 700; text-transform: uppercase; font-size: 2.15em; line-height: 0.95; letter-spacing: -0.05em; margin: 0 0 0.5em; }
+.tk-where { margin: 0 0 0.7em; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.03em; }
+.tk-blurb { margin: 0; line-height: 1.4; text-transform: none; opacity: 0.9; }
+.tk-date { display: flex; align-items: center; gap: 0.5em; }
+.tk-date b { font-family: var(--display); font-weight: 700; font-size: 3.2em; line-height: 0.85; letter-spacing: -0.07em; }
+.tk-date span { text-transform: uppercase; line-height: 1.25; font-size: 0.9em; }
+.tk-meta { display: flex; flex-direction: column; align-items: flex-end; text-transform: uppercase; line-height: 1.3; }
+.tk-price { font-family: var(--display); font-weight: 700; font-size: 1.6em; letter-spacing: -0.04em; color: var(--accent); }
+.tk-btn {
+  grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 1em;
+  border: 1.5px solid var(--ink); color: var(--ink); text-decoration: none; text-transform: uppercase;
+  transition: background 0.2s, color 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tk-btn:hover, .tk-btn:focus-visible { background: var(--ink); color: var(--paper); transform: rotate(-1.5deg) scale(1.03); }
+.tk-btn[aria-disabled="true"] { cursor: default; }
+.tk-bars {
+  grid-column: 1 / -1; height: 1.6em; margin-top: 0.2em; opacity: 0.8;
+  background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 4px, var(--ink) 4px 5px, transparent 5px 9px, var(--ink) 9px 12px, transparent 12px 14px);
+}
+@media (max-width: 767px) { .tk { width: 78vw; } }
+
+/* Menu-card sheets: coloured paper, outlined section heads, a red die-cut tag */
+.menu {
+  --paper: #f3d58a; --fg: #463721; --line: #463721;
+  flex: 0 0 auto; width: calc(var(--u) * 19); min-width: 270px; scroll-snap-align: start;
+  position: relative; padding: 1.4em 1.3em 1.3em; font-size: 0.75em; color: var(--fg); text-align: left;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(0,0,0,.05) 0 1px, transparent 1.5px) 0 0 / 7px 7px,
+    var(--grain), var(--paper);
+  background-blend-mode: normal, multiply, normal;
+  border-radius: 3px; rotate: var(--tilt);
+  box-shadow: 0 10px 0 rgba(70, 55, 33, 0.16), 0 14px 24px rgba(70, 55, 33, 0.18);
+  transition: rotate 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), translate 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.menu:hover { rotate: 0deg; translate: 0 -12px; }
+.menu-blue { --paper: #8fb4ea; }
+.menu-maroon { --paper: #5a1a24; --fg: #f8f8f0; --line: #f8f8f0; }
+.menu-head {
+  display: grid; grid-template-columns: 1fr 4.5em; margin-top: 1.4em;
+  border: 1.5px solid var(--line); text-transform: uppercase;
+}
+.menu-head span { padding: 0.55em 0.8em; }
+.menu-head span + span { border-left: 1.5px solid var(--line); text-align: center; }
+.menu h3 {
+  font-family: var(--display); font-weight: 700; font-size: 2.3em; line-height: 1;
+  letter-spacing: -0.06em; margin: 0.7em 0 0.6em;
+}
+.menu-art { aspect-ratio: 200 / 80; background: var(--line); overflow: hidden; position: relative; border-radius: 2px; margin-bottom: 1em; }
+.menu-art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.menu-art svg * { fill: var(--paper); stroke: var(--paper); }
+.menu-art svg [fill="none"], .menu-art svg g[fill="none"] { fill: none; }
+.menu-item { margin: 0 0 0.9em; line-height: 1.3; }
+.menu-item b { font-weight: 700; }
+.menu-note { color: #e5252f; font-size: 0.85em; margin: 0.4em 0 1.2em; transform: rotate(-2deg); transform-origin: left; }
+.menu-maroon .menu-note { color: #ff6b6b; }
+.menu-btn {
+  display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 1em;
+  border: 1.5px solid var(--line); color: var(--fg); text-decoration: none; text-transform: uppercase;
+  transition: background 0.2s, color 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.menu-btn:hover { background: var(--fg); color: var(--paper); transform: rotate(-1.5deg) scale(1.03); }
+/* red die-cut tag pinned to the corner with the date */
+.menu-tag { position: absolute; top: -18px; left: -14px; width: 5.6em; height: 5.6em; rotate: -12deg; filter: drop-shadow(0 4px 3px rgba(0,0,0,.25)); }
+.menu-tag svg { width: 100%; height: 100%; fill: #e5252f; }
+.menu-tag span { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; color: #fff; font-size: 0.8em; line-height: 1; padding-top: 0.4em; }
+.menu-tag b { font-family: var(--display); font-size: 2em; letter-spacing: -0.05em; }
+.menu-tag::after { content: ""; position: absolute; top: 11%; left: 44%; width: 0.7em; height: 0.7em; border-radius: 50%; background: #d9d9d9; box-shadow: inset -1px -1px 2px #777; }
+@media (max-width: 767px) {
+  .lineup-track { padding-inline: 1.2rem; gap: 16px; }
+  .menu { width: 78vw; }
+}
+
+/* Events intro: same look as the layer words on Home (paper-cut headline over justified mono text) */
+.events-intro { max-width: 52rem; display: flex; flex-direction: column; gap: 1.5em; }
+.events-intro .story-title { margin: 0; font-size: clamp(32px, 4.4vw, 64px); }
+.events-intro .story-left { margin: 0; }
+.events-intro .w { white-space: nowrap; }
+.events-intro em { font-style: normal; color: var(--strawberry); }
+
+/* ---------- About: first layout (centred photo, small label, big statement with a highlighted phrase) ---------- */
+.about-hero { display: flex; flex-direction: column; align-items: center; min-height: 100svh; box-sizing: border-box; padding: clamp(1rem, 2vw, 1.5rem) clamp(1.5rem, 6vw, 6rem) clamp(1.5rem, 3vw, 2.5rem); }
+.about-image {
+  position: relative; width: min(70vw, 700px); aspect-ratio: 16 / 7; margin-bottom: clamp(1rem, 3vw, 3rem);
+}
+.about-cols { display: grid; grid-template-columns: 1.35fr 1fr; gap: clamp(2rem, 6vw, 6rem); align-items: stretch; flex: 1; width: 100%; text-align: left; }
+.about-left { align-self: start; }
+.about-right { align-self: end; padding-bottom: clamp(2rem, 5vw, 4.5rem); }
+.about-right p:last-child { margin-bottom: 0; }
+.about-right p { margin: 0 0 1.6em; text-align: justify; text-transform: uppercase; }
+@media (max-width: 991px) { .about-cols { grid-template-columns: 1fr; } }
+.about-pbj { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; }
+.about-pbj-note { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font-family: var(--mono, inherit); font-size: 0.75em; text-transform: uppercase; opacity: 0.7; }
+.about-pbj-note[hidden] { display: none; }
+.about-hero .kicker { margin-bottom: 1.5rem; }
+.about-hero h2 { width: 100%; max-width: none; font-size: 2.4em; text-align: left; }
+/* the text rolls up line by line: each line sits in a clipped box and rises from below, one after another */
+.about-hero .roll-line { display: block; overflow: hidden; line-height: 0.98; padding: 0.15em 0.2em; margin: -0.15em -0.2em; } /* room for the letters' wobble and shadow */
+.about-hero .roll-in { display: flex; justify-content: space-between; /* justified: the words spread to fill the line */ transform: translateY(115%); }
+.about-hero h2.rolled .roll-in { transform: none; transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1); transition-delay: calc(0.15s + var(--i) * 0.12s); }
+@media (prefers-reduced-motion: reduce) { .about-hero .roll-in, .about-hero h2.rolled .roll-in { transform: none; transition: none; } }
+.about-hero .w, .about-hero .unit { white-space: nowrap; }
+.about-hero .w svg { margin-right: -0.045em; } /* letters sit a little closer, like the reference headline */
+.about-hero .roll-line:last-child .roll-in { justify-content: flex-start; gap: 0.2em; } /* the last line stays left, like justified text */
+.about-hero mark { background: none; color: inherit; padding: 0; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
