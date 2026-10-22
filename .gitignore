@@ -138,3 +138,7 @@ exports/
 
 # local screenshot output
 shots/
+
+# lab/ experiments stay on this computer; only the README is shared
+lab/*
+!lab/README.md
