@@ -288,6 +288,8 @@ export function createMascot(root) {
   // space left below them (measured from where its layers actually are, and eased in so it never jumps)
   let phoneShift = 0; // pixels the picture is slid down
   let measureTick = 0;
+  let settling = false;
+  let apartDoneAt = null; // when the layers finished floating apart (null until then)
   let seenHi = 0;
   let seenLo = 0;
   let extHi = 0;
@@ -609,7 +611,8 @@ export function createMascot(root) {
       }
       belowY = y;
       mesh.position.set(0, rest[i] + (y - rest[i]) * opening.apart, 0);
-      mesh.rotation.set(p.x, p.turn, p.z + Math.sin(time * 1.1 + i) * 0.06 * floating);
+      // the slabs level out while tucked together (tilted slabs poke through each other and flicker), and tilt as they float apart
+      mesh.rotation.set(p.x * opening.apart, p.turn, (p.z + Math.sin(time * 1.1 + i) * 0.06 * floating) * opening.apart);
     });
     turntable.rotation.y = spin.angle;
     // The camera follows the stack down and zooms in, and the whole thing bobs a little
@@ -643,7 +646,7 @@ export function createMascot(root) {
       return Math.max(0, hi - LIMIT) + Math.min(0, lo + LIMIT);
     };
     for (let pass = 0; pass < 2; pass++) {
-      const over = frameShift(); // in screen units: positive = too high
+      const over = frameShift() * opening.apart; // in screen units: positive = too high. Quiet while the layers are still tucked together, so the opening never makes the view lurch
       if (!over) break;
       target.y += over * (camera.top / camera.zoom) / Math.cos(ELEVATION);
       camera.position.copy(target).addScaledVector(viewDir, 30);
@@ -652,7 +655,7 @@ export function createMascot(root) {
     if (isPhone && tabBar && focus.amount < 0.001) {
       // where the layers really are on screen: every point of their outlines, looked at every 8th frame (the layers move
       // smoothly, so the last answer stays good in between)
-      if (++measureTick % 8 === 1) {
+      if (opening.apart >= 1 && ++measureTick % 8 === 1) {
         let hi = -Infinity;
         let lo = Infinity;
         camera.updateMatrixWorld(true);
@@ -672,7 +675,12 @@ export function createMascot(root) {
       const lo = seenLo;
       const nowY = ((1 - (hi + lo) / 2) / 2) * size.h; // where the middle of the layers is on screen right now
       const wantY = (tabBar.offsetHeight + size.h) / 2 + size.h * 0.02; // the middle of the space below the tabs, a touch lower (the top bread's tilted edge makes the stack look higher than it measures)
-      phoneShift = Math.max(0, Math.min(size.h * 0.2, phoneShift + (wantY - nowY) * 0.06));
+      if (opening.apart >= 1) {
+        // right after the opening the slide eases in gently (it was worked out off screen, so any leftover correction is tiny and should not be seen)
+        if (apartDoneAt === null) apartDoneAt = time;
+        const rate = settling ? 0.06 : 0.06 * Math.min(1, Math.max(0.05, (time - apartDoneAt) / 3));
+        phoneShift = Math.max(0, Math.min(size.h * 0.2, phoneShift + (wantY - nowY) * rate));
+      }
     }
     // The tapped layer: slide it to the middle of the screen, pull it in front of the others and make it
     // a little bigger (never wider than the screen). Everything else stays exactly where it was.
@@ -1243,6 +1251,28 @@ export function createMascot(root) {
     },
     // The hero opening (see heroOpen.js): hide the sandwich now, play the rest later
     opening,
+    // Before the opening plays: work out, off screen, where the sandwich settles once its layers are apart, so the
+    // picture does not slide around while it grows
+    settle() {
+      const saved = { ...opening };
+      const t0 = lastTime;
+      const render = renderer.render;
+      renderer.render = () => {};
+      settling = true;
+      opening.zoom = 1;
+      opening.apart = 1;
+      measureTick = 0;
+      for (let i = 0; i < 90; i++) {
+        measureTick = i % 8 === 0 ? 0 : measureTick;
+        draw(t0 + (i + 1) / 60, i === 0);
+      }
+      renderer.render = render;
+      settling = false;
+      Object.assign(opening, saved);
+      lastTime = t0;
+      apartDoneAt = null;
+      springs.forEach((sp) => (sp.ready = false));
+    },
     hold(on) {
       stepsOn = !on;
     },
