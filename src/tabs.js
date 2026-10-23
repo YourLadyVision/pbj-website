@@ -34,7 +34,13 @@ export function setupTabs({ onSwitch } = {}) {
     if (toEnd) window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
 
     // Folder shuffle: the new page slides in like a folder pulled to the front
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (name === "home") {
+      // Home has a pinned (position: fixed) hero, and a transform on its folder would hold that hero at the wrong spot
+      // until the transform is cleared (it then jumps), so Home only fades in
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        gsap.fromTo(to, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out", clearProps: "opacity" });
+      }
+    } else if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       gsap.fromTo(
         to,
         { xPercent: phoneQuery.matches ? 0 : 6, yPercent: phoneQuery.matches ? 4 : 0, rotate: 1.5, opacity: 0 },
