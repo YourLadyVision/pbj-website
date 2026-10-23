@@ -24,9 +24,12 @@ const mascot = createMascot(document.querySelector(".mascot"));
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 if (!reduceMotion) Object.assign(mascot.opening, { zoom: 0.001, apart: 0 });
 const heroOpen = playHeroOpen({ hero: document.querySelector(".hero"), mascot, lenis });
-playIntro({ lenis, onDone: heroOpen.start });
+// Heavy background work (the About letters) waits until the loading screen and the sandwich opening are both finished, so they never stutter
+let introDone;
+const afterIntro = new Promise((res) => (introDone = res));
+playIntro({ lenis, onDone: () => heroOpen.start(introDone) });
 
-setupEvents(document.querySelector('[data-panel="events"]'));
+setupEvents(document.querySelector('[data-panel="events"]')); // the paper-cut headline (the old ticket lineup is parked in events.js, unused for now)
 const hosts = setupHosts(document.querySelector('[data-panel="hosts"]'));
 
 setupTabs({
@@ -53,14 +56,21 @@ document.querySelector(".signup-form").addEventListener("submit", (e) => {
   document.querySelector(".form-note").hidden = false;
 });
 
-// About: the PBJ letters are heavy, so they load only when the About tab is first opened
+// About: the PBJ letters are heavy, so they load quietly in the background a few seconds after the page opens
+// (or at once if someone opens About first). They stay invisible until all three are ready, then fade in together.
 {
   const about = document.querySelector('[data-panel="about"]'), frame = about?.querySelector(".about-pbj"), note = about?.querySelector(".about-pbj-note");
   const load = () => { if (frame && !frame.src) frame.src = frame.dataset.src; };
   if (about) {
+    addEventListener("message", (e) => {
+      if (e.data !== "pbj-ready") return;
+      if (note) note.hidden = true;
+      frame.classList.add("ready");
+    });
     if (!about.hidden) load();
     new MutationObserver(() => { if (!about.hidden) load(); }).observe(about, { attributes: true, attributeFilter: ["hidden"] });
-    addEventListener("message", (e) => { if (e.data === "pbj-ready" && note) note.hidden = true; });
+    const preload = () => (window.requestIdleCallback ? requestIdleCallback(load, { timeout: 4000 }) : load());
+    afterIntro.then(() => setTimeout(preload, 1500));
   }
 }
 

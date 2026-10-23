@@ -31,6 +31,7 @@ const swirlShader = {
 
     void main() {
       float p = progress;
+      if (p < 0.0005) { gl_FragColor = vec4(texture2D(tex, vUv).rgb, 1.0); return; } // untouched: show the picture as is
       vec2 d = (vUv - 0.5) * vec2(aspect, 1.0);
       float r = length(d);
       float a = atan(d.y, d.x);
@@ -91,9 +92,9 @@ export function playIntro({ lenis, onDone = () => {} }) {
   // ---- The page's gooey "hole" it swirls out of ----
   const hole = { r: 0, wobble: 1, spin: 0 };
   const maxR = Math.hypot(vw, vh) / 2 + 40;
+  const top = site.getBoundingClientRect().top; // the page sits still while the intro plays: measure once, not every frame
   function drawHole(t = 0) {
-    const top = site.getBoundingClientRect().top; // keep the hole centred on the screen
-    const pts = [];
+      const pts = [];
     for (let i = 0; i < 72; i++) {
       const a = (i / 72) * Math.PI * 2;
       const wob =
@@ -118,7 +119,7 @@ export function playIntro({ lenis, onDone = () => {} }) {
     cleanupSwirl();
     html.classList.remove("intro");
     gsap.set(site, { clearProps: "clipPath" });
-    gsap.set(layers, { clearProps: "transform,transformOrigin" });
+    gsap.set(layers, { clearProps: "transform,transformOrigin,willChange" });
     try {
       sessionStorage.setItem("pbj-intro", "1");
     } catch (e) {}
@@ -133,7 +134,10 @@ export function playIntro({ lenis, onDone = () => {} }) {
     return;
   }
 
-  layers.forEach((el) => gsap.set(el, { rotate: -160, scale: 0.25, transformOrigin: originFor(el) }));
+  layers.forEach((el) => {
+    gsap.set(el, { rotate: -160, scale: 0.25, transformOrigin: originFor(el), force3D: true });
+    el.style.willChange = "transform";
+  });
 
   // ---- A twistable copy of the loading screen, drawn on top of it ----
   const dpr = Math.min(window.devicePixelRatio, 2);
@@ -145,10 +149,17 @@ export function playIntro({ lenis, onDone = () => {} }) {
   renderer.setPixelRatio(dpr);
   renderer.setSize(vw, vh, false);
 
+  // The picture is exactly as big as the screen's pixels, with no mip-mapping, so the first frame of the swirl
+  // matches the real lettering pixel for pixel (no blur when we swap from the real text to the swirl)
+  const buf = renderer.getDrawingBufferSize(new THREE.Vector2());
   const pic = document.createElement("canvas");
-  pic.width = vw * dpr;
-  pic.height = vh * dpr;
+  pic.width = buf.x;
+  pic.height = buf.y;
   const picTexture = new THREE.CanvasTexture(pic);
+  picTexture.generateMipmaps = false;
+  picTexture.minFilter = THREE.LinearFilter;
+  picTexture.magFilter = THREE.LinearFilter;
+  const picScale = buf.x / vw;
 
   const material = new THREE.ShaderMaterial({ ...swirlShader, transparent: true, premultipliedAlpha: true });
   material.uniforms = THREE.UniformsUtils.clone(swirlShader.uniforms);
@@ -165,7 +176,7 @@ export function playIntro({ lenis, onDone = () => {} }) {
   // Paint the loading screen (purple + text, exactly where the real text sits) into the picture
   function paintPicture() {
     const ctx = pic.getContext("2d");
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.setTransform(picScale, 0, 0, picScale, 0, 0);
     ctx.fillStyle = getComputedStyle(overlay).backgroundColor;
     ctx.fillRect(0, 0, vw, vh);
     cutLines.forEach((w) => w.paint(ctx));
@@ -204,7 +215,7 @@ export function playIntro({ lenis, onDone = () => {} }) {
   if (import.meta.env.DEV) window.introTl = tl; // handy for testing in the browser
   tl
     // 1. "Ooze the fun" on jelly purple
-    .from(text, { opacity: 0, y: 8, duration: 0.4 })
+    .from(text, { opacity: 0, duration: 0.4 })
     // 2. Sucked into the gooey hole
     .call(swapToSwirl, null, 1.4)
     .to(swirl, { value: 1, duration: 1.3, ease: "power2.in" }, 1.4)

@@ -21,7 +21,7 @@ const WORDS = [
 // call the returned start() when the loading screen is done.
 export function playHeroOpen({ hero, mascot, lenis }) {
   const title = hero.querySelector(".hero-title");
-  if (!title) return { start() {} };
+  if (!title) return { start(done) { done?.(); } };
   const reduceMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)",
   ).matches;
@@ -108,12 +108,14 @@ export function playHeroOpen({ hero, mascot, lenis }) {
   apply();
   new ResizeObserver(relayout).observe(hero); // re-measure whenever the hero itself changes size
 
-  const start = () => {
+  const start = (onDone = () => {}) => {
     if (reduceMotion) {
       t = 1;
       apply();
+      onDone();
       return;
     }
+    mascot.settle();
     mascot.hold(true);
     lenis.stop();
     const tl = gsap
@@ -122,6 +124,7 @@ export function playHeroOpen({ hero, mascot, lenis }) {
         onComplete() {
           mascot.hold(false);
           lenis.start();
+          onDone();
         },
       })
       .to(
