@@ -27,7 +27,8 @@ for (const [name, viewport] of Object.entries(sizes)) {
   await page.goto(url, { waitUntil: "load" });
   await page.waitForTimeout(6000); // loading intro + hero opening
   for (let i = 0; i < 3; i++) {
-    await page.screenshot({ path: join(out, `${name}-${i + 1}.png`) });
+    // The 3D home page is slow to draw on the checking computer (no graphics card), so allow up to 3 minutes
+    await page.screenshot({ path: join(out, `${name}-${i + 1}.png`), timeout: 180000 });
     await page.evaluate((h) => window.scrollBy(0, h), viewport.height * 1.5);
     await page.waitForTimeout(2000);
   }
