@@ -559,10 +559,10 @@ html.intro .intro-swirl {
 }
 .pin:hover { transform: translateY(-6px) rotate(-1deg); }
 @media (max-width: 991px) { .pins { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 767px) { .pins { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; padding-inline: 1rem; } .pin { border-radius: 12px; } }
+@media (max-width: 767px) { .pins { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; padding: 0.5rem 1.2rem 4rem; } .pin { border-radius: 12px; } }
 
 /* Events intro: same look as the layer words on Home (paper-cut headline over justified mono text) */
-.events-intro { max-width: 52rem; display: flex; flex-direction: column; gap: 1.5em; }
+.events-intro { margin-bottom: clamp(1rem, 3vw, 2.5rem); max-width: 52rem; display: flex; flex-direction: column; gap: 1.5em; }
 .events-intro .story-title { margin: 0; font-size: clamp(32px, 4.4vw, 64px); }
 .events-intro .story-left { margin: 0; }
 .events-intro .w { white-space: nowrap; }
@@ -578,7 +578,14 @@ html.intro .intro-swirl {
 .about-right { align-self: end; padding-bottom: clamp(2rem, 5vw, 4.5rem); }
 .about-right p:last-child { margin-bottom: 0; }
 .about-right p { margin: 0 0 1.6em; text-align: justify; text-transform: uppercase; }
-@media (max-width: 991px) { .about-cols { grid-template-columns: 1fr; } }
+@media (max-width: 991px) {
+  .about-hero { min-height: 0; padding-top: 0.5rem; padding-bottom: 2.5rem; }
+  .about-image { width: min(100%, 520px); margin-bottom: 0.5rem; }
+  .about-cols { grid-template-columns: 1fr; gap: 1.75rem; }
+  .about-hero .about-left h2 { font-size: 1.45em; }
+  .about-right { padding-bottom: 0; }
+  .about-right p { margin-bottom: 1.2em; }
+}
 .about-pbj { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; opacity: 0; transition: opacity 0.6s ease; }
 .about-pbj.ready { opacity: 1; }
 /* while About is closed it is still laid out (just invisible and out of the way), so the letters can load and size themselves in the background */
@@ -596,3 +603,6 @@ html.intro .intro-swirl {
 .about-hero .w svg { margin-right: -0.045em; } /* letters sit a little closer, like the reference headline */
 .about-hero .roll-line:last-child .roll-in { justify-content: flex-start; gap: 0.2em; } /* the last line stays left, like justified text */
 .about-hero mark { background: none; color: inherit; padding: 0; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+[data-panel="events"] .block { padding-bottom: clamp(1rem, 3vw, 2rem); }
+/* the Events headline is a long sentence: left-aligned, so it never stretches into big word gaps */
+.events-intro .story-title { text-align: left; }

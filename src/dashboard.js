@@ -81,8 +81,10 @@ function ask({ title, message = "", input, ok = "OK" }) {
 
 /* ---------- Paper-cut headings: the same hand-cut wobbling lettering as the website's headlines (see cutword.js) ---------- */
 let cutLetters = [];
-function cutHeadings() {
-  app.querySelectorAll(".cut:not([data-cut])").forEach((h) => {
+// Cuts every ".cut" heading inside `root` into paper-cut letters and returns the letters made (a window disposes of its own when it closes)
+function cutHeadings(root = app) {
+  const made = [];
+  root.querySelectorAll(".cut:not([data-cut])").forEach((h) => {
     h.dataset.cut = "1";
     const text = h.textContent.replace(/\s+/g, " ").trim();
     h.setAttribute("aria-label", text);
@@ -92,13 +94,14 @@ function cutHeadings() {
       w.className = "w";
       w.setAttribute("aria-hidden", "true");
       [...word].forEach((ch) => {
-        const letter = createCutLetter(ch, { fill: "var(--pop)", shadow: "var(--brown)" });
-        if (letter) { cutLetters.push(letter); w.append(letter.el); } else w.append(document.createTextNode(ch));
+        const letter = createCutLetter(ch, { fill: h.dataset.fill || "var(--pop)", shadow: h.dataset.shadow || "var(--brown)", calm: h.hasAttribute("data-level") ? 0 : undefined });
+        if (letter) { (root === app ? cutLetters : made).push(letter); w.append(letter.el); } else w.append(document.createTextNode(ch));
       });
       h.append(w);
       if (i < all.length - 1) h.append(" ");
     });
   });
+  return made;
 }
 
 /* ---------- My events ---------- */
@@ -137,13 +140,26 @@ const iconSvg = {
   chev: '<path d="m6 9 6 6 6-6"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
   check: '<path d="m5 12 5 5 9-10"/>',
+  flip: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>',
 };
 const ic = (name, size = "1.3em") => svg(iconSvg[name], size);
+
+// A stand-in for the guest check-in QR code: three corner squares and scattered dots. It can't be scanned; the real code gets embedded later.
+function qrPlaceholder(seed) {
+  let h = 2166136261; for (const c of String(seed)) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0;
+  const rnd = () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0), (h & 1023) / 1023);
+  const N = 25, cells = [];
+  const finder = (x0, y0) => { for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) if (x === 0 || y === 0 || x === 6 || y === 6 || (x > 1 && x < 5 && y > 1 && y < 5)) cells.push([x0 + x, y0 + y]); };
+  finder(0, 0); finder(N - 7, 0); finder(0, N - 7);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const inF = (x < 8 && y < 8) || (x > N - 9 && y < 8) || (x < 8 && y > N - 9); if (!inF && rnd() > 0.52) cells.push([x, y]); }
+  return `<svg class="qr" viewBox="0 0 ${N} ${N}" role="img" aria-label="QR code placeholder">${cells.map(([x, y]) => `<rect x="${x}" y="${y}" width="1.02" height="1.02"/>`).join("")}</svg>`;
+}
 
 function renderList() {
   document.title = "My events — PeanutButterJelly.vip";
   const events = load();
   let tab = "all", query = "", openMenu = null;
+  const flipped = new Set(); // tickets currently turned over to show the QR side
   app.innerHTML = `
     <div class="dash-head">
       <div><h1 class="cut">My events</h1><p>Manage your events and see how they're doing.</p></div>
@@ -158,8 +174,10 @@ function renderList() {
     const paid = (e.tickets || []).some((t) => t.paid);
     const img = (e.images || []).filter(Boolean)[0];
     const menu = openMenu === `st-${e.id}`, kebab = openMenu === `k-${e.id}`;
-    return `<article class="ev-card ${past ? "past" : ""}" data-id="${e.id}">
-      <div class="ev-img" ${img ? `style="background-image:url(${img})"` : ""}>${img ? "" : `<span>${esc((e.title || "?").trim().slice(0, 1).toUpperCase())}</span>`}${past ? '<i class="ev-past">Past</i>' : ""}</div>
+    const no = `PBJ-${String(e.id).replace(/\W/g, "").slice(-6).toUpperCase()}`;
+    return `<article class="ev-card ticket ${past ? "past" : ""} ${flipped.has(e.id) ? "flipped" : ""}" data-id="${e.id}"><div class="tk">
+      <div class="tk-face front"><div class="tk-bgw"><div class="tk-edge"></div><div class="tk-bg"></div></div>
+      <div class="tk-stub img" ${img ? `style="background-image:url(${img})"` : ""}>${img ? "" : `<span>${esc((e.title || "?").trim().slice(0, 1).toUpperCase())}</span>`}${past ? '<i class="ev-past">Past</i>' : ""}<button type="button" class="flip" data-act="flip" aria-label="Turn the ticket over to see its QR code" title="Show QR code">${ic("flip", "1.2em")}</button></div>
       <div class="ev-main">
         <div class="ev-top"><div><h3>${esc(e.title || "Untitled event")}</h3><p class="ev-date">${ic("cal", "1.1em")}${dayLine(e)}</p></div>
           <div class="ev-ctl">
@@ -176,16 +194,23 @@ function renderList() {
         <div class="ev-actions">
           ${past ? "" : `<button type="button" class="act primary" data-act="edit">${ic("edit")}${done ? "Edit" : "Continue"}</button>`}
           <button type="button" class="act" data-act="view">${ic("eye")}View event</button>
-          <button type="button" class="act outline" data-act="soon" data-what="Sales tracking">${ic("chart")}View sales</button>
-          ${past ? "" : `<button type="button" class="act" data-act="soon" data-what="Coupons">${ic("tag")}Coupons</button><button type="button" class="act boost" data-act="soon" data-what="Boost">${ic("bolt")}Boost</button>`}
-        </div></div></article>`;
+          <button type="button" class="act outline" data-act="sales">${ic("chart")}View sales</button>
+          ${past ? "" : `<button type="button" class="act" data-act="coupons">${ic("tag")}Coupons</button>`}
+        </div></div></div>
+      <div class="tk-face tk-back"><div class="tk-bgw"><div class="tk-edge"></div><div class="tk-bg dark"></div></div>
+        <div class="tk-stub qrside">${qrPlaceholder(e.id)}<span class="qr-cap">Admit one</span><small>QR code coming soon</small></div>
+        <div class="ev-main bk"><span class="bk-cap">PB&amp;J · Admit one</span><h3 class="bk-title">${esc(e.title || "Untitled event")}</h3>
+          <p class="bk-text">Guests will show this code at the door to check in.</p><span class="bk-no">Ticket no. ${no}</span>
+          ${done ? `<div class="ev-link light">${ic("link", "1.1em")}<span>${eventLink(e)}</span><button type="button" data-act="copy">${ic("copy", "1.1em")}Copy</button></div>` : ""}
+          <div class="ev-actions"><button type="button" class="act flipback" data-act="flip">${ic("flip")}Flip back</button></div></div></div>
+      </div></article>`;
   };
   const paint = () => {
     tabsEl.innerHTML = TABS.map(([k, n]) => `<button type="button" role="tab" class="ev-tab ${tab === k ? "on" : ""}" data-tab="${k}" aria-selected="${tab === k}">${n}<b>${events.filter((e) => inTab(e, k)).length}</b></button>`).join("");
     const q = query.trim().toLowerCase();
     const shown = events.filter((e) => inTab(e, tab) && (!q || (e.title || "").toLowerCase().includes(q)));
     if (!shown.length) {
-      listEl.innerHTML = `<div class="empty"><h2 class="cut">${events.length ? "Nothing here" : "No events yet"}</h2>
+      listEl.innerHTML = `<div class="empty"><h2 class="cut" data-fill="var(--brown)" data-shadow="var(--cream)">${events.length ? "Nothing here" : "No events yet"}</h2>
         <p>${events.length ? "No events match this tab or search." : "Got something worth finding? Create your first event and share it with Mumbai."}</p>
         ${events.length ? "" : '<a class="btn" href="#/create/0">+ Create event</a>'}</div>`;
     } else listEl.innerHTML = shown.map(card).join("");
@@ -207,6 +232,9 @@ function renderList() {
     else if (what === "kebab") { openMenu = openMenu === `k-${e.id}` ? null : `k-${e.id}`; paint(); }
     else if (what === "edit") { draft = e; location.hash = `#/create/${e.submitted ? 1 : Math.min(e.step ?? 0, STEPS.length - 1)}`; }
     else if (what === "view") { draft = e; location.hash = "#/create/7"; }
+    else if (what === "flip") { const art = act.closest(".ev-card"); if (art.classList.toggle("flipped")) flipped.add(e.id); else flipped.delete(e.id); }
+    else if (what === "coupons") location.hash = `#/event/${e.id}/coupons`;
+    else if (what === "sales") location.hash = `#/event/${e.id}/sales`;
     else if (what === "soon") toast(`${act.dataset.what} comes later`);
     else if (what === "copy") { try { await navigator.clipboard.writeText(`https://${eventLink(e)}`); toast("Link copied"); } catch { toast(eventLink(e)); } }
     else if (what === "dup") { const c = JSON.parse(JSON.stringify(e)); c.id = newId(); c.title = `${e.title || "Untitled event"} (copy)`; c.status = "draft"; c.submitted = false; c.step = 1; events.unshift(c); save(events); openMenu = null; paint(); toast("Event duplicated as a draft"); }
@@ -1038,8 +1066,8 @@ function openTicketModal(type, existing, onSave) {
   if (evFrom && (!t.saleFrom || t.saleFrom < evFrom || (t.saleTo || t.saleFrom) > evTo)) { t.saleFrom = evFrom; t.saleTo = evTo; }
   const back = document.createElement("div");
   back.className = "modal-back";
-  back.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${esc(type.name)}">
-    <div class="modal-head"><div><h3>${esc(type.name)}</h3><p>Fill in the required fields below</p></div><button type="button" class="modal-x" data-x aria-label="Close">×</button></div>
+  back.innerHTML = `<div class="modal coupon-modal" role="dialog" aria-modal="true" aria-label="${esc(type.name)}">
+    <div class="modal-head plain"><div><h3 class="cut">${esc(type.name)}</h3><p>Fill in the required fields below</p></div><button type="button" class="modal-x" data-x aria-label="Close">×</button></div>
     <div class="modal-body">
       <div class="seg" role="tablist"><button type="button" data-paid="1">Paid</button><button type="button" data-paid="0">✓ RSVP / Free</button></div>
       <div class="two tight">
@@ -1080,6 +1108,7 @@ function openTicketModal(type, existing, onSave) {
   </div>`;
   document.body.append(back);
   document.body.style.overflow = "hidden";
+  const headLetters = cutHeadings(back);
   const $ = (q) => back.querySelector(q);
   // Guest tickets are RSVP / free only: no Paid option
   if (type.id === "guest") { t.paid = false; $(".seg").classList.add("single"); $(".seg").innerHTML = '<span>✓ RSVP / Free</span>'; }
@@ -1117,7 +1146,7 @@ function openTicketModal(type, existing, onSave) {
   back.querySelectorAll("[data-paid]").forEach((b) => b.addEventListener("click", () => { t.paid = b.dataset.paid === "1"; refresh(); }));
   back.querySelectorAll("[data-order]").forEach((b) => b.addEventListener("click", () => { t.order = b.dataset.order; refresh(); }));
   $("#opt-toggle").addEventListener("click", () => { const open = $("#opt").hidden; $("#opt").hidden = !open; $("#opt-toggle").setAttribute("aria-expanded", open); });
-  const close = () => { back.remove(); document.body.style.overflow = ""; document.removeEventListener("keydown", onKey); };
+  const close = () => { headLetters.forEach((l) => l.dispose()); back.remove(); document.body.style.overflow = ""; document.removeEventListener("keydown", onKey); };
   const onKey = (e) => { if (e.key === "Escape") close(); };
   document.addEventListener("keydown", onKey);
   back.querySelectorAll("[data-x]").forEach((b) => b.addEventListener("click", close));
@@ -1434,13 +1463,384 @@ function stepComing(host, step) {
   host.querySelector("#done").addEventListener("click", () => { toast("Draft saved"); draft = null; });
 }
 
+/* ---------- Coupons (per event) ---------- */
+const couponState = (c) => { const end = c.to || c.from; if (end && end < iso(new Date())) return "Expired"; return c.active ? "Active" : "Paused"; };
+const discountText = (c) => (c.type === "pct" ? `${c.value}% off` : `${rupees(+c.value)} off`);
+const clock = (t) => (t && t.h && t.m ? `${t.h}:${t.m}` : "—");
+
+function renderCoupons(id) {
+  const events = load(), ev = events.find((e) => e.id === id);
+  if (!ev) { location.hash = "#/"; return; }
+  ev.coupons ??= [];
+  document.title = "Coupons — PeanutButterJelly.vip";
+  let query = "";
+  app.innerHTML = `
+    <div class="sub-head">
+      <button type="button" class="back-pill" data-back>‹ Back</button>
+      <div class="sh-t"><h1 class="cut">Coupons</h1><p>Manage discount coupons for ${esc(ev.title || "this event")}</p></div>
+      <div class="head-tools"><label class="search">${ic("search", "1.3em")}<input id="cp-q" type="text" placeholder="Search coupons…" aria-label="Search coupons" autocomplete="off" /></label>
+        <button type="button" class="btn create-btn" id="cp-add">+ Add coupon</button></div>
+    </div>
+    <div id="cp-list" class="cp-list"></div>`;
+  const listEl = app.querySelector("#cp-list");
+  const persistEv = () => save(events);
+  const paint = () => {
+    const q = query.trim().toLowerCase();
+    const shown = ev.coupons.filter((c) => !q || c.code.toLowerCase().includes(q));
+    if (!shown.length) {
+      listEl.innerHTML = `<div class="empty"><h2 class="cut" data-fill="var(--brown)" data-shadow="var(--cream)">${ev.coupons.length ? "No match" : "No coupons yet"}</h2>
+        <p>${ev.coupons.length ? "No coupon matches that search." : "Add a discount code your guests can use at checkout."}</p></div>`;
+      cutHeadings(); return;
+    }
+    listEl.innerHTML = shown.map((c) => {
+      const st = couponState(c);
+      return `<article class="cp-card" data-id="${c.id}"><div class="cp-main"><b class="cp-code">${esc(c.code)}</b><span class="pill ${st === "Active" ? "live" : st === "Paused" ? "off" : "out"}">${st}</span></div>
+        <div class="cp-meta"><span><small>Discount</small><b>${discountText(c)}</b></span><span><small>Used</small><b>${c.used || 0} / ${c.max}</b></span><span><small>Valid</small><b>${dmy(c.from)}${c.to && c.to !== c.from ? ` → ${dmy(c.to)}` : ""}<em>${clock(c.st)} – ${clock(c.en)}</em></b></span></div>
+        <div class="made-ctl"><button type="button" class="switch ${c.active ? "on" : ""}" role="switch" aria-checked="${c.active}" data-toggle aria-label="Coupon active"><i></i></button>
+          <button type="button" class="icon-btn" data-edit aria-label="Edit ${esc(c.code)}" title="Edit">${ic("edit", "1.5em")}</button>
+          <button type="button" class="icon-btn danger" data-del aria-label="Delete ${esc(c.code)}" title="Delete"><svg viewBox="0 0 24 24" width="1.5em" height="1.5em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></div></article>`;
+    }).join("");
+  };
+  paint(); cutHeadings();
+  app.querySelector("[data-back]").addEventListener("click", () => { location.hash = "#/"; });
+  app.querySelector("#cp-q").addEventListener("input", (e) => { query = e.target.value; paint(); });
+  const add = (existing) => openCouponModal(ev, existing, (c) => {
+    const i = ev.coupons.findIndex((x) => x.id === c.id);
+    if (i >= 0) ev.coupons[i] = c; else ev.coupons.unshift(c);
+    persistEv(); paint(); toast(i >= 0 ? "Coupon updated" : "Coupon created");
+  });
+  app.querySelector("#cp-add").addEventListener("click", () => add());
+  listEl.addEventListener("click", async (e) => {
+    if (e.target.closest("[data-add]")) { add(); return; }
+    const card = e.target.closest(".cp-card"); if (!card) return;
+    const c = ev.coupons.find((x) => x.id === card.dataset.id);
+    if (e.target.closest("[data-toggle]")) { c.active = !c.active; persistEv(); paint(); }
+    else if (e.target.closest("[data-edit]")) add(c);
+    else if (e.target.closest("[data-del]") && (await ask({ title: `Delete ${c.code}?`, message: "Guests will no longer be able to use it.", ok: "Delete" }))) { ev.coupons = ev.coupons.filter((x) => x.id !== c.id); persistEv(); paint(); }
+  });
+}
+
+function openCouponModal(ev, existing, onSave) {
+  const c = existing ? { ...existing, st: { ...existing.st }, en: { ...existing.en } } : { id: newId(), code: "", max: "", type: "pct", value: "", from: "", to: "", st: { h: "", m: "" }, en: { h: "", m: "" }, active: true, used: 0 };
+  const back = document.createElement("div");
+  back.className = "modal-back";
+  back.innerHTML = `<div class="modal coupon-modal" role="dialog" aria-modal="true" aria-label="${existing ? "Edit" : "New"} coupon">
+    <div class="modal-head plain"><div><h3 class="cut">${existing ? "Edit coupon" : "New coupon"}</h3><p>Fill in the details to create a coupon</p></div><button type="button" class="modal-x" data-x aria-label="Close">×</button></div>
+    <div class="modal-body">
+      <p class="mini-title">Coupon details</p>
+      <div class="field" id="cf-code"><label for="cp-code">Coupon code <span class="req">*</span></label><input id="cp-code" class="box caps" type="text" maxlength="20" autocomplete="off" placeholder="E.g. DIWALI20" /><p class="err" id="cp-code-err">Use 3 to 20 letters or numbers.</p></div>
+      <div class="field"><label for="cp-max">Max uses <span class="req">*</span></label><input id="cp-max" class="box" type="number" min="1" step="1" inputmode="numeric" placeholder="e.g. 100 (how many times it can be used)" /></div>
+      <p class="mini-title">Discount</p>
+      <div class="field"><span class="lab">Discount value <span class="req">*</span></span>
+        <div class="disc"><div class="seg" role="tablist"><button type="button" data-type="pct">% PCT</button><button type="button" data-type="inr">₹ INR</button></div><input id="cp-val" class="box" type="number" min="1" step="any" inputmode="decimal" placeholder="e.g. 20" /></div></div>
+      <p class="mini-title">Validity period</p>
+      <div class="field"><span class="lab">Date range <span class="req">*</span></span><div id="cp-dates"></div></div>
+      <div class="two tight">
+        <div class="field"><span class="lab">Start time <span class="req">*</span></span><div class="time-row"><div id="cs-h"></div><div id="cs-m"></div></div></div>
+        <div class="field"><span class="lab">End time <span class="req">*</span></span><div class="time-row"><div id="ce-h"></div><div id="ce-m"></div></div></div>
+      </div>
+      <p class="mini-title">Status</p>
+      <div class="switch-row"><div><b id="cp-st-t"></b></div><button type="button" class="switch" id="cp-on" role="switch" aria-label="Coupon active"><i></i></button></div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn ghost" data-x>Cancel</button><button type="button" class="btn" id="cp-save">${existing ? "Save coupon" : "Create coupon"}</button></div></div>`;
+  document.body.append(back);
+  document.body.style.overflow = "hidden";
+  const headLetters = cutHeadings(back);
+  const $ = (q) => back.querySelector(q);
+  $("#cp-code").value = c.code; $("#cp-max").value = c.max; $("#cp-val").value = c.value;
+  const evEnd = ev.dateTo || ev.dateFrom || "";
+  const dates = { get from() { return c.from; }, set from(v) { c.from = v; }, get to() { return c.to; }, set to(v) { c.to = v; } };
+  rangePicker($("#cp-dates"), dates, () => refresh(), { max: evEnd });
+  dropdown($("#cs-h"), HOURS, c.st.h, (v) => { c.st.h = v; refresh(); }, "HH"); dropdown($("#cs-m"), MINUTES, c.st.m, (v) => { c.st.m = v; refresh(); }, "MM");
+  dropdown($("#ce-h"), HOURS, c.en.h, (v) => { c.en.h = v; refresh(); }, "HH"); dropdown($("#ce-m"), MINUTES, c.en.m, (v) => { c.en.m = v; refresh(); }, "MM");
+  const taken = () => (ev.coupons || []).some((x) => x.id !== c.id && x.code.toLowerCase() === c.code.trim().toLowerCase());
+  const valueOk = () => (c.type === "pct" ? +c.value >= 1 && +c.value <= 100 : +c.value > 0);
+  const timesOk = () => { if (!(c.st.h && c.st.m && c.en.h && c.en.m)) return false; const single = !c.to || c.to === c.from; return !single || `${c.en.h}${c.en.m}` > `${c.st.h}${c.st.m}`; };
+  const valid = () => /^[A-Z0-9_-]{3,20}$/.test(c.code.trim()) && !taken() && +c.max >= 1 && valueOk() && !!c.from && timesOk();
+  const refresh = () => {
+    back.querySelectorAll("[data-type]").forEach((b) => b.classList.toggle("on", b.dataset.type === c.type));
+    $("#cp-val").placeholder = c.type === "pct" ? "e.g. 20" : "e.g. 100";
+    $("#cp-on").classList.toggle("on", c.active); $("#cp-on").setAttribute("aria-checked", c.active);
+    $("#cp-st-t").textContent = c.active ? "Active: coupon can be used" : "Paused: coupon can't be used";
+    const dup = taken(); $("#cf-code").classList.toggle("bad", dup); $("#cp-code-err").textContent = dup ? "This code already exists for this event." : "Use 3 to 20 letters or numbers.";
+    $("#cp-save").disabled = !valid();
+  };
+  $("#cp-code").addEventListener("input", (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""); c.code = e.target.value; refresh(); });
+  $("#cp-max").addEventListener("input", (e) => { c.max = e.target.value; refresh(); });
+  $("#cp-val").addEventListener("input", (e) => { c.value = e.target.value; refresh(); });
+  back.querySelectorAll("[data-type]").forEach((b) => b.addEventListener("click", () => { c.type = b.dataset.type; refresh(); }));
+  $("#cp-on").addEventListener("click", () => { c.active = !c.active; refresh(); });
+  const close = () => { headLetters.forEach((l) => l.dispose()); back.remove(); document.body.style.overflow = ""; document.removeEventListener("keydown", onKey); };
+  const onKey = (e) => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  back.querySelectorAll("[data-x]").forEach((b) => b.addEventListener("click", close));
+  $("#cp-save").addEventListener("click", () => { if (!valid()) return; if (!c.to) c.to = c.from; c.code = c.code.trim(); onSave(c); close(); });
+  refresh();
+  $("#cp-code").focus();
+}
+
+/* ---------- Sales and analytics (per event) ---------- */
+// PBJ doesn't sell tickets yet, so every number here is zero. The page is ready for when sales exist.
+const SALES_TABS = [["overview", "Overview"], ["analytics", "Analytics"], ["tickets", "Ticket wise"]];
+// A small graph that draws itself in, then keeps a gentle motion going (stops for people who turn motion off). Shape only for now: it becomes real once there are sales.
+const spark = (color, delay = 0) => `<svg class="spark" viewBox="0 0 80 28" aria-hidden="true" style="--c:${color}; --d:${delay}s"><path class="sp-area" d="M2 22 L16 17 L30 21 L44 11 L58 16 L76 7 L76 28 L2 28 Z" fill="${color}"/><path class="sp-line" pathLength="100" d="M2 22 L16 17 L30 21 L44 11 L58 16 L76 7" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle class="sp-dot" cx="76" cy="7" r="2.6" fill="${color}"/><circle class="sp-ring" cx="76" cy="7" r="2.6" fill="none" stroke="${color}" stroke-width="1.5"/></svg>`;
+
+function renderSales(id) {
+  const events = load(), ev = events.find((e) => e.id === id);
+  if (!ev) { location.hash = "#/"; return; }
+  document.title = "Sales — PeanutButterJelly.vip";
+  let tab = "overview";
+  const st = statusOf(ev), past = isPast(ev);
+  const badge = past ? ["Event ended", "off"] : st === "published" ? ["Event live", "live"] : [STATUSES[st].label, st === "soldout" || st === "cancelled" ? "out" : st === "coming" ? "soon" : "off"];
+  app.innerHTML = `
+    <div class="sub-head sales-head">
+      <button type="button" class="back-pill" data-back>‹ Back</button>
+      <div class="sh-t"><h1 class="rv-name">${esc(ev.title || "Untitled event")}</h1><p>${esc(ev.city || "—")} · ${dayLine(ev)}</p></div>
+      <span class="pill ${badge[1]} big">${badge[0]}</span>
+    </div>
+    <div class="ev-tabs" role="tablist">${SALES_TABS.map(([k, n]) => `<button type="button" role="tab" class="ev-tab" data-tab="${k}">${n}</button>`).join("")}</div>
+    <div id="sales-body"></div>`;
+  const body = app.querySelector("#sales-body");
+  const tile = (label, value, cap, color, delay = 0, extra = "") => `<div class="an-tile"><div class="an-top"><span>${label}</span>${spark(color, delay)}</div><b class="an-num">${value}</b><small>${cap}</small>${extra}</div>`;
+  const empty = (title, text) => `<div class="empty"><h2 class="cut" data-fill="var(--brown)" data-shadow="var(--cream)">${title}</h2><p>${text}</p></div>`;
+  const draw = () => {
+    app.querySelectorAll("[data-tab]").forEach((b) => { const on = b.dataset.tab === tab; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
+    const tickets = ev.tickets || [];
+    if (tab === "overview") body.innerHTML = `
+      <div class="an-grid four">${tile("Total revenue", "₹0", "Total sales", "#463721", 0)}${tile("Total tickets", "0", "Tickets sold", "#f0a830", 0.15)}${tile("Total pax", "0", "People attending", "#6b2d5c", 0.3)}${tile("Refunds", "0", "Refund orders", "#c2184f", 0.45)}</div>
+      <div class="an-grid two">
+        <div class="an-panel"><span class="an-label">Today's sales snapshot</span><div class="snap"><div><small>Tickets</small><b>0</b></div><div><small>Pax</small><b class="c2">0</b></div><div><small>Refunds</small><b class="c3">0</b></div></div><div class="snap-foot"><span>Today's revenue</span><b>₹0</b></div></div>
+        <div class="an-panel"><span class="an-label">Check-in status</span><div class="ring-row"><div class="ring"><b>0%</b></div><div class="ring-txt"><small>Checked in</small><b>0 / 0</b><small>Remaining</small><b>0</b></div></div></div>
+      </div>
+      <div class="an-panel wide"><div class="tx-head"><div><b class="tx-t cut" data-level>All transactions</b> <span class="muted">0 records</span></div><div class="head-tools"><label class="search">${ic("search", "1.3em")}<input type="text" placeholder="Search ticket, holder, type…" aria-label="Search transactions" disabled /></label><button type="button" class="btn create-btn" id="csv">↓ Download CSV</button></div></div>
+        <div class="tx-scroll"><table class="tx"><thead><tr><th>Order no.</th><th>Ticket type</th><th>Ticket holder</th><th>Amount</th><th>Date</th><th>Pax / Tkts</th><th>Coupon</th><th>Disc.</th></tr></thead><tbody><tr><td colspan="8" class="tx-empty">No transactions found</td></tr></tbody></table></div></div>`;
+    else if (tab === "tickets") body.innerHTML = tickets.length
+      ? `<div class="an-panel wide"><div class="tx-scroll"><table class="tx"><thead><tr><th>Ticket</th><th>Price</th><th>Quantity</th><th>Sold</th><th>Remaining</th><th>Revenue</th></tr></thead><tbody>${tickets.map((t) => `<tr><td><b>${esc(t.name)}</b></td><td>${t.paid ? rupees(+t.price) : "Free"}</td><td>${t.qty}</td><td>0</td><td>${t.qty}</td><td>₹0</td></tr>`).join("")}</tbody></table></div></div>`
+      : empty("No tickets yet", "Add tickets to this event to see them here.");
+    else if (tab === "analytics") drawAnalytics(body, ev);
+    else body.innerHTML = empty("Coming later", "This part of the dashboard isn't built yet.");
+    cutHeadings();
+    const csv = body.querySelector("#csv");
+    if (csv) csv.addEventListener("click", () => {
+      const blob = new Blob(["Order no.,Ticket type,Ticket holder,Amount,Date,Pax / Tkts,Coupon,Disc.\n"], { type: "text/csv" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${(ev.title || "event").replace(/\W+/g, "-").toLowerCase()}-transactions.csv`; a.click(); URL.revokeObjectURL(a.href);
+    });
+  };
+  draw();
+  app.querySelector("[data-back]").addEventListener("click", () => { location.hash = "#/"; });
+  app.querySelector(".ev-tabs").addEventListener("click", (e) => { const b = e.target.closest("[data-tab]"); if (b) { tab = b.dataset.tab; draw(); } });
+}
+
+/* ---------- Analytics tab ---------- */
+const nice = (max) => { if (max <= 0) return [0, 1, 2, 3, 4]; const step = Math.pow(10, Math.floor(Math.log10(max / 4))) * ([1, 2, 5, 10].find((m) => (Math.pow(10, Math.floor(Math.log10(max / 4))) * m) * 4 >= max) || 10); return [0, 1, 2, 3, 4].map((i) => i * step); };
+const weekOf = (d) => { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return Math.ceil(((t - y0) / 86400000 + 1) / 7); };
+
+const SOURCES = [["Google", "#463721"], ["Direct", "#f0a830"], ["Instagram", "#c2184f"], ["WhatsApp", "#6b2d5c"], ["Other", "#8c8a80"]];
+
+function drawAnalytics(body, ev) {
+  const st = { measure: "purchase", gran: "date", q: "", sort: "views", dir: -1 };
+  const now = new Date(), dd = String(now.getDate()).padStart(2, "0"), mm = String(now.getMonth() + 1).padStart(2, "0");
+  const coupons = ev.coupons || [];
+  body.innerHTML = `
+    <section class="an-hero"><span class="pill live"><i class="dot" style="background:#2e9e4f"></i>Event analytics</span><h2 class="an-title cut">${esc(ev.title || "Untitled event")}</h2><p>How your event is doing: sales, visits and where your guests come from.</p></section>
+    <div class="an-grid four">
+      <div class="an-tile dark"><span class="an-label">Revenue</span><b class="an-num">₹0</b><small>Total revenue</small></div>
+      <div class="an-tile"><span class="an-label">Tickets sold</span><b class="an-num">0</b><small>Number of tickets sold</small></div>
+      <div class="an-tile"><span class="an-label">Page sessions</span><b class="an-num">0</b><small>Visits to your event page</small></div>
+      <div class="an-tile"><span class="an-label">Page views</span><b class="an-num">0</b><small>Pages seen in total</small></div>
+    </div>
+    <section class="an-panel wide">
+      <div class="trend-head"><div><span class="an-label tight">Performance trend</span><h3 class="tx-t cut" data-level>Booking performance</h3></div>
+        <div class="toggles"><div class="seg2" data-group="measure"><button type="button" data-v="purchase">By purchase</button><button type="button" data-v="ticket">By ticket</button></div>
+        <div class="seg2" data-group="gran"><button type="button" data-v="date">By date</button><button type="button" data-v="week">By week</button><button type="button" data-v="month">By month</button></div></div></div>
+      <div class="chart-box"><div id="chart"></div><div class="legend"><button type="button" class="lg on" data-series="a" aria-pressed="true"><svg class="lg-ico" viewBox="0 0 36 12" style="color:var(--brown)" aria-hidden="true"><line x1="1" x2="35" y1="6" y2="6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="18" cy="6" r="3.3" fill="currentColor"/></svg><b id="lg1"></b></button><button type="button" class="lg on" data-series="b" aria-pressed="true"><svg class="lg-ico" viewBox="0 0 36 12" style="color:var(--strawberry)" aria-hidden="true"><line x1="1" x2="35" y1="6" y2="6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="12" y="3" width="12" height="6" rx="2" fill="currentColor"/></svg><b>Page views</b></button></div></div>
+    </section>
+    <div class="an-grid two">
+      <section class="an-panel"><span class="an-label tight">Traffic</span><h3 class="tx-t cut" data-level>Page view source</h3>
+        <label class="search full">${ic("search", "1.3em")}<input id="src-q" type="text" placeholder="Search source" aria-label="Search source" autocomplete="off" /></label>
+        <div class="tx-scroll"><table class="tx narrow"><thead><tr><th><button type="button" class="sortbtn" data-ssort="name">Source ⇅</button></th><th><button type="button" class="sortbtn" data-ssort="users">Users ⇅</button></th><th><button type="button" class="sortbtn" data-ssort="views">Page views ⇅</button></th></tr></thead><tbody id="src-rows"></tbody></table></div>
+        <div class="pager"><button type="button" disabled aria-label="Previous page">‹</button><b>1</b><button type="button" disabled aria-label="Next page">›</button></div></section>
+      <section class="an-panel ref-card"><span class="an-label tight">Distribution</span><h3 class="tx-t cut" data-level>Referrer split</h3>
+        <div class="donut-row"><svg class="donut" viewBox="0 0 120 120" aria-label="No referrals yet"><circle cx="60" cy="60" r="44" fill="none" stroke="var(--line)" stroke-width="16"/><circle class="donut-spin" cx="60" cy="60" r="44" fill="none" stroke="var(--bread)" stroke-width="16" stroke-dasharray="40 236.4" stroke-linecap="round"/><text x="60" y="58" text-anchor="middle" class="d-n">0</text><text x="60" y="73" text-anchor="middle" class="d-s">referrals</text></svg>
+          <ul class="d-leg">${SOURCES.map(([n, c]) => `<li><i style="background:${c}"></i>${n}<b>0%</b></li>`).join("")}</ul></div></section>
+    </div>
+    <div class="an-grid two">
+      <section class="an-panel"><span class="an-label tight">Devices</span><h3 class="tx-t cut" data-level>Traffic source by device</h3>
+        <div class="donut-row"><svg class="donut dev-ring" viewBox="0 0 120 120" aria-label="No traffic yet"><circle cx="60" cy="60" r="44" fill="none" stroke="var(--line)" stroke-width="16"/><circle class="donut-spin" cx="60" cy="60" r="44" fill="none" stroke="var(--bread)" stroke-width="16" stroke-dasharray="40 236.4" stroke-linecap="round"/><text x="60" y="58" text-anchor="middle" class="d-n">0</text><text x="60" y="73" text-anchor="middle" class="d-s">visits</text></svg>
+          <ul class="d-leg dev-leg">${["Desktop", "Phone", "Tablet", "Other"].map((n, i) => `<li><i style="background:${["#463721", "#f0a830", "#6b2d5c", "#c2184f"][i]}"></i>${n}<b>0%</b></li>`).join("")}</ul></div></section>
+      <section class="an-panel"><span class="an-label tight">Usage</span><h3 class="tx-t cut" data-level>Device users</h3>
+        <label class="search full">${ic("search", "1.3em")}<input id="dev-q" type="text" placeholder="Search device" aria-label="Search device" autocomplete="off" /></label>
+        <div class="tx-scroll"><table class="tx narrow"><thead><tr><th><button type="button" class="sortbtn" data-sort="source">Source ⇅</button></th><th><button type="button" class="sortbtn" data-sort="views">Page views ⇅</button></th></tr></thead><tbody id="dev-rows"></tbody></table></div>
+        <div class="pager"><button type="button" disabled aria-label="Previous page">‹</button><b>1</b><button type="button" disabled aria-label="Next page">›</button></div></section>
+    </div>
+    <section class="an-panel wide"><span class="an-label tight">Audience geography</span><h3 class="tx-t cut" data-level>Audience map</h3>
+      <div class="geo">
+        <div class="geo-list"><label class="search full">${ic("search", "1.3em")}<input id="city-q" type="text" placeholder="Search city" aria-label="Search city" autocomplete="off" /></label>
+          <div class="tx-scroll"><table class="tx narrow"><thead><tr><th>City</th><th>Overall audience</th></tr></thead><tbody id="city-rows"><tr><td colspan="2" class="tx-empty">No audience data yet</td></tr></tbody></table></div>
+          <div class="pager"><button type="button" disabled aria-label="Previous page">‹</button><b>1</b><button type="button" disabled aria-label="Next page">›</button></div></div>
+        <div class="geo-map" id="geo-map"><p class="muted map-load">Loading map…</p></div>
+      </div></section>`;
+
+  // Performance chart: two series on two scales, built once and then updated, so everything glides when you change a view.
+  // With no sales yet each series is a single point at zero for today. Click a legend item to hide or show that series.
+  const chart = body.querySelector("#chart");
+  st.hide = { a: false, b: false };
+  let drawChart = () => {};
+  let refreshChart = () => {}; // set by mountChart; the legend and toggles below are wired once, so a rebuild never doubles their clicks
+  body.querySelectorAll(".lg").forEach((g) => g.addEventListener("click", () => { st.hide[g.dataset.series] = !st.hide[g.dataset.series]; refreshChart(); }));
+  let mountedW = 0;
+  const mountChart = () => {
+    if (!chart.getBoundingClientRect().width) { requestAnimationFrame(mountChart); return; } // not laid out yet
+    const tickText = (v) => (v === 0 ? "0" : v.toFixed(1));
+    const scales = () => ({ L: { min: -1, max: 1 }, R: { min: 0, max: 2 } }); // zero data: booking axis -1..1, page-view axis 0..2
+    const W = Math.max(280, Math.round(chart.getBoundingClientRect().width)), H = W < 500 ? 280 : 340, pl = 48, pr = 48, pt = 24, pb = 56, iw = W - pl - pr, ih = H - pt - pb;
+    const px = pl + iw / 2, yAt = (frac) => pt + ih - frac * ih;
+    chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="chart-svg" role="img" aria-label="Booking performance chart, no data yet">
+      <g id="grid">${[0, 1, 2, 3, 4].map((i) => `<line x1="${pl}" x2="${W - pr}" y1="${yAt(i / 4)}" y2="${yAt(i / 4)}" class="g"/><text x="${pl - 12}" y="${yAt(i / 4) + 4}" text-anchor="end" class="t tl" data-i="${i}"/><text x="${W - pr + 12}" y="${yAt(i / 4) + 4}" class="t r tr" data-i="${i}"/>`).join("")}</g>
+      <line x1="${px}" x2="${px}" y1="${pt}" y2="${pt + ih}" class="g v"/>
+      <line x1="${pl}" x2="${pl}" y1="${pt}" y2="${pt + ih}" class="ax"/><line x1="${W - pr}" x2="${W - pr}" y1="${pt}" y2="${pt + ih}" class="ax r"/>
+      <text x="${px}" y="${H - 22}" text-anchor="middle" class="t x" id="xl"/>
+      <g class="pt a"><circle r="4.5"/></g><g class="pt b"><rect x="-6" y="-3" width="12" height="6" rx="2"/></g>
+      <g class="xh" visibility="hidden" pointer-events="none">
+        <line class="hx" x1="${pl}" x2="${W - pr}" y1="0" y2="0"/><line class="hv" x1="0" x2="0" y1="${pt}" y2="${pt + ih}"/>
+        <g class="bl"><rect rx="4" height="24"/><text text-anchor="middle"/></g><g class="br"><rect rx="4" height="24"/><text text-anchor="middle"/></g><g class="bb"><rect rx="4" height="26"/><text text-anchor="middle"/></g>
+        <g class="tip t1"><rect rx="6" height="30"/><text/></g><g class="tip t2"><rect rx="6" height="30"/><text/></g>
+      </g></svg>
+      <p class="chart-note">No bookings yet. Lines will draw here once tickets sell.</p>`;
+    const svgEl = chart.querySelector("svg"), xh = svgEl.querySelector(".xh");
+    const label = () => (st.gran === "date" ? `${dd}-${mm}-${now.getFullYear()}` : st.gran === "week" ? `Week ${weekOf(now)}, ${now.getFullYear()}` : `${SHORT[now.getMonth()]} ${now.getFullYear()}`);
+    const seriesName = () => (st.measure === "purchase" ? "Online booking amount" : "Tickets sold");
+    const valueText = () => (st.measure === "purchase" ? "₹0" : "0");
+    const place = (el, x, y) => { el.style.transform = `translate(${x}px, ${y}px)`; };
+    // Move everything to match the current view. `replay` pops the points again so each change is visible.
+    const update = (replay = false) => {
+      const { L, R } = scales();
+      svgEl.querySelectorAll(".tl").forEach((t) => { t.textContent = tickText(L.min + ((L.max - L.min) * t.dataset.i) / 4); });
+      svgEl.querySelectorAll(".tr").forEach((t) => { t.textContent = tickText(R.min + ((R.max - R.min) * t.dataset.i) / 4); });
+      svgEl.querySelector("#xl").textContent = label();
+      body.querySelector("#lg1").textContent = seriesName();
+      const a = svgEl.querySelector(".pt.a"), b = svgEl.querySelector(".pt.b");
+      place(a, px, yAt((0 - L.min) / (L.max - L.min))); place(b, px, yAt((0 - R.min) / (R.max - R.min)));
+      a.classList.toggle("off", st.hide.a); b.classList.toggle("off", st.hide.b);
+      body.querySelectorAll(".lg").forEach((g) => { const off = st.hide[g.dataset.series]; g.classList.toggle("on", !off); g.setAttribute("aria-pressed", !off); });
+      if (replay) { svgEl.classList.remove("replay"); void svgEl.getBoundingClientRect(); svgEl.classList.add("replay"); }
+    };
+    // Guide lines, axis badges, date badge and a tooltip per visible series follow the pointer
+    const fmt = (n) => { const r = Math.round(n * 10) / 10; return r === 0 ? "0" : Number.isInteger(r) ? String(r) : r.toFixed(1); };
+    const badge = (g, text, cx, cy, h) => { const t = g.querySelector("text"), r = g.querySelector("rect"), w = text.length * 7.8 + 18; t.textContent = text; r.setAttribute("width", w); r.setAttribute("x", cx - w / 2); r.setAttribute("y", cy); t.setAttribute("x", cx); t.setAttribute("y", cy + h * 0.68); };
+    const narrow = W < 520; // on a phone the tooltips are short and sit centred above the points so they never cover the axis badges
+    const tip = (g, text, right, cy) => { const t = g.querySelector("text"), r = g.querySelector("rect"), w = text.length * 8.2 + 22; const left = narrow ? Math.min(Math.max(px - w / 2, pl + 4), W - pr - 4 - w) : Math.max(pl + 6, right - w); t.textContent = text; r.setAttribute("width", w); r.setAttribute("x", left); r.setAttribute("y", cy); t.setAttribute("x", left + 11); t.setAttribute("y", cy + 20); };
+    svgEl.addEventListener("pointermove", (e) => {
+      const bx = svgEl.getBoundingClientRect(), k = W / bx.width, cx = (e.clientX - bx.left) * k, cy = (e.clientY - bx.top) * k;
+      if (cx < pl || cx > W - pr || cy < pt || cy > pt + ih) { xh.setAttribute("visibility", "hidden"); svgEl.querySelector("#xl").style.visibility = ""; return; }
+      xh.setAttribute("visibility", "visible");
+      const { L, R } = scales(), f = (pt + ih - cy) / ih;
+      xh.querySelector(".hx").setAttribute("y1", cy); xh.querySelector(".hx").setAttribute("y2", cy);
+      xh.querySelector(".hv").setAttribute("x1", cx); xh.querySelector(".hv").setAttribute("x2", cx);
+      badge(xh.querySelector(".bl"), fmt(L.min + (L.max - L.min) * f), pl - 24, cy - 12, 24);
+      badge(xh.querySelector(".br"), fmt(R.min + (R.max - R.min) * f), W - pr + 24, cy - 12, 24);
+      badge(xh.querySelector(".bb"), label(), px, pt + ih + 6, 26);
+      const near = Math.abs(cx - px) < 90;
+      const ya = yAt((0 - L.min) / (L.max - L.min)), yb = yAt((0 - R.min) / (R.max - R.min));
+      const t1 = xh.querySelector(".t1"), t2 = xh.querySelector(".t2");
+      t1.setAttribute("visibility", near && !st.hide.a ? "visible" : "hidden"); t2.setAttribute("visibility", near && !st.hide.b ? "visible" : "hidden");
+      // keep both tooltips inside the plot (clear of the date badge) and apart from each other
+      const maxY = pt + ih - 36, minY = pt + 2;
+      const lift = narrow ? 40 : 15;
+      let y1 = Math.max(minY, Math.min(maxY, ya - lift)), y2 = Math.max(minY, Math.min(maxY, yb - lift));
+      const both = !st.hide.a && !st.hide.b;
+      if (both && Math.abs(y1 - y2) < 36) { if (y1 <= y2) { y2 = Math.min(maxY, y1 + 36); y1 = y2 - 36; } else { y1 = Math.min(maxY, y2 + 36); y2 = y1 - 36; } }
+      tip(t1, `${narrow ? (st.measure === "purchase" ? "Amount" : "Tickets") : seriesName()}: ${valueText()}`, px - 14, y1); tip(t2, narrow ? "Views: 0" : "Page views: 0", px - 14, y2);
+      svgEl.querySelector("#xl").style.visibility = "hidden"; // the date badge replaces the date label while hovering
+      svgEl.querySelectorAll(".pt").forEach((c) => c.classList.toggle("hot", near));
+    });
+    svgEl.addEventListener("pointerleave", () => { xh.setAttribute("visibility", "hidden"); svgEl.querySelector("#xl").style.visibility = ""; svgEl.querySelectorAll(".pt").forEach((c) => c.classList.remove("hot")); });
+    drawChart = () => update(true);
+    refreshChart = () => update();
+      update(true);
+    mountedW = Math.round(chart.getBoundingClientRect().width);
+  };
+
+  const paintSeg = () => body.querySelectorAll(".seg2 button").forEach((b) => b.classList.toggle("on", st[b.parentElement.dataset.group] === b.dataset.v));
+  body.querySelectorAll(".seg2 button").forEach((b) => b.addEventListener("click", () => { st[b.parentElement.dataset.group] = b.dataset.v; paintSeg(); drawChart(); }));
+  paintSeg(); mountChart();
+  // rebuild when the width changes (phone turned, window resized) so the text keeps its size
+  if (window.ResizeObserver) { const ro = new ResizeObserver(() => { if (!chart.isConnected) { ro.disconnect(); return; } const w = Math.round(chart.getBoundingClientRect().width); if (w && Math.abs(w - mountedW) > 20) mountChart(); }); ro.observe(chart); }
+
+  // Device users: search and sort
+  const DEVICES = [["Desktop", 0], ["Phone", 0], ["Tablet", 0], ["Other", 0]];
+  const rows = body.querySelector("#dev-rows");
+  const paintRows = () => {
+    const q = st.q.trim().toLowerCase();
+    const list = DEVICES.filter(([n]) => n.toLowerCase().includes(q)).sort((a, b) => (st.sort === "source" ? a[0].localeCompare(b[0]) : a[1] - b[1]) * st.dir);
+    rows.innerHTML = list.length ? list.map(([n, v]) => `<tr><td>${n}</td><td>${v}</td></tr>`).join("") : '<tr><td colspan="2" class="tx-empty">No device matches</td></tr>';
+  };
+  paintRows();
+  body.querySelector("#dev-q").addEventListener("input", (e) => { st.q = e.target.value; paintRows(); });
+  body.querySelectorAll("[data-sort]").forEach((b) => b.addEventListener("click", () => { st.dir = st.sort === b.dataset.sort ? -st.dir : 1; st.sort = b.dataset.sort; paintRows(); }));
+
+  // Page view source: search and sort (all zero until there are visits)
+  const srcSt = { q: "", sort: "", dir: 1 }; // no sort at first: Google, Direct, Instagram, WhatsApp, then Other
+  const srcRows = body.querySelector("#src-rows");
+  const paintSources = () => {
+    const q = srcSt.q.trim().toLowerCase();
+    const list = SOURCES.filter(([n]) => n.toLowerCase().includes(q)).sort((a, b) => (a[0] === "Other") - (b[0] === "Other") || (srcSt.sort === "name" ? a[0].localeCompare(b[0]) * srcSt.dir : 0)); // "Other" always stays last
+    srcRows.innerHTML = list.length ? list.map(([n, c]) => `<tr><td><i class="sdot" style="background:${c}"></i>${n}</td><td>0</td><td>0</td></tr>`).join("") : '<tr><td colspan="3" class="tx-empty">No source matches</td></tr>';
+  };
+  paintSources();
+  body.querySelector("#src-q").addEventListener("input", (e) => { srcSt.q = e.target.value; paintSources(); });
+  body.querySelectorAll("[data-ssort]").forEach((b) => b.addEventListener("click", () => { srcSt.dir = srcSt.sort === b.dataset.ssort ? -srcSt.dir : 1; srcSt.sort = b.dataset.ssort; paintSources(); }));
+
+  drawMap(body.querySelector("#geo-map"));
+}
+
+// India map for the audience section. The map shapes load only when this tab is opened. Every state is empty until there are visitors.
+async function drawMap(host) {
+  let map;
+  try { map = (await import("@svg-maps/india")).default; } catch { host.innerHTML = '<p class="muted map-load">Couldn\'t load the map.</p>'; return; }
+  if (!host.isConnected) return;
+  const visitors = {}; // state id -> visitors (none yet)
+  const top = Math.max(1, ...Object.values(visitors));
+  const fill = (id) => { const v = visitors[id] || 0; if (!v) return ""; const t = v / top; return `color-mix(in srgb, var(--strawberry) ${Math.round(35 + t * 65)}%, var(--bread))`; };
+  host.innerHTML = `<svg class="geo-svg" viewBox="${map.viewBox}" role="img" aria-label="Map of India showing where your audience is. No visitors yet."><g class="geo-g">${map.locations.map((l) => `<path d="${l.path}" data-id="${l.id}" data-name="${esc(l.name)}" style="${fill(l.id) ? `fill:${fill(l.id)}` : ""}"/>`).join("")}</g></svg>
+    <div class="zoom"><button type="button" data-z="1" aria-label="Zoom in">+</button><button type="button" data-z="0" aria-label="Reset zoom">⌂</button><button type="button" data-z="-1" aria-label="Zoom out">−</button></div>
+    <div class="geo-foot"><div class="geo-legend"><i></i><span><b>Little</b><b>A lot</b></span></div>
+      <p class="geo-credit">Map: <a href="https://github.com/VictorCazanave/svg-maps" target="_blank" rel="noopener">SVG Maps</a> (CC BY 4.0)</p></div>
+    <div class="geo-tip" hidden></div>`;
+  const g = host.querySelector(".geo-g"), tip = host.querySelector(".geo-tip"), svgEl = host.querySelector(".geo-svg");
+  const vb = map.viewBox.split(" ").map(Number);
+  const view = { k: 1, x: 0, y: 0 };
+  const apply = () => { g.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.k})`; };
+  g.style.transformOrigin = `${vb[2] / 2}px ${vb[3] / 2}px`;
+  const clampPan = () => { const lim = (vb[2] * (view.k - 1)) / 2; const limY = (vb[3] * (view.k - 1)) / 2; view.x = Math.max(-lim, Math.min(lim, view.x)); view.y = Math.max(-limY, Math.min(limY, view.y)); };
+  host.querySelectorAll("[data-z]").forEach((b) => b.addEventListener("click", () => {
+    const d = +b.dataset.z; view.k = d === 0 ? 1 : Math.max(1, Math.min(4, view.k + d * 0.75));
+    if (view.k === 1) { view.x = 0; view.y = 0; } clampPan(); apply();
+  }));
+  host.querySelectorAll("path").forEach((p) => {
+    p.addEventListener("pointermove", (e) => { const hb = host.getBoundingClientRect(); tip.hidden = false; tip.textContent = `${p.dataset.name}: ${visitors[p.dataset.id] || 0} visitors`; tip.style.left = `${Math.max(4, Math.min(e.clientX - hb.left + 14, hb.width - tip.offsetWidth - 4))}px`; tip.style.top = `${e.clientY - hb.top + 14}px`; });
+    p.addEventListener("pointerleave", () => { tip.hidden = true; });
+  });
+  // drag to move around once zoomed in
+  let drag = null;
+  svgEl.addEventListener("pointerdown", (e) => { if (view.k > 1) { drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y }; svgEl.setPointerCapture(e.pointerId); svgEl.classList.add("grab"); } });
+  svgEl.addEventListener("pointermove", (e) => { if (!drag) return; const k = vb[2] / svgEl.getBoundingClientRect().width; view.x = drag.vx + (e.clientX - drag.x) * k; view.y = drag.vy + (e.clientY - drag.y) * k; clampPan(); apply(); });
+  const end = () => { drag = null; svgEl.classList.remove("grab"); };
+  svgEl.addEventListener("pointerup", end); svgEl.addEventListener("pointercancel", end);
+}
+
 /* ---------- Routing ---------- */
 function route() {
   cutLetters.forEach((l) => l.dispose());
   cutLetters = [];
   const m = location.hash.match(/^#\/create\/(\d)$/);
+  const ev = location.hash.match(/^#\/event\/([^/]+)\/(coupons|sales)$/);
   document.querySelector('[data-nav="list"]').classList.toggle("on", !m);
-  if (m) {
+  if (ev) {
+    draft = null;
+    if (ev[2] === "coupons") renderCoupons(ev[1]); else renderSales(ev[1]);
+    window.scrollTo({ top: 0 });
+  } else if (m) {
     const step = Math.min(+m[1], STEPS.length - 1);
     // Opening a step by link without a started event sends people to step 0
     if (!draft && step > 0) { location.hash = "#/create/0"; return; }
