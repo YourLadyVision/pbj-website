@@ -211,8 +211,7 @@ function renderList() {
     const shown = events.filter((e) => inTab(e, tab) && (!q || (e.title || "").toLowerCase().includes(q)));
     if (!shown.length) {
       listEl.innerHTML = `<div class="empty"><h2 class="cut" data-fill="var(--brown)" data-shadow="var(--cream)">${events.length ? "Nothing here" : "No events yet"}</h2>
-        <p>${events.length ? "No events match this tab or search." : "Got something worth finding? Create your first event and share it with Mumbai."}</p>
-        ${events.length ? "" : '<a class="btn" href="#/create/0">+ Create event</a>'}</div>`;
+        <p>${events.length ? "No events match this tab or search." : "Got something worth finding? Create your first event and share it with Mumbai."}</p></div>`;
     } else listEl.innerHTML = shown.map(card).join("");
     cutHeadings();
   };
@@ -1583,7 +1582,11 @@ function openCouponModal(ev, existing, onSave) {
 // PBJ doesn't sell tickets yet, so every number here is zero. The page is ready for when sales exist.
 const SALES_TABS = [["overview", "Overview"], ["analytics", "Analytics"], ["tickets", "Ticket wise"]];
 // A small graph that draws itself in, then keeps a gentle motion going (stops for people who turn motion off). Shape only for now: it becomes real once there are sales.
-const spark = (color, delay = 0) => `<svg class="spark" viewBox="0 0 80 28" aria-hidden="true" style="--c:${color}; --d:${delay}s"><path class="sp-area" d="M2 22 L16 17 L30 21 L44 11 L58 16 L76 7 L76 28 L2 28 Z" fill="${color}"/><path class="sp-line" pathLength="100" d="M2 22 L16 17 L30 21 L44 11 L58 16 L76 7" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle class="sp-dot" cx="76" cy="7" r="2.6" fill="${color}"/><circle class="sp-ring" cx="76" cy="7" r="2.6" fill="none" stroke="${color}" stroke-width="1.5"/></svg>`;
+const spark = (color, delay = 0, down = false) => {
+  const pts = down ? "M2 7 L16 12 L30 8 L44 18 L58 13 L76 22" : "M2 22 L16 17 L30 21 L44 11 L58 16 L76 7"; // up for sales, down for refunds
+  const y = down ? 22 : 7;
+  return `<svg class="spark" viewBox="0 0 80 28" aria-hidden="true" style="--c:${color}; --d:${delay}s"><path class="sp-area" d="${pts} L76 28 L2 28 Z" fill="${color}"/><path class="sp-line" pathLength="100" d="${pts}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle class="sp-dot" cx="76" cy="${y}" r="2.6" fill="${color}"/><circle class="sp-ring" cx="76" cy="${y}" r="2.6" fill="none" stroke="${color}" stroke-width="1.5"/></svg>`;
+};
 
 function renderSales(id) {
   const events = load(), ev = events.find((e) => e.id === id);
@@ -1601,13 +1604,13 @@ function renderSales(id) {
     <div class="ev-tabs" role="tablist">${SALES_TABS.map(([k, n]) => `<button type="button" role="tab" class="ev-tab" data-tab="${k}">${n}</button>`).join("")}</div>
     <div id="sales-body"></div>`;
   const body = app.querySelector("#sales-body");
-  const tile = (label, value, cap, color, delay = 0, extra = "") => `<div class="an-tile"><div class="an-top"><span>${label}</span>${spark(color, delay)}</div><b class="an-num">${value}</b><small>${cap}</small>${extra}</div>`;
+  const tile = (label, value, cap, color, delay = 0, extra = "", down = false) => `<div class="an-tile"><div class="an-top"><span>${label}</span>${spark(color, delay, down)}</div><b class="an-num">${value}</b><small>${cap}</small>${extra}</div>`;
   const empty = (title, text) => `<div class="empty"><h2 class="cut" data-fill="var(--brown)" data-shadow="var(--cream)">${title}</h2><p>${text}</p></div>`;
   const draw = () => {
     app.querySelectorAll("[data-tab]").forEach((b) => { const on = b.dataset.tab === tab; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
     const tickets = ev.tickets || [];
     if (tab === "overview") body.innerHTML = `
-      <div class="an-grid four">${tile("Total revenue", "₹0", "Total sales", "#463721", 0)}${tile("Total tickets", "0", "Tickets sold", "#f0a830", 0.15)}${tile("Total pax", "0", "People attending", "#6b2d5c", 0.3)}${tile("Refunds", "0", "Refund orders", "#c2184f", 0.45)}</div>
+      <div class="an-grid four">${tile("Total revenue", "₹0", "Total sales", "#463721", 0)}${tile("Total tickets", "0", "Tickets sold", "#f0a830", 0.15)}${tile("Total pax", "0", "People attending", "#6b2d5c", 0.3)}${tile("Refunds", "0", "Refund orders", "#c2184f", 0.45, "", true)}</div>
       <div class="an-grid two">
         <div class="an-panel"><span class="an-label">Today's sales snapshot</span><div class="snap"><div><small>Tickets</small><b>0</b></div><div><small>Pax</small><b class="c2">0</b></div><div><small>Refunds</small><b class="c3">0</b></div></div><div class="snap-foot"><span>Today's revenue</span><b>₹0</b></div></div>
         <div class="an-panel"><span class="an-label">Check-in status</span><div class="ring-row"><div class="ring"><b>0%</b></div><div class="ring-txt"><small>Checked in</small><b>0 / 0</b><small>Remaining</small><b>0</b></div></div></div>
