@@ -34,6 +34,7 @@
 
     <div id="site">
     <!-- Folder tabs: right edge on computers, stacked at the top on phones -->
+    <nav class="tabs" id="sections" aria-label="Sections">
     <nav class="tabs" aria-label="Sections">
       <button class="tab" data-tab="home" style="--tab: #fffffa; --on: var(--brown); --top: 2vh; --len: 12vh">Home</button>
       <button class="tab" data-tab="events" style="--tab: var(--honey); --on: var(--brown); --top: 16vh; --len: 12vh">Events</button>
@@ -42,6 +43,33 @@
       <button class="tab" data-tab="hosts" style="--tab: var(--brown); --on: var(--cream); --top: 62vh; --len: 17vh">Meet Our Hosts</button>
       <button class="tab" data-tab="secret" style="--tab: var(--pop); --on: var(--brown); --top: 80vh; --len: 14vh">Our Secret</button>
     </nav>
+
+    <!-- Top bar: who you are, your city, and the menu that pulls the folder tabs out -->
+    <div class="topbar" role="toolbar" aria-label="Quick choices">
+      <div class="tb-item" data-menu="who">
+        <button class="tb-btn" type="button" aria-expanded="false" aria-haspopup="true"><i>[</i><span>Your role</span><i>]</i></button>
+        <div class="tb-pop" hidden>
+          <p class="tb-head">Who are you?</p>
+          <ul class="tb-list">
+            <li><button type="button" data-value="PBJ Exclusive Host"><span>PBJ Exclusive Host</span><em class="tb-tag">Interested to be</em></button></li>
+            <li><button type="button" data-value="Host">Host</button></li>
+            <li><button type="button" data-value="Spontaneous Planner">Spontaneous Planner</button></li>
+            <li><button type="button" data-value="Venue">Venue</button></li>
+            <li><button type="button" data-value="Brand">Brand</button></li>
+          </ul>
+        </div>
+      </div>
+      <div class="tb-item" data-menu="city">
+        <button class="tb-btn" type="button" aria-expanded="false" aria-haspopup="true"><i>[</i><span>Mumbai</span><i>]</i></button>
+        <div class="tb-pop tb-wide" hidden>
+          <p class="tb-head">Choose your city</p>
+          <ul class="tb-list tb-two" id="tb-cities"></ul>
+        </div>
+      </div>
+      <div class="tb-item">
+        <button class="tb-btn" type="button" id="tb-menu"><i>[</i><span>Menu</span><i>]</i></button>
+      </div>
+    </div>
 
     <main class="folder">
       <!-- HOME -->

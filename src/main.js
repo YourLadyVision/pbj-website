@@ -7,6 +7,7 @@ import { createMascot } from "./mascot.js";
 import { playIntro } from "./intro.js";
 import { playHeroOpen } from "./heroOpen.js";
 import { setupHosts } from "./hosts.js";
+import { setupTopbar } from "./topbar.js";
 import { setupEvents } from "./events.js";
 import { createCutLetter } from "./cutword.js";
 
@@ -32,6 +33,7 @@ playIntro({ lenis, onDone: () => heroOpen.start(introDone) });
 setupEvents(document.querySelector('[data-panel="events"]')); // the paper-cut headline (the old ticket lineup is parked in events.js, unused for now)
 const hosts = setupHosts(document.querySelector('[data-panel="hosts"]'));
 
+setupTopbar();
 setupTabs({
   onSwitch(name) {
     if (name === "hosts") hosts.show();

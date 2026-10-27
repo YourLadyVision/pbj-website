@@ -33,6 +33,7 @@
   /* noartmusic.com's size system, copied exactly: every size is a multiple of one unit that grows
      with the screen width (their "1em"). Computers: width / 90. Tablets: width / 52.125. Phones: width / 23.4375 */
   --u: calc(clamp(992px, 100vw, 2560px) / 90);
+  --topbar-h: calc(var(--u) * 4.4); /* room reserved at the top for the [ WHO ARE YOU ] bar */
 }
 /* Deep Jam (dark): switch by setting data-theme="dark" on <html>. Light is the default. */
 :root[data-theme="dark"] {
@@ -42,6 +43,7 @@
 }
 
 @media (min-width: 1921px) { :root { --u: 21.333px; } }
+@media (max-width: 991px) { :root { --topbar-h: calc(var(--u) * 3.6); } }
 @media (max-width: 991px) { :root { --u: calc(100vw / 52.125); } }
 @media (max-width: 767px) { :root { --u: calc(100vw / 23.4375); } :root:not([data-theme="dark"]) { --page: #f3f0e0; } }
 
@@ -186,7 +188,7 @@ h2 { max-width: 22ch; }
 }
 .tab[aria-current="page"]::before { background: var(--fill); box-shadow: none; }
 
-.folder { margin-right: var(--tab-size); }
+.folder { margin-right: var(--tab-size); padding-top: var(--topbar-h); }
 
 /* ---------- Panels & blocks ---------- */
 .block {
@@ -230,6 +232,7 @@ h2 { max-width: 22ch; }
 /* ---------- Hero + mascot ---------- */
 .hero {
   position: relative;
+  height: calc(100vh - var(--topbar-h));
   height: 100vh;
   overflow: hidden;
 }
@@ -375,6 +378,7 @@ h2 { max-width: 22ch; }
     --tab-h: 44px;
     --step: 8px;
     --bar: calc(var(--tab-h) + 5 * var(--step) + 14px);
+    --topbar-h: 54px; /* the options sit in the middle of this strip, with air above (below the tabs) and below */
   }
 
   .tabs {
@@ -442,10 +446,10 @@ h2 { max-width: 22ch; }
   .tab.peek::before,
   .tab.peek::after { display: none; }
 
-  .folder { margin-right: 0; padding-top: var(--bar); }
+  .folder { margin-right: 0; padding-top: calc(var(--bar) + var(--topbar-h)); }
 
   .hero {
-    height: calc(100svh - var(--bar));
+    height: calc(100svh - var(--bar) - var(--topbar-h));
   }
   .hero-sub { margin-bottom: 1.25rem; }
 }
@@ -499,7 +503,7 @@ html.intro .intro-swirl {
 
 /* ---------- Layout section: thick peanut butter you can push around ---------- */
 .spread-section { background: var(--page); }
-.spread-stage { position: relative; height: 100svh; overflow: hidden; }
+.spread-stage { position: relative; height: calc(100svh - var(--topbar-h)); overflow: hidden; }
 .spread-stage canvas { touch-action: pan-y; cursor: grab; position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .knife {
   position: absolute;
@@ -512,10 +516,10 @@ html.intro .intro-swirl {
 }
 .knife svg { display: block; width: 100%; height: auto; overflow: visible; }
 
-@media (max-width: 767px) { .spread-stage { height: calc(100svh - var(--bar)); } }
+@media (max-width: 767px) { .spread-stage { height: calc(100svh - var(--bar) - var(--topbar-h)); } }
 
 /* ---------- Meet Our Hosts: endless grid of magazine covers (a copy of the 197 Historias Ilustradas grid), and the opened magazine ---------- */
-.hosts-stage { position: relative; height: 100vh; overflow: hidden; background: var(--page); overscroll-behavior: contain; }
+.hosts-stage { position: relative; height: calc(100vh - var(--topbar-h)); overflow: hidden; background: var(--page); overscroll-behavior: contain; }
 .hosts-grid { position: absolute; inset: 0; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; visibility: hidden; }
 .hosts-grid.is-ready { visibility: visible; }
 .hg-content { position: relative; width: 100%; height: 100%; will-change: transform; }
@@ -549,7 +553,7 @@ html.intro .intro-swirl {
 .hosts-close:hover .hosts-fill::after, .hosts-close:focus-visible .hosts-fill::after { transform: scaleX(1); }
 .hosts-close:hover .hosts-fill > span, .hosts-close:focus-visible .hosts-fill > span { color: var(--page); }
 .hosts-stage.is-open .hosts-close { opacity: 1; pointer-events: auto; }
-@media (max-width: 767px) { .hosts-stage { height: calc(100svh - var(--bar)); } }
+@media (max-width: 767px) { .hosts-stage { height: calc(100svh - var(--bar) - var(--topbar-h)); } }
 
 /* ---------- Events: grid of identical empty cards (content and colours come later) ---------- */
 .pins { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; padding: 1rem clamp(1.5rem, 6vw, 6rem) 5rem; }
@@ -606,3 +610,84 @@ html.intro .intro-swirl {
 [data-panel="events"] .block { padding-bottom: clamp(1rem, 3vw, 2rem); }
 /* the Events headline is a long sentence: left-aligned, so it never stretches into big word gaps */
 .events-intro .story-title { text-align: left; }
+
+/* ---------- Top bar: [ WHO ARE YOU ] [ CHOOSE YOUR CITY ] [ MENU ], centred at the top of every page ---------- */
+.topbar { position: fixed; top: 0; left: 0; right: var(--tab-size); height: var(--topbar-h); z-index: 9; display: flex; justify-content: center; align-items: center; gap: 2.4em; padding: 0 1em; pointer-events: none; }
+.tb-item { position: relative; pointer-events: auto; }
+.tb-btn { display: inline-flex; align-items: center; gap: 0.9em; padding: 0.7em 0.2em; background: none; border: 0; font: inherit; font-size: 0.75em; text-transform: uppercase; color: var(--ink); cursor: pointer; -webkit-tap-highlight-color: transparent; text-shadow: 0 0 6px var(--page), 0 0 12px var(--page); }
+.tb-btn i { font-style: normal; display: inline-block; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.tb-btn:hover i:first-child, .tb-item.open i:first-child { transform: translateX(-0.35em); }
+.tb-btn:hover i:last-child, .tb-item.open i:last-child { transform: translateX(0.35em); }
+.tb-pop { position: absolute; top: calc(100% + 0.2em); left: 50%; translate: -50% 0; width: 15em; max-width: calc(100vw - 2rem); padding: 0.9em 0.6em 0.6em; background: var(--page); border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent); border-radius: 18px; box-shadow: 0 10px 30px rgba(70, 55, 33, 0.14); transform-origin: top center; animation: tb-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.tb-pop[hidden] { display: none; }
+.tb-wide { width: 24em; }
+@keyframes tb-in { from { opacity: 0; transform: translateY(-8px) scale(0.96); } }
+.tb-head { margin: 0 0 0.5em 0.8em; font-size: 0.65em; text-transform: uppercase; opacity: 0.6; }
+.tb-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.1em; }
+.tb-two { grid-template-columns: 1fr 1fr; gap: 0.1em 0.3em; }
+.tb-list button { width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; position: relative; min-height: 2.6em; padding: 0.4em 0.8em; background: none; border: 0; border-radius: 12px; font-family: var(--mono); font-size: 0.75em; line-height: 1.2; text-transform: uppercase; text-align: left; color: var(--ink); cursor: pointer; transition: background 0.2s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.tb-list button:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 8%, transparent); transform: translateX(3px); }
+.tb-list button.on { background: var(--brown); color: var(--cream); }
+.tb-list button small { margin-top: 0.3em; font-size: 0.8em; opacity: 0.55; }
+.tb-list button:disabled { cursor: default; }
+.tb-list button b { position: absolute; right: 0.8em; top: 50%; translate: 0 -50%; color: var(--pop); font-weight: 400; }
+
+/* Menu: the folder tabs bounce in place one after another, like piano keys pressed in a smooth run */
+/* One key at a time on an even beat. On computers a folder tab is a key on its side: it is pressed in towards the edge of the
+   screen and bounces back out. On phones it is pressed down. Only the tab itself moves; its body strip and shoulder stay put,
+   so the folders behind never show through. */
+@property --key { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@keyframes tab-key {
+  0% { --key: 0px; animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  28% { --key: var(--press, 12px); animation-timing-function: cubic-bezier(0.3, 0, 0.5, 1); }
+  58% { --key: -3px; animation-timing-function: ease-in-out; }
+  80% { --key: 1px; animation-timing-function: ease-in-out; }
+  100% { --key: 0px; }
+}
+.tab { translate: var(--key) 0; }
+.tab::before, .tab::after { translate: calc(-1 * var(--key)) 0; }
+.tabs.play .tab { animation: tab-key 0.6s linear calc(var(--i) * 0.2s) both; }
+@media (max-width: 767px) {
+  .topbar { top: var(--bar); right: 0; gap: 0.6em; padding: 0 0.4em; }
+  .tb-btn { white-space: nowrap; gap: 0.5em; }
+  .tb-item { position: static; }
+  .tb-pop, .tb-wide { position: fixed; top: calc(var(--bar) + var(--topbar-h)); left: 50%; width: calc(100vw - 1.6rem); }
+  .tab { translate: 0 var(--key); }
+  .tab::before, .tab::after { translate: 0 calc(-1 * var(--key)); }
+  .tabs.play .tab { --press: 8px; }
+}
+.tb-btn:focus { outline: none; }
+.tb-btn:focus-visible { outline: none; }
+@media (prefers-reduced-motion: reduce) { .tb-pop { animation: none; } .tb-btn i { transition: none; } .tabs.play .tab { animation: none; } }
+/* Home (computers): everything in the opening frame sits a little higher, so the sandwich and title never touch the bottom edge */
+@media (min-width: 768px) { .hero .mascot, .hero .hero-title, .hero .story { translate: 0 calc(var(--u) * -1.4); } }
+/* Home (computers): the picture of the sandwich reaches past the hero's top and bottom edges, so the layers can cross them and stay visible */
+@media (min-width: 768px) { .hero { overflow: visible; } .hero .mascot { top: calc(var(--u) * -5); bottom: calc(var(--u) * -5); } }
+.tb-tag { position: absolute; right: 0.8em; top: 50%; translate: 0 -50%; font-style: normal; font-size: 0.8em; padding: 0.25em 0.7em; border-radius: 99px; background: var(--strawberry); color: var(--cream); white-space: nowrap; }
+.tb-list button.on .tb-tag { background: var(--pop); color: var(--brown); }
+.tb-pop[data-menu="who"] { width: 19em; }
+/* hovering an option on the top-bar cards turns it bread-yellow */
+.tb-list button:hover:not(:disabled):not(.on) { background: var(--peanut); color: var(--brown); }
+/* the "Coming soon" cities light up yellow on hover too (they still can't be picked) */
+.tb-list button:disabled:hover { background: var(--peanut); color: var(--brown); }
+/* the selected option (Mumbai, or your role) is yellow */
+.tb-list button.on { background: var(--peanut); color: var(--brown); }
+.tb-list button.on b { color: var(--strawberry); }
+.tb-list button.on .tb-tag { background: var(--strawberry); color: var(--cream); }
+/* The bar's letters are plain colour, like the folder tabs (no blending, no outline, no glow): dark, or cream over dark backgrounds */
+.topbar { mix-blend-mode: normal; }
+.tb-btn { color: var(--ink); font-weight: 400; -webkit-text-stroke: 0; text-shadow: none; -webkit-font-smoothing: auto; }
+.tb-btn .c { white-space: pre; transition: color 0.2s; }
+.tb-btn .on-dark { color: var(--cream); }
+.tb-layer { position: fixed; inset: 0; z-index: 9; pointer-events: none; }
+.tb-layer .tb-pop { pointer-events: auto; top: calc(var(--topbar-h) / 2 + var(--u) * 1.2); }
+@media (max-width: 767px) { .tb-layer .tb-pop { top: calc(var(--bar) + var(--topbar-h)); } }
+/* Hover or click: a yellow highlight swipes in behind the word from left to right (and stays while its card is open) */
+.tb-btn { gap: 0.4em; }
+.tb-btn > span { padding: 0.2em 0.7em; background: linear-gradient(var(--peanut), var(--peanut)) no-repeat left center / 0% 100%; transition: background-size 0.4s cubic-bezier(0.65, 0, 0.35, 1); }
+.tb-btn:hover > span, .tb-btn:focus-visible > span, .tb-item.open .tb-btn > span { background-size: 100% 100%; }
+.tb-btn:hover > span .c, .tb-btn:focus-visible > span .c, .tb-item.open .tb-btn > span .c { color: var(--brown); }
+@media (max-width: 767px) { .tb-btn { gap: 0.2em; } .tb-btn > span { padding: 0.2em 0.45em; } }
+/* The top-bar words use the folder tabs' own type: Chivo Mono, regular, capitals, 0.75 of the page unit */
+.tb-btn { font-family: var(--mono); font-weight: 400; font-size: 0.75em; letter-spacing: 0; line-height: 1.2; text-transform: uppercase; }
+  .topbar { background: var(--page); }
