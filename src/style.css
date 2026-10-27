@@ -820,3 +820,45 @@ html.intro .intro-swirl {
   .ev-count { margin-bottom: 1em; }
   .ev-grid { gap: 1em 0.8em; }
 }
+
+/* ---------- List Your Event: full-screen sections that pin at the top while the next slides up over them (see setupLoop in events.js) ---------- */
+.ev-loop { margin-top: calc(var(--topbar-h) * -1); } /* the first section starts right at the top of the window, under the top bar */
+.ev-loop-slide { position: relative; box-sizing: border-box; height: 100svh; display: flex; flex-direction: column; justify-content: center; gap: 2rem; padding: 0 clamp(1.5rem, 6vw, 6rem); background: var(--bg, var(--cream)); color: var(--brown); }
+.ev-loop-slide p { margin: 0; }
+.ev-loop-title { margin: 0; font-size: clamp(34px, 6vw, 104px); line-height: 1; text-align: left; }
+.ev-loop-title .w { white-space: nowrap; display: inline-block; margin-right: 0.15em; }
+.ev-loop-title.stack { font-size: min(13vw, 19svh); } /* one word per line, as big as the screen allows */
+.ev-loop-title.stack .w { display: block; margin-right: 0; }
+@media (max-width: 767px) { .ev-loop { margin-top: calc((var(--bar) + var(--topbar-h)) * -1); } .ev-loop-slide { padding-top: calc(var(--bar) + var(--topbar-h)); } }
+.ev-cursor { display: inline-block; position: relative; width: 0; height: 0.8em; vertical-align: baseline; }
+.ev-cursor::after { content: ""; position: absolute; left: 0.06em; bottom: 0; width: 0.07em; height: 100%; background: var(--strawberry); animation: ev-blink 0.9s steps(1) infinite; }
+@keyframes ev-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .ev-cursor::after { animation: none; } }
+
+/* ---------- List Your Event, "observer" version: fixed full-frame sections that wipe in one over another ---------- */
+.ev-loop.obs { margin: 0; }
+.ev-loop.obs .ev-loop-slide { position: fixed; top: 0; left: 0; right: var(--tab-size); bottom: 0; height: auto; padding: 0; display: block; z-index: 1; background: none; }
+.ev-loop.obs .ev-outer, .ev-loop.obs .ev-inner { width: 100%; height: 100%; overflow: hidden; }
+.ev-loop.obs .ev-bg { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 2rem; padding: 0 clamp(1.5rem, 6vw, 6rem); background: var(--bg, var(--cream)); color: var(--brown); }
+.ev-loop.obs .ev-bg p { margin: 0; }
+.ev-loop.obs .ev-loop-title .w > * { will-change: transform; }
+/* phones: the sections start right under the folder tabs and run to the bottom of the screen (so the text is centred in what you can actually see, even as the browser's own bars come and go); the colour fills the strip behind the top bar too */
+@media (max-width: 767px) {
+  .ev-loop.obs .ev-loop-slide { top: var(--bar); right: 0; bottom: 0; touch-action: none; }
+  .ev-loop.obs .ev-bg { padding-top: var(--topbar-h); }
+}
+
+/* List Your Event on phones: bigger lettering that still fits the narrow screen (the longest word, OFF-THE-TRACK, just fits), and the stacked opener as big as the space under the bars allows */
+@media (max-width: 767px) {
+  .ev-loop-title { font-size: 10vw; line-height: 1.04; }
+  .ev-loop-title.stack { font-size: min(21vw, 15svh); line-height: 1; }
+}
+
+/* List Your Event on phones: the colour of each section fills the strip behind [ YOUR ROLE ] [ MUMBAI ] [ MENU ] too, as it does under the top bar on computers */
+@media (max-width: 767px) { html[data-page="list"] .topbar { background: transparent; } }
+.ev-loop-title .ev-br { display: none; } /* "SO," sits on a line of its own on phones only */
+@media (max-width: 767px) { .ev-loop-title .ev-br { display: inline; } }
+
+/* the mask boxes of the "text masking" reveal: each line of words is clipped to its own box (stretched a little, with clip-path, so the lettering's shadow and wobble are not cut off), and the line rises up inside it; none of this moves the layout */
+.ev-loop-title .ev-mask { display: block; clip-path: inset(-0.14em -0.2em -0.1em -0.2em); }
+.ev-loop-title .ev-reveal-line { display: block; }

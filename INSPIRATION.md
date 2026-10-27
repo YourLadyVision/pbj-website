@@ -181,3 +181,17 @@ _Anything that doesn't fit above._
 - **What it looks like:** Each artist gets a profile: a big bold name, a large photo, the event they're playing (with date), and buttons to their Instagram and SoundCloud. Below it, a "Discover more artists" list shows everyone else on the lineup.
 - **Where I'd use it:** Our list of Partner Hosts under PBJ, once we have them on our roster. Each host gets a profile like this (photo, name, their upcoming PBJ event, links to their Instagram or website), with "Discover more hosts" below.
 - **Screenshot:** inspiration/
+
+## GSAP "Layered pinning with infinite looping" (codepen.io/GreenSock/pen/VwbywPd), with ScrollTrigger pinning and ScrollTrigger.maxScroll()
+- **Where I'd use it:** The List Your Event page: six full-screen sections, each pinned at the top while the next slides up over it like cards on a pile. The page snaps to the nearest section. The page does not loop: the last section (a typewriter line) is the end, and scrolling on opens the next folder. (`ScrollTrigger.maxScroll()` finds the end for the snapping.) The "Your events" button sits on the last section so it is never lost. Built in `src/events.js` (`setupLoop`).
+- **To plan for:** The sections' wording and colours are placeholders until final.
+
+## GSAP "Animated Continuous Sections with GSAP Observer" (codepen.io/GreenSock/pen/XWzRraJ)
+- **Where I'd use it:** The List Your Event page (tried and set aside for now; the "Layered pinning" version above is the one in use. To try this one again, set `LOOP_MODE` to `"observer"` in `src/events.js`). The page itself does not scroll: each scroll gesture wipes the next section in like a curtain (the colour slides one way while its content slides the other), the old colour drifts away, and the new letters fly up in random order. The last section types itself out. After the last section, scrolling on opens the next folder; scrolling up from the first opens the previous one.
+- **To plan for:** Uses GSAP's Observer plugin (no ScrollTrigger). The sections' wording and colours are placeholders until final.
+
+- **List Your Event on phones:** same pile-of-cards look, but swipe-driven: the page itself does not scroll on phones (native scrolling with pinned layers glitches on touch screens). One swipe slides the next section up over the last (a swipe the other way slides the top one away); built with GSAP's Observer in `src/events.js` (`setupObserverLoop`, "layered"). Computers keep the ScrollTrigger pinning.
+
+- **List Your Event on computers (update):** the sections are still pinned by ScrollTrigger, but one scroll gesture now glides exactly one section (an eased move of the page, driven by us, not by the wheel), so a hard flick or a trackpad's coasting can never skip a section. `ScrollTrigger.maxScroll()` marks the end of the page; scrolling on past it opens the next folder.
+
+- **List Your Event, final (computers and phones):** both now use the same swipe/scroll-driven version: the page itself never scrolls, and one gesture slides the next section up over the last (and back). The ScrollTrigger pinning version is still in `src/events.js`; set `LOOP_MODE` to `"pinned"` there to use it again.

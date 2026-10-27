@@ -19,7 +19,9 @@
     <script>
       // Play the loading intro on the first visit of a session (always while developing, or with ?intro)
       try {
-        if (location.hostname === "localhost" || location.search.includes("intro") || !sessionStorage.getItem("pbj-intro"))
+        // (never on a refresh: refreshing keeps you on the page you are on, without the loading screen)
+        const reloaded = performance.getEntriesByType("navigation")[0]?.type === "reload";
+        if (!reloaded && (location.hostname === "localhost" || location.search.includes("intro") || !sessionStorage.getItem("pbj-intro")))
           document.documentElement.classList.add("intro");
         history.scrollRestoration = "manual"; // always start the intro at the top of the page
       } catch (e) {
@@ -170,14 +172,7 @@
           </div>
         </div>
       </section>
-      <section class="panel" data-panel="list" hidden>
-        <div class="block">
-          <p class="kicker">■ List Your Event</p>
-          <h2>Got something worth finding?</h2>
-          <p class="placeholder">Coming soon: who can list, how to list, a few rules and a host signup.</p>
-          <p><a class="btn" href="/dashboard.html">Your events</a></p>
-        </div>
-      </section>
+      <section class="panel" data-panel="list" hidden></section> <!-- the looping sections are built by src/events.js (setupLoop); the "Your events" button is on the last one -->
       <section class="panel" data-panel="hosts" hidden>
         <div class="hosts-stage" data-lenis-prevent>
           <div class="hosts-book-wrap"><canvas class="hosts-book" aria-label="A host's magazine: tap the right side for the next pages, the left side to go back"></canvas></div>

@@ -230,7 +230,7 @@ export function createCutWord(text, { fill, shadow, calm }) {
 // el is an <svg> exactly one letter wide (its width is the letter's advance, so text around it flows as usual) and
 // one capital tall, sitting on the text's baseline; the wobble and shadow spill over its edges.
 let letterSeed = 0;
-export function createCutLetter(ch, { fill, shadow, calm }) {
+export function createCutLetter(ch, { fill, shadow, calm, skip }) { // skip: () => true while the letter is out of sight (it then stops redrawing)
   const c = calm ?? calmFor(); // calm: 0 keeps the letters level (no jitter), for headings that must line up with their neighbours
   const glyph = glyphs[ch.toUpperCase()];
   if (!glyph) return null;
@@ -249,6 +249,7 @@ export function createCutLetter(ch, { fill, shadow, calm }) {
   const self = {
     el: svg,
     step(f) {
+      if (skip?.()) return;
       const [sx, sy] = shadowAt(f);
       const d = roughPath(glyph, f, seed, AMP * (0.6 + 0.4 * c));
       back.setAttribute("d", d);

@@ -7,8 +7,8 @@ import { createMascot } from "./mascot.js";
 import { playIntro } from "./intro.js";
 import { playHeroOpen } from "./heroOpen.js";
 import { setupHosts } from "./hosts.js";
+import { setupEvents, setupLoop } from "./events.js";
 import { setupTopbar } from "./topbar.js";
-import { setupEvents } from "./events.js";
 import { createCutLetter } from "./cutword.js";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -31,13 +31,16 @@ const afterIntro = new Promise((res) => (introDone = res));
 playIntro({ lenis, onDone: () => heroOpen.start(introDone) });
 
 setupEvents(document.querySelector('[data-panel="events"]')); // the paper-cut headline (the old ticket lineup is parked in events.js, unused for now)
+setupLoop(document.querySelector('[data-panel="list"]'), lenis); // the looping sections at the top of List Your Event
 const hosts = setupHosts(document.querySelector('[data-panel="hosts"]'));
 
 setupTopbar();
 setupTabs({
   onSwitch(name) {
+    document.documentElement.dataset.page = name; // (the phone's top bar lets List Your Event's colours show through)
     if (name === "hosts") hosts.show();
     else hosts.hide();
+    lenis.scrollTo(0, { immediate: true, force: true }); // (force: List Your Event may be holding Lenis still while a folder is being left)
     lenis.scrollTo(0, { immediate: true });
     mascot.setActive(name === "home");
     if (name === "home") mascot.resize();
