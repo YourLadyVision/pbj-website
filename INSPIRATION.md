@@ -55,6 +55,22 @@ _Bounces, wiggles, hover effects, page transitions._
 - **Screenshot:** inspiration/
 - **Phone version:** Phones have no cursor, so on phones the button sits on each event card as a normal button.
 
+### Flip Carousel demo (the "caterpillar")
+- **Link:** https://demos.gsap.com/demo/flip-carousel
+- **Code:** https://codepen.io/GreenSock/pen/eYwbjdz (uses GSAP's Flip plugin)
+- **What I like:** A line of cards that moves like a caterpillar. On "Next", the first card shrinks away into its bottom-left corner, all the others glide one place to the left, and a new card grows in at the end from its bottom-right corner. "Previous" does it the other way round.
+- **Where I'd use it:** On the Events page, on the brown belt where the event cards are lined up. Built in `src/events.js` (the arrows, or a swipe, move the belt).
+- **Screenshot:** none (it's an animation, nothing to see in a still)
+- **To plan for:** The belt always shows the same number of cards (5 on computers); on tablets and phones the extra cards are hidden off the edge. When we have real events, the cards that grow in will be the next real events in the list.
+
+### Flexbox Filtering demo
+- **Link:** https://demos.gsap.com/demo/flexbox-filtering
+- **Code:** https://codepen.io/GreenSock/pen/NWRxarv (uses GSAP's Flip plugin)
+- **What I like:** When you switch a filter, nothing just pops. The boxes that still match glide smoothly to their new places, the ones that don't match shrink and fade away, and any that come back grow in, one after another.
+- **Where I'd use it:** On the Events page, when someone uses the filters (sort, day, month, area, price) or the category line: the event cards glide into place, shrink away or grow in. Built in `src/events.js`.
+- **Screenshot:** none (it's an animation, nothing to see in a still)
+- **To plan for:** While the cards fly about, the space under the grid is held in place so the page below doesn't jump. With "reduce motion" switched on, the cards just swap.
+
 ## Scrolling
 _What happens as people scroll down the page._
 

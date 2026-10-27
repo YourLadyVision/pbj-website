@@ -555,15 +555,71 @@ html.intro .intro-swirl {
 .hosts-stage.is-open .hosts-close { opacity: 1; pointer-events: auto; }
 @media (max-width: 767px) { .hosts-stage { height: calc(100svh - var(--bar) - var(--topbar-h)); } }
 
-/* ---------- Events: grid of identical empty cards (content and colours come later) ---------- */
-.pins { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; padding: 1rem clamp(1.5rem, 6vw, 6rem) 5rem; }
-.pin {
-  aspect-ratio: 4 / 5; border: 2px solid var(--ink); border-radius: 16px;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- Events: banner of posters, category bar, filters on the left, cards on the right ---------- */
+.ev-browse { padding: 0 0 5rem; }
+.ev-arrow { flex: none; width: 2.6em; height: 2.6em; border-radius: 50%; border: 2px solid var(--ink); background: var(--page); color: var(--ink); font: inherit; cursor: pointer; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.ev-arrow:hover { transform: scale(1.12) rotate(-4deg); }
+.ev-arrow.sm { width: 2em; height: 2em; border: 0; background: none; }
+.ev-banner { position: relative; background: var(--brown); padding: calc(var(--u) * 2) clamp(1.5rem, 6vw, 6rem); display: flex; align-items: center; gap: 1rem; }
+.ev-banner .ev-arrow { position: absolute; z-index: 2; top: 50%; translate: 0 -50%; background: var(--brown); color: var(--cream); border-color: var(--cream); }
+.ev-banner .prev { left: 0.8rem; } .ev-banner .next { right: 0.8rem; }
+.ev-banner-track { position: relative; display: flex; gap: 20px; overflow: hidden; width: 100%; touch-action: pan-y; }
+.ev-slide.hide { display: none; }
+.ev-banner-track::-webkit-scrollbar, .ev-cats-track::-webkit-scrollbar { display: none; }
+.ev-slide { flex: 0 0 calc((100% - 80px) / 5); display: block; text-decoration: none; }
+.ev-poster { position: relative; aspect-ratio: 4 / 5; border-radius: 16px; overflow: hidden; background: var(--bg); color: var(--fg); display: flex; flex-direction: column; justify-content: flex-end; padding: 1em; box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18); }
+.ev-poster svg { position: absolute; left: 0; right: 0; top: 5%; width: 100%; height: 36%; fill: currentColor; --p: currentColor; }
+.ev-poster svg .p { fill: var(--fg); } .ev-poster svg .a { fill: var(--pop); } .ev-poster svg .k { fill: var(--bg); }
+.ev-poster svg .lp { fill: none; stroke: var(--fg); stroke-width: 5; stroke-linecap: round; } .ev-poster svg .la { fill: none; stroke: var(--pop); stroke-width: 5; stroke-linecap: round; }
+.ev-poster b { position: relative; font-family: var(--display); font-weight: 700; font-size: 1.45em; line-height: 1; letter-spacing: -0.04em; text-transform: uppercase; text-align: left; }
+.ev-poster span { position: relative; margin-top: 0.6em; font-size: 0.75em; text-transform: uppercase; }
+.ev-cats { display: flex; align-items: center; padding: 0.4rem 1rem; background: color-mix(in srgb, var(--ink) 8%, var(--page)); }
+.ev-cats-track { display: flex; gap: 2em; overflow-x: auto; scrollbar-width: none; flex: 1; padding: 0.9em 0.5em; }
+.ev-cats-track button { flex: none; background: none; border: 0; font: inherit; font-size: 0.85em; text-transform: uppercase; color: var(--ink); cursor: pointer; padding: 0.3em 0; border-bottom: 3px solid transparent; }
+.ev-cats-track button.on { border-bottom-color: var(--strawberry); color: var(--strawberry); }
+.ev-body { display: grid; grid-template-columns: 17em 1fr; gap: clamp(1.5rem, 3vw, 3rem); padding: 2.5rem clamp(1.5rem, 3vw, 3rem) 0; align-items: start; }
+.ev-filters { display: flex; flex-direction: column; gap: 0.9em; position: sticky; top: 1rem; }
+.ev-filters-head { display: flex; justify-content: space-between; align-items: baseline; }
+.ev-filters h2 { margin: 0; font-size: 1.5em; }
+.ev-clear { background: none; border: 0; font: inherit; font-size: 0.75em; text-transform: uppercase; opacity: 0.6; cursor: pointer; color: var(--ink); }
+.ev-clear:hover { opacity: 1; color: var(--strawberry); }
+.ev-f { border: 1px solid rgba(70, 55, 33, 0.16); border-radius: 22px; background: #fffffa; transition: border-color 0.2s, box-shadow 0.2s; }
+.ev-f:hover { border-color: rgba(70, 55, 33, 0.3); }
+.ev-f[open] { box-shadow: 0 8px 22px rgba(70, 55, 33, 0.07); }
+.ev-f.active { border-color: var(--pop); }
+.ev-f summary { display: flex; justify-content: space-between; align-items: center; padding: 1em 1.3em; cursor: pointer; list-style: none; font-size: 0.85em; text-transform: uppercase; min-height: 3em; }
+.ev-f summary::-webkit-details-marker { display: none; }
+.ev-f summary > span::before { content: "⌄"; display: inline-block; margin-right: 0.8em; transition: transform 0.25s; }
+.ev-f[open] summary > span::before { transform: rotate(180deg); }
+.ev-opts { display: flex; flex-direction: column; gap: 0.7em; padding: 0 1.1em 1.1em; font-size: 0.75em; text-transform: uppercase; }
+.ev-opts label { display: flex; gap: 0.7em; align-items: center; cursor: pointer; min-height: 1.8em; }
+.ev-opts input { accent-color: var(--strawberry); width: 1.2em; height: 1.2em; }
+.ev-count { margin: 0 0 1.2em; font-size: 0.75em; text-transform: uppercase; opacity: 0.7; }
+.ev-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2em 1.6em; }
+.ev-card-b { display: block; text-decoration: none; color: inherit; }
+.ev-card-b .ev-poster { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.ev-cat { margin: 1em 0 0.3em; font-size: 0.75em; text-transform: uppercase; color: var(--strawberry); }
+.ev-card-b h3 { margin: 0 0 0.4em; font-size: 1.3em; line-height: 1; letter-spacing: -0.04em; text-align: left; }
+.ev-line { margin: 0 0 0.3em; font-size: 0.75em; text-transform: uppercase; opacity: 0.8; text-align: left; }
+.ev-price { opacity: 1; font-weight: 400; }
+.lineup-empty { grid-column: 1 / -1; font-size: 0.85em; text-transform: uppercase; }
+@media (max-width: 991px) {
+  .ev-slide { flex-basis: calc((100% - 40px) / 3); }
+  .ev-body { grid-template-columns: 1fr; padding-top: 1.5rem; }
+  .ev-filters { position: static; }
+  .ev-grid { grid-template-columns: repeat(2, 1fr); }
 }
-.pin:hover { transform: translateY(-6px) rotate(-1deg); }
-@media (max-width: 991px) { .pins { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 767px) { .pins { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; padding: 0.5rem 1.2rem 4rem; } .pin { border-radius: 12px; } }
+@media (max-width: 767px) {
+  .ev-banner { padding: 1rem 1rem; }
+  .ev-banner .ev-arrow { display: none; }
+  .ev-banner-track { gap: 12px; }
+  .ev-slide { flex-basis: 62%; }
+  .ev-poster b { font-size: 1.6em; }
+  .ev-body { padding: 1.2rem 1.2rem 0; }
+  .ev-grid { gap: 1.6em 0.9em; }
+  .ev-card-b h3 { font-size: 1.1em; }
+}
+@media (prefers-reduced-motion: reduce) { .ev-slide, .ev-arrow, .ev-card-b .ev-poster { transition: none; } }
 
 /* Events intro: same look as the layer words on Home (paper-cut headline over justified mono text) */
 .events-intro { margin-bottom: clamp(1rem, 3vw, 2.5rem); max-width: 52rem; display: flex; flex-direction: column; gap: 1.5em; }
@@ -610,6 +666,12 @@ html.intro .intro-swirl {
 [data-panel="events"] .block { padding-bottom: clamp(1rem, 3vw, 2rem); }
 /* the Events headline is a long sentence: left-aligned, so it never stretches into big word gaps */
 .events-intro .story-title { text-align: left; }
+/* Events: on computers the heading block sits higher up the page */
+@media (min-width: 992px) { [data-panel="events"] .block { padding-top: clamp(1.5rem, 3vw, 3rem); } }
+/* Events: on computers the brown banner sits closer under the heading */
+@media (min-width: 992px) { [data-panel="events"] .block { padding-bottom: 0; } [data-panel="events"] .events-intro { margin-bottom: calc(var(--u) * 1); } }
+/* Events (computers): the heading sits in the middle between the top of the page and the brown banner */
+@media (min-width: 992px) { [data-panel="events"] .block { padding-top: calc(var(--u) * 3); padding-bottom: calc(var(--u) * 3); } [data-panel="events"] .events-intro { margin-bottom: 0; } }
 
 /* ---------- Top bar: [ WHO ARE YOU ] [ CHOOSE YOUR CITY ] [ MENU ], centred at the top of every page ---------- */
 .topbar { position: fixed; top: 0; left: 0; right: var(--tab-size); height: var(--topbar-h); z-index: 9; display: flex; justify-content: center; align-items: center; gap: 2.4em; padding: 0 1em; pointer-events: none; }
@@ -690,4 +752,71 @@ html.intro .intro-swirl {
 @media (max-width: 767px) { .tb-btn { gap: 0.2em; } .tb-btn > span { padding: 0.2em 0.45em; } }
 /* The top-bar words use the folder tabs' own type: Chivo Mono, regular, capitals, 0.75 of the page unit */
 .tb-btn { font-family: var(--mono); font-weight: 400; font-size: 0.75em; letter-spacing: 0; line-height: 1.2; text-transform: uppercase; }
+/* Events filters: the dashboard's look (soft thin border, white card, brown selected pill, pale-yellow hover) */
+.ev-opts { padding: 0 0.7em 0.8em; gap: 0.2em; }
+.ev-opts label { padding: 0.55em 0.7em; border-radius: 12px; transition: background 0.2s; }
+.ev-opts label:hover { background: #fff6d4; }
+.ev-opts label:has(input:checked) { background: var(--brown); color: var(--cream); }
+.ev-opts input { appearance: none; -webkit-appearance: none; width: 0.9em; height: 0.9em; margin: 0; border: 1px solid currentColor; border-radius: 50%; flex: none; }
+.ev-opts input:checked { background: var(--peanut); border-color: var(--peanut); }
+.ev-cats-track button { border-radius: 99px; padding: 0.4em 1em; border-bottom: 0; }
+.ev-cats-track button:hover:not(.on) { background: #fff6d4; }
+.ev-cats-track button.on { background: var(--brown); color: var(--cream); }
+.ev-clear { border-radius: 99px; padding: 0.3em 0.8em; }
+
+/* Events filters as dropdowns (like the dashboard's Venue field): a label, a rounded field, and a list of options that opens under it */
+.ev-dd { position: relative; }
+.ev-dd.open { z-index: 5; }
+.ev-dd-label { margin: 0 0 0.5em; font-size: 0.85em; text-transform: uppercase; }
+.ev-dd-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 1em; min-height: 3.4em; padding: 0.6em 1.1em; background: #fffffa; border: 1px solid rgba(70, 55, 33, 0.16); border-radius: 22px; font: inherit; font-size: 0.85em; text-transform: none; color: var(--ink); cursor: pointer; text-align: left; transition: box-shadow 0.2s, border-color 0.2s; }
+.ev-dd-btn:hover { border-color: rgba(70, 55, 33, 0.3); }
+.ev-dd-btn svg { width: 1.2em; height: 1.2em; flex: none; transition: transform 0.25s; }
+.ev-dd.open .ev-dd-btn { box-shadow: 0 8px 22px rgba(70, 55, 33, 0.07); }
+.ev-dd.open .ev-dd-btn svg { transform: rotate(180deg); }
+.ev-dd.active .ev-dd-btn { border-color: var(--pop); }
+.ev-dd-list { position: absolute; left: 0; right: 0; top: calc(100% + 0.5em); margin: 0; padding: 0; list-style: none; background: #fffffa; border: 1px solid rgba(70, 55, 33, 0.16); border-radius: 18px; overflow: hidden; box-shadow: 0 14px 30px rgba(70, 55, 33, 0.12); animation: tb-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.ev-dd-list[hidden] { display: none; }
+.ev-dd-list button { width: 100%; display: block; padding: 1em 1.3em; background: none; border: 0; font: inherit; font-size: 0.85em; text-transform: none; text-align: left; color: var(--ink); cursor: pointer; }
+.ev-dd-list button:hover { background: #fff6d4; }
+.ev-dd-list button.on { background: #fae391; }
+.ev-filters { gap: 1.2em; }
+
+/* Events cards for now: empty, with only "Coming soon" in paper-cut letters */
+.ev-poster.ev-empty { background: none; box-shadow: none; border: 1px solid rgba(70, 55, 33, 0.16); display: grid; place-items: center; padding: 1em; }
+.ev-banner .ev-poster.ev-empty { border-color: rgba(248, 248, 240, 0.25); }
+.ev-soon { display: flex; flex-direction: column; align-items: center; gap: 0.1em; font-size: 2.4em; line-height: 1; text-align: center; }
+.ev-soon .w { white-space: nowrap; }
+.ev-poster .ev-soon { position: static; margin: 0; font-size: 2.6em; }
+.ev-poster .ev-soon .w { position: static; margin: 0; font-size: 1em; display: block; }
+.ev-poster .ev-soon svg { position: static; left: auto; right: auto; top: auto; }
+/* the "Coming soon" cards on the brown banner are cream */
+.ev-banner .ev-poster.ev-empty { background: var(--cream); border-color: transparent; }
+/* "Coming soon" always fits and sits in the middle of its card, whatever the card's width (desktop or phone) */
+.ev-poster.ev-empty { container-type: inline-size; }
+.ev-poster .ev-soon { font-size: 16cqw; justify-self: center; align-self: center; }
+.ev-poster.ev-empty { justify-content: center; align-content: center; }
+
+/* ---------- Events on phones: tidy, even spacing ---------- */
+@media (max-width: 767px) {
+  /* the bar gets a solid page-coloured back, so cards scroll cleanly underneath it instead of showing through the words */
   .topbar { background: var(--page); }
+  [data-panel="events"] .block { padding-top: calc(var(--u) * 2.4); padding-bottom: calc(var(--u) * 2.4); }
+  .ev-banner { padding: 1.1rem 1.2rem; }
+  .ev-slide { flex-basis: 44%; }
+  .ev-slide .ev-poster { border-radius: 14px; }
+  .ev-cats { padding: 0.2rem 0.4rem; }
+  .ev-cats-track { gap: 0.6em; padding: 0.7em 0.4em; }
+  .ev-cats-track button { white-space: nowrap; padding: 0.4em 0.9em; font-size: 0.8em; }
+  .ev-body { gap: 1.6rem; padding: 1.4rem 1.2rem 0; }
+  /* the five filters sit two to a row instead of one long stack */
+  .ev-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 1em 0.8em; }
+  .ev-filters-head { grid-column: 1 / -1; }
+  .ev-filters h2 { font-size: 1.3em; }
+  .ev-dd-label { margin-bottom: 0.4em; font-size: 0.7em; }
+  .ev-dd-btn { min-height: 3em; padding: 0.5em 0.9em; font-size: 0.75em; border-radius: 18px; }
+  .ev-dd-list { border-radius: 16px; }
+  .ev-dd-list button { padding: 0.9em 1em; font-size: 0.75em; }
+  .ev-dd[data-key="price"] { grid-column: 1 / -1; }
+  .ev-count { margin-bottom: 1em; }
+  .ev-grid { gap: 1em 0.8em; }
+}
