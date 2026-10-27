@@ -233,7 +233,6 @@ h2 { max-width: 22ch; }
 .hero {
   position: relative;
   height: calc(100vh - var(--topbar-h));
-  height: 100vh;
   overflow: hidden;
 }
 
@@ -629,37 +628,55 @@ html.intro .intro-swirl {
 .events-intro em { font-style: normal; color: var(--strawberry); }
 
 /* ---------- About: first layout (centred photo, small label, big statement with a highlighted phrase) ---------- */
-.about-hero { display: flex; flex-direction: column; align-items: center; min-height: 100svh; box-sizing: border-box; padding: clamp(1rem, 2vw, 1.5rem) clamp(1.5rem, 6vw, 6rem) clamp(1.5rem, 3vw, 2.5rem); }
+.about-hero { display: flex; flex-direction: column; align-items: center; min-height: calc(100svh - var(--topbar-h)); box-sizing: border-box; padding: clamp(1rem, 2vw, 1.5rem) clamp(1.5rem, 6vw, 6rem) clamp(1.5rem, 3vw, 2.5rem); }
 .about-image {
   position: relative; width: min(70vw, 700px); aspect-ratio: 16 / 7; margin-bottom: clamp(1rem, 3vw, 3rem);
 }
-.about-cols { display: grid; grid-template-columns: 1.35fr 1fr; gap: clamp(2rem, 6vw, 6rem); align-items: stretch; flex: 1; width: 100%; text-align: left; }
-.about-left { align-self: start; }
-.about-right { align-self: end; padding-bottom: clamp(2rem, 5vw, 4.5rem); }
+/* Computers: everything sits exactly between the [ options ] bar and the bottom of the frame. The letters and the
+   headline shrink a little on short windows so nothing runs past the bottom. */
+@media (min-width: 992px) {
+  .about-hero { height: calc(100svh - var(--topbar-h)); min-height: 0; overflow: hidden; }
+  .about-image { width: auto; height: min(30svh, 320px); flex: none; margin-bottom: clamp(0.5rem, 1.5svh, 1.5rem); }
+  .about-cols { min-height: 0; }
+}
+.about-cols { display: grid; grid-template-columns: 1.35fr 1fr; gap: clamp(2rem, 6vw, 6rem); align-items: end; /* the small text ends level with the bottom of the headline, whatever the window size */ width: 100%; text-align: left; }
+.about-left { align-self: end; }
+.about-right { align-self: end; margin-bottom: calc(var(--u) * -3.6); } /* ends a touch below the headline's last line, in proportion to the window width */
 .about-right p:last-child { margin-bottom: 0; }
 .about-right p { margin: 0 0 1.6em; text-align: justify; text-transform: uppercase; }
 @media (max-width: 991px) {
-  .about-hero { min-height: 0; padding-top: 0.5rem; padding-bottom: 2.5rem; }
-  .about-image { width: min(100%, 520px); margin-bottom: 0.5rem; }
+  .about-hero { min-height: 0; padding-top: 0; padding-bottom: 2rem; }
+  /* the 3D letters have some empty air inside their frame: pull the frame up and the text below up with it */
+  .about-image { width: min(100%, 520px); margin-top: -0.6rem; margin-bottom: -0.5rem; }
   .about-cols { grid-template-columns: 1fr; gap: 1.75rem; }
-  .about-hero .about-left h2 { font-size: 1.45em; }
-  .about-right { padding-bottom: 0; }
+  .about-hero .about-left h2 { font-size: 1.28em; } /* a touch smaller on phones: more words per line, so the justified gaps stay small */
+  .about-right { padding-bottom: 0; margin-bottom: 0; }
   .about-right p { margin-bottom: 1.2em; }
 }
-.about-pbj { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; opacity: 0; transition: opacity 0.6s ease; }
-.about-pbj.ready { opacity: 1; }
+.about-pbj { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; opacity: 0; transition: opacity 0.6s ease; pointer-events: none; }
+.about-pbj.ready { opacity: 1; pointer-events: auto; }
+/* a light picture of the letters shows at once; the 3D ones (heavy to build) fade in over it when they are ready */
+.about-pbj-still { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.6s ease; }
+.about-pbj-still.gone { opacity: 0; pointer-events: none; }
 /* while About is closed it is still laid out (just invisible and out of the way), so the letters can load and size themselves in the background */
 .panel[data-panel="about"][hidden] { display: block; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; visibility: hidden; pointer-events: none; overflow: hidden; z-index: -1; }
 .about-pbj-note { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font-family: var(--mono, inherit); font-size: 0.75em; text-transform: uppercase; opacity: 0.7; }
 .about-pbj-note[hidden] { display: none; }
 .about-hero .kicker { margin-bottom: 1.5rem; }
-.about-hero h2 { width: 100%; max-width: none; font-size: 2.4em; text-align: left; }
+.about-hero h2 { width: 100%; max-width: none; font-size: min(2.4em, 5svh); text-align: left; }
 /* the text rolls up line by line: each line sits in a clipped box and rises from below, one after another */
 .about-hero .roll-line { display: block; overflow: hidden; line-height: 0.98; padding: 0.15em 0.2em; margin: -0.15em -0.2em; } /* room for the letters' wobble and shadow */
 .about-hero .roll-in { display: flex; justify-content: space-between; /* justified: the words spread to fill the line */ transform: translateY(115%); }
 .about-hero h2.rolled .roll-in { transform: none; transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1); transition-delay: calc(0.15s + var(--i) * 0.12s); }
 @media (prefers-reduced-motion: reduce) { .about-hero .roll-in, .about-hero h2.rolled .roll-in { transform: none; transition: none; } }
-.about-hero .w, .about-hero .unit { white-space: nowrap; }
+.about-hero .w, .about-hero .unit, .about-hero .roll-slot, .about-hero .flip-slot { position: relative; display: inline-block; max-width: 100%; }
+.about-hero .flip-cells { position: relative; display: block; visibility: hidden; clip-path: inset(-0.05em -0.25em -0.05em -0.25em); } /* letters roll in and out through the top and bottom edge */
+.about-hero .flip-cells::before { content: "\200b"; } /* an invisible character, so the board has the same line height and baseline as the text */
+.about-hero .ltr { position: absolute; top: 0; white-space: nowrap; }
+.about-hero .flip-base { position: absolute; left: 0; top: 0; }
+.about-hero .flip-slot.flip-right .flip-base { left: auto; right: 0; } /* the board closes its line: ARTISTS, ends at the right edge, like the justified text around it */
+.about-hero .roll-slot { position: relative; display: inline-block; clip-path: inset(-0.05em -0.15em -0.05em -0.15em); } /* the word's own box: letters roll out of the top and in from the bottom */
+.about-hero .w-to { position: absolute; left: 0; top: 0; }
 .about-hero .w svg { margin-right: -0.045em; } /* letters sit a little closer, like the reference headline */
 .about-hero .roll-line:last-child .roll-in { justify-content: flex-start; gap: 0.2em; } /* the last line stays left, like justified text */
 .about-hero mark { background: none; color: inherit; padding: 0; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
