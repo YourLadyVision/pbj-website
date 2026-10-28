@@ -641,18 +641,30 @@ html.intro .intro-swirl {
 }
 .about-cols { display: grid; grid-template-columns: 1.35fr 1fr; gap: clamp(2rem, 6vw, 6rem); align-items: end; /* the small text ends level with the bottom of the headline, whatever the window size */ width: 100%; text-align: left; }
 .about-left { align-self: end; }
-.about-right { align-self: end; margin-bottom: calc(var(--u) * -3.6); } /* ends a touch below the headline's last line, in proportion to the window width */
+.about-right { align-self: end; margin-bottom: calc(var(--u) * -7.5); } /* ends a touch below the headline's last line, in proportion to the window width */
 .about-right p:last-child { margin-bottom: 0; }
 .about-right p { margin: 0 0 1.6em; text-align: justify; text-transform: uppercase; }
+/* The subtext here is the same size as the text in the hero layers when they open (see .story-left): 18px, and on phones 12-15px by screen width */
+.about-right p, .who-sub { font-size: 18px; line-height: 1.35; }
+@media (max-width: 767px) { .about-right p, .who-sub { font-size: clamp(12px, 3.7vw, 15px); line-height: 1.5; } }
+@media (min-width: 992px) { .about-right p { font-size: min(18px, 2.3svh); } } /* on a short computer window the first frame must still fit, so the text gives way a little (it is 18px on any normal window) */
 @media (max-width: 991px) {
-  .about-hero { min-height: 0; padding-top: 0; padding-bottom: 2rem; }
+  .about-hero { min-height: calc(100svh - var(--bar) - var(--topbar-h)); padding-top: 0; padding-bottom: 2rem; } /* the first frame fills the screen, so the next frame starts below the fold */
   /* the 3D letters have some empty air inside their frame: pull the frame up and the text below up with it */
   .about-image { width: min(100%, 520px); margin-top: -0.6rem; margin-bottom: -0.5rem; }
-  .about-cols { grid-template-columns: 1fr; gap: 1.75rem; }
+  .about-cols { grid-template-columns: 1fr; gap: 1.75rem; flex: 1; align-content: space-between; } /* heading at the top, the paragraphs at the bottom of the frame, like on computers */
   .about-hero .about-left h2 { font-size: 1.28em; } /* a touch smaller on phones: more words per line, so the justified gaps stay small */
   .about-right { padding-bottom: 0; margin-bottom: 0; }
   .about-right p { margin-bottom: 1.2em; }
 }
+/* About, second frame: WHO'S COOKING? (the founders and the journey) */
+.about-who { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 1.2em; padding: clamp(2rem, 6vw, 5rem) clamp(1.5rem, 6vw, 6rem); }
+.who-title { max-width: none; margin: 0; font-size: 4.5em; }
+@media (max-width: 991px) { .who-title { font-size: 2.6em; } }
+.who-word { display: inline-block; white-space: nowrap; clip-path: inset(-0.1em -0.25em -0.1em -0.25em); } /* letters roll up through the bottom edge of their word */
+.who-sub { max-width: 34ch; margin: 0; text-transform: uppercase; }
+@media (max-width: 991px) { .about-who { padding-top: 3rem; padding-bottom: 2.5rem; } }
+@media (min-width: 992px) { .about-who { justify-content: flex-start; padding-top: calc(var(--u) * 3); padding-bottom: calc(var(--u) * 2.5); } .who-sub { max-width: none; white-space: nowrap; } } /* computers: the heading sits at the top of its frame, under the options bar */
 .about-pbj { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; opacity: 0; transition: opacity 0.6s ease; pointer-events: none; }
 .about-pbj.ready { opacity: 1; pointer-events: auto; }
 /* a light picture of the letters shows at once; the 3D ones (heavy to build) fade in over it when they are ready */
@@ -669,7 +681,8 @@ html.intro .intro-swirl {
 .about-hero .roll-in { display: flex; justify-content: space-between; /* justified: the words spread to fill the line */ transform: translateY(115%); }
 .about-hero h2.rolled .roll-in { transform: none; transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1); transition-delay: calc(0.15s + var(--i) * 0.12s); }
 @media (prefers-reduced-motion: reduce) { .about-hero .roll-in, .about-hero h2.rolled .roll-in { transform: none; transition: none; } }
-.about-hero .w, .about-hero .unit, .about-hero .roll-slot, .about-hero .flip-slot { position: relative; display: inline-block; max-width: 100%; }
+.about-hero .w, .about-hero .unit, .about-hero .roll-slot { white-space: nowrap; } /* a word never breaks in the middle */
+.about-hero .flip-slot { position: relative; display: inline-block; max-width: 100%; white-space: nowrap; }
 .about-hero .flip-cells { position: relative; display: block; visibility: hidden; clip-path: inset(-0.05em -0.25em -0.05em -0.25em); } /* letters roll in and out through the top and bottom edge */
 .about-hero .flip-cells::before { content: "\200b"; } /* an invisible character, so the board has the same line height and baseline as the text */
 .about-hero .ltr { position: absolute; top: 0; white-space: nowrap; }
@@ -879,3 +892,88 @@ html.intro .intro-swirl {
 /* the mask boxes of the "text masking" reveal: each line of words is clipped to its own box (stretched a little, with clip-path, so the lettering's shadow and wobble are not cut off), and the line rises up inside it; none of this moves the layout */
 .ev-loop-title .ev-mask { display: block; clip-path: inset(-0.14em -0.2em -0.1em -0.2em); }
 .ev-loop-title .ev-reveal-line { display: block; }
+
+/* ---------- About: the founders (two big panels) ---------- */
+.about-founders { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 2vw, 1.8rem); padding: 0 clamp(1.5rem, 6vw, 6rem); box-sizing: border-box; }
+.fpanel { container-type: size; position: relative; isolation: isolate; overflow: hidden; border-radius: 28px; background: var(--brown); height: calc(100svh - var(--topbar-h) - 2.5rem); min-height: 480px; }
+.fpanel > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(var(--zoom, 1)); transform-origin: var(--origin, 50% 50%); transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.fpanel:nth-child(1) > img { object-position: 56% 30%; } /* each photo is placed so the person sits in the middle of the panel */
+.fpanel:nth-child(2) > img { object-position: 49% 32%; }
+.fpanel:hover > img { transform: scale(calc(var(--zoom, 1) * 1.04)); }
+.fpanel::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to top, rgba(40, 28, 14, 0.8), rgba(40, 28, 14, 0) 50%); }
+.fmeta { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; gap: 0.55em; padding: clamp(1.1rem, 2.2vw, 1.9rem); color: var(--cream); }
+.fname { margin: 0; font-family: var(--display); font-weight: 700; line-height: 1; font-size: 2.6em; display: flex; flex-wrap: wrap; column-gap: 0.28em; }
+.fword { display: inline-block; white-space: nowrap; }
+.frole { margin: 0; font-size: 0.75em; text-transform: uppercase; }
+.fbtn, .fclose { display: inline-flex; gap: 0.5em; align-items: center; margin-top: 0.3em; padding: 0.55em 1em; border: 2px solid #fff; border-radius: 999px; background: none; color: #fff; text-shadow: 0.06em 0.08em 0 var(--crust); font: inherit; font-size: 0.75em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
+.fbtn i, .fclose i { font-style: normal; }
+.fbtn:hover, .fclose:hover { background: rgba(255, 255, 255, 0.22); } /* the buttons only change shade on hover: they never move */
+.fbtn:focus-visible, .fclose:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+/* the story slides up over the photo */
+.fbio { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; justify-content: space-between; gap: 1.2em; box-sizing: border-box; padding: clamp(1.4rem, 3vw, 2.6rem); overflow: auto; visibility: hidden; clip-path: inset(100% 0 0 0); transition: clip-path 0.6s cubic-bezier(0.7, 0, 0.2, 1), visibility 0s 0.6s; }
+.fpanel.open .fbio { visibility: visible; clip-path: inset(0); transition: clip-path 0.6s cubic-bezier(0.7, 0, 0.2, 1), visibility 0s; }
+.fbio p { margin: 0; font-size: min(3.5cqw, 2.95cqh); line-height: 1.4; text-transform: uppercase; } /* the story is as big as its card allows (about 24px on a computer), so it fills the card */
+/* the card text is paper-cut lettering: white with a crust-brown shadow (plain-text characters get the same look) */
+.fpanel[data-tone="pop"] .fbio { background: var(--crust); } /* the first card: crust brown */
+.fpanel[data-tone="butter"] .fbio { background: var(--strawberry); } /* the second card's story rolls up over jam red */
+/* the card text is paper-cut lettering: white with a crust-brown shadow (plain-text characters get the same look) */
+.frole { color: #fff; text-shadow: 0.06em 0.08em 0 var(--crust); }
+/* both stories: light-yellow lettering with a brown shadow, like the List Your Event titles */
+.fbio p, .fbio .fclose { color: var(--peanut); text-shadow: 0.06em 0.08em 0 var(--brown); }
+.fbio .fclose { border-color: var(--peanut); }
+.cword { display: inline-block; white-space: nowrap; }
+.fbio .fclose { align-self: flex-start; margin-top: 0; }
+@media (max-width: 991px) { .about-founders { grid-template-columns: minmax(0, 1fr); } .fpanel { height: auto; width: 100%; min-width: 0; aspect-ratio: 4 / 5; min-height: 540px; } .fname { font-size: 2em; } }
+@media (max-width: 767px) { .fbio p { font-size: min(4cqw, 3cqh); } } /* phones: the card is tall and narrow, so the story can be a little bigger for its width (about the hero text's size) */
+@media (prefers-reduced-motion: reduce) { .fpanel > img, .fbtn, .fclose, .fbio { transition: none; } .fpanel:hover > img { transform: scale(var(--zoom, 1)); } }
+
+/* ---------- About: the fun fact (one long line of heading that travels sideways as you scroll; its letters tumble into place) ---------- */
+/* It sits between the founders and the journey. While it travels, only the line itself is pinned (near the middle of the screen); its
+   section's height is set from the line's length in aboutStory.js */
+.about-fact { position: relative; margin: clamp(5rem, 12vw, 10rem) 0 clamp(5rem, 14vw, 12rem); } /* between the founders and the journey, with room on both sides; while it travels, only the line itself is pinned */
+.fstage { position: sticky; top: calc(var(--topbar-h, 0px) + (100svh - var(--topbar-h, 0px) - var(--fh, 0px)) / 2); overflow: hidden; } /* centred in the space under the top bar */
+/* The line is far wider than the screen. It must be cut off at the sides AND must not make the page itself wider (on a phone that
+   makes the page zoom out or slide sideways): overflow-x: clip does both, while letting the tumbling letters swing above and below */
+@supports (overflow: clip) { .fstage { overflow-x: clip; overflow-y: visible; } }
+.ftext { display: flex; align-items: center; width: max-content; white-space: nowrap; column-gap: 0.3em; margin: 0; padding-left: 100%; font-family: var(--display); font-weight: 700; line-height: 1.4; font-size: 6.5em; }
+.ftext.fnative { animation: fslide 1s linear both; }
+@keyframes ftoss { from { transform: translateY(var(--ty)) rotate(var(--tr)); } to { transform: none; } }
+.ftext.fnative svg { animation: ftoss 1s cubic-bezier(0.34, 1.35, 0.64, 1) both; } /* a gentle overshoot as each letter lands */
+@keyframes fslide { to { transform: translateX(var(--fx)); } }
+.ftext svg { will-change: transform; } /* each letter gets its own layer, so moving the line never repaints the letters */ /* big: about the size of the List Your Event titles */
+.ftext .fword { display: inline-block; white-space: nowrap; }
+@media (max-width: 991px) { .ftext { font-size: 3.4em; } }
+/* people who prefer less motion: the sentence simply sits there, wrapped, in colour */
+.about-fact.fstatic { height: auto; margin: clamp(4rem, 9vw, 7rem) 0; }
+.fstatic .fstage { position: static; overflow: visible; padding: 0 clamp(1.5rem, 6vw, 6rem); }
+.fstatic .ftext { width: auto; white-space: normal; flex-wrap: wrap; padding-left: 0; row-gap: 0.15em; }
+
+/* ---------- About: the journey (the page holds still while the steps change as you scroll) ---------- */
+.about-journey { position: relative; height: calc(var(--steps, 5) * 85svh); }
+.jstage { position: sticky; top: var(--topbar-h); height: calc(100svh - var(--topbar-h)); box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 1.2rem; padding: 0 clamp(1.5rem, 6vw, 6rem); }
+.jsteps { position: relative; min-height: 58svh; }
+.jstep { position: absolute; inset: 0; display: grid; grid-template-columns: auto minmax(0, 46ch); column-gap: clamp(1.5rem, 6vw, 6rem); align-items: center; align-content: center; }
+.jnumbox { overflow: hidden; padding: 0.1em 0.2em; margin: -0.1em -0.2em; }
+.jnum { display: block; font-family: var(--display); font-weight: 700; font-size: min(9em, 20svh); line-height: 0.95; letter-spacing: -0.04em; color: var(--pop); text-shadow: 0.035em 0.05em 0 var(--brown); }
+.jstep:nth-child(even) .jnum { color: var(--strawberry); }
+.jbody { display: flex; flex-direction: column; gap: 1em; }
+.jtitle { margin: 0; font-family: var(--display); font-weight: 700; line-height: 1; font-size: 4em; display: flex; flex-wrap: wrap; column-gap: 0.28em; }
+.jword { display: inline-block; white-space: nowrap; clip-path: inset(-0.1em -0.25em -0.1em -0.25em); }
+.jtext { margin: 0; font-size: 18px; line-height: 1.35; text-transform: uppercase; }
+.jdots { position: absolute; right: clamp(1.5rem, 6vw, 6rem); top: 50%; translate: 0 -50%; display: flex; flex-direction: column; gap: 0.8em; }
+.jdots i { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--brown); transition: background 0.3s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.jdots i.on { background: var(--strawberry); border-color: var(--strawberry); transform: scale(1.3); }
+@media (max-width: 991px) {
+  .jstep { grid-template-columns: 1fr; row-gap: 0.8rem; }
+  .jnum { font-size: 5em; }
+  .jtitle { font-size: 2.6em; }
+  .jsteps { min-height: 62svh; }
+  .jdots { right: auto; left: clamp(1.5rem, 6vw, 6rem); top: auto; bottom: 1.4rem; translate: none; flex-direction: row; }
+}
+@media (max-width: 767px) { .jtext { font-size: clamp(12px, 3.7vw, 15px); line-height: 1.5; } }
+/* people who prefer less motion get the steps one under another, no pinning */
+.about-journey.jstatic { height: auto; }
+.jstatic .jstage { position: static; height: auto; padding-top: 3rem; padding-bottom: 3rem; }
+.jstatic .jsteps { min-height: 0; display: flex; flex-direction: column; gap: 3rem; }
+.jstatic .jstep { position: static; }
+.jstatic .jdots { display: none; }

@@ -10,9 +10,12 @@ import { setupHosts } from "./hosts.js";
 import { setupEvents, setupLoop } from "./events.js";
 import { setupTopbar } from "./topbar.js";
 import { createCutLetter } from "./cutword.js";
+import { setupAboutWho } from "./aboutWho.js";
+import { setupAboutStory } from "./aboutStory.js";
 import glyphData from "./glyphs.json";
 
 gsap.registerPlugin(ScrollTrigger);
+ScrollTrigger.config({ ignoreMobileResize: true }); // phone address bar sliding must not re-measure and jolt the page
 
 // Smooth scrolling on computers. On phones Lenis leaves normal touch scrolling alone (its default).
 const lenis = new Lenis();
@@ -85,6 +88,9 @@ document.querySelector(".signup-form").addEventListener("submit", (e) => {
     }
   }
 }
+
+setupAboutWho(document.querySelector('[data-panel="about"]')); // the second frame of About: WHO'S COOKING?
+setupAboutStory(document.querySelector('[data-panel="about"]')); // the founders and the journey, under it
 
 // About: the words roll up line by line, each line rising out of its own clipped box
 {
@@ -270,15 +276,16 @@ document.querySelector(".signup-form").addEventListener("submit", (e) => {
       h2.textContent = "";
       words.forEach((w) => { if (w.dataset.gap) h2.appendChild(document.createTextNode(" ")); h2.appendChild(w); });
       lastW = h2.clientWidth; // the width these lines were worked out for
-      // group the words by the line they landed on
+      // Work out the lines from the words' widths, like a browser would wrap them (a word goes on the line if it fits, with at least a
+      // space's room before it). This does not depend on where the page happens to have put the words at this moment.
       const fs = parseFloat(getComputedStyle(h2).fontSize);
+      const gapW = fs * 0.3;
       const lines = [];
       words.forEach((w) => {
         if (w.nodeType !== 1) return;
-        // measure the letters themselves (a word in a roll slot sits a few pixels off a plain word's box)
-        const top = (w.querySelector("svg") || w).getBoundingClientRect().top;
-        const last = lines[lines.length - 1];
-        if (last && Math.abs(last.top - top) < fs * 0.4) last.items.push(w); else lines.push({ top, items: [w] });
+        // (offsetWidth, not getBoundingClientRect: the page can still be mid-animation, and screen sizes would then be shrunk or shifted)
+        const width = w.offsetWidth, gap = w.dataset.gap ? gapW : 0, last = lines[lines.length - 1];
+        if (last && last.used + gap + width <= lastW + 0.5) { last.items.push(w); last.used += gap + width; } else lines.push({ items: [w], used: width });
       });
       // justified text: when the board is the last thing on its line (words before it), ARTISTS, ends at the right edge; otherwise it starts at the left
       if (flip) {
