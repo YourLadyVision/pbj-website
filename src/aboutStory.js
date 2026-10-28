@@ -44,15 +44,18 @@ const piece = (ch, opts) => {
   const box = document.createElement("span");
   box.style.cssText = `position:relative;display:inline-block;vertical-align:baseline;width:${width}em;height:0.729em`;
   box.setAttribute("aria-hidden", "true");
-  parts.forEach(([c, left, lift, rot, stretch = 1]) => {
-    const l = createCutLetter(c, opts);
+  // a piece with several parts draws every part's shadow first and every face on top, so one part's shadow never lands on another's face
+  const layers = parts.length > 1 ? [{ ...opts, fill: opts.shadow }, { ...opts, shadow: "transparent" }] : [opts];
+  const seeds = parts.map((_, i) => 5000 + i * 7 + (ch.charCodeAt(0) % 97) * 13);
+  layers.forEach((layer) => parts.forEach(([c, left, lift, rot, stretch = 1], n) => {
+    const l = createCutLetter(c, parts.length > 1 ? { ...layer, seed: seeds[n] } : layer);
     if (!l) return;
     const x = left === "next" ? adv("'") + 0.03 : left + (ch === "+" || ch === "—" ? (width - adv("-")) / 2 : 0);
     let origin = "50% 50%";
     if (c === "-") { const ys = G["-"].c.flatMap((k) => k.filter((_, i) => i % 2)); origin = `50% ${(((Math.min(...ys) + Math.max(...ys)) / 2 + 729) / 729) * 100}%`; } // the hyphen's own middle, so a quarter turn makes a plus
     l.el.style.cssText += `;position:absolute;left:${x}em;bottom:${lift}em;transform:rotate(${rot}deg) scale(${stretch},1);transform-origin:${origin}`;
     box.append(l.el);
-  });
+  }));
   return box;
 };
 const cutText = (el, fill = "#fff", shadow = "var(--crust)", live) => { // live: a function; the letters shake (like the headlines) while it returns true

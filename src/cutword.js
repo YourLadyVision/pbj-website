@@ -240,11 +240,11 @@ export function createCutWord(text, { fill, shadow, calm }) {
 let letterSeed = 0;
 // one watcher for every letter: letters that are off screen (or in a hidden tab) stop redrawing, so scrolling a busy page stays light
 const seeing = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver((list) => { list.forEach((e) => { e.target._off = !e.isIntersecting; }); }, { rootMargin: "120px" });
-export function createCutLetter(ch, { fill, shadow, calm, skip, rough = 1, shadowK = 1, jag = 0.25, coarse = false }) { // skip: () => true while the letter is out of sight (it then stops redrawing); rough / shadowK / jag: a stronger, nickier edge and a longer shadow for small lettering (1, 1, 0.25 = as for headlines)
+export function createCutLetter(ch, { fill, shadow, calm, skip, rough = 1, shadowK = 1, jag = 0.25, coarse = false, seed: fixedSeed }) { // seed: reuse another letter's wobble (so a shadow layer and a face layer match); skip: () => true while the letter is out of sight (it then stops redrawing); rough / shadowK / jag: a stronger, nickier edge and a longer shadow for small lettering (1, 1, 0.25 = as for headlines)
   const c = calm ?? calmFor(); // calm: 0 keeps the letters level (no jitter), for headings that must line up with their neighbours
   const glyph = glyphFor(ch.toUpperCase(), coarse);
   if (!glyph) return null;
-  const seed = (letterSeed += 7);
+  const seed = fixedSeed ?? (letterSeed += 7);
   const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("aria-hidden", "true");
   svg.setAttribute("viewBox", `0 ${-data.cap} ${glyph.adv} ${data.cap}`);
