@@ -955,6 +955,7 @@ html.intro .intro-swirl {
 .jstep { position: absolute; inset: 0; padding-right: calc(clamp(1.5rem, 6vw, 6rem) + 2.2rem); /* keeps the text clear of the dots */ display: grid; grid-template-columns: auto minmax(0, 46ch); column-gap: clamp(1.5rem, 6vw, 6rem); align-items: center; align-content: center; }
 .jnumbox { overflow: hidden; padding: 0.1em 0.2em; margin: -0.1em -0.2em; }
 .jnum { display: block; font-family: var(--display); font-weight: 700; font-size: min(9em, 20svh); line-height: 0.95; letter-spacing: -0.04em; color: var(--pop); text-shadow: 0.035em 0.05em 0 var(--brown); }
+.jnum { position: relative; top: -0.04em; } /* the digits sit slightly low in their line, so they are lifted until the ink (with its shadow) has equal space above and below */
 .jstep:nth-child(even) .jnum { color: var(--strawberry); }
 .jbody { display: flex; flex-direction: column; gap: 1em; }
 .jtitle { margin: 0; font-family: var(--display); font-weight: 700; line-height: 1; font-size: 4em; display: flex; flex-wrap: wrap; column-gap: 0.28em; }
