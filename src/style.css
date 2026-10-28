@@ -977,3 +977,9 @@ html.intro .intro-swirl {
 .jstatic .jsteps { min-height: 0; display: flex; flex-direction: column; gap: 3rem; }
 .jstatic .jstep { position: static; }
 .jstatic .jdots { display: none; }
+
+/* the story is centred in the whole frame (the same space above and below), not just in the space under the top bar */
+@media (min-width: 992px) {
+  .jstage { padding-bottom: var(--topbar-h); }
+  .jdots { top: calc(50% - var(--topbar-h) / 2); }
+}
