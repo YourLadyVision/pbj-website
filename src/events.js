@@ -18,18 +18,58 @@ export function setupEvents(root) {
 // The page snaps to the nearest section (ScrollTrigger.maxScroll() gives the end of the page). The last section is a closing line that
 // types itself out. It does not loop: after it, scrolling on opens the next folder like on every other page.
 // (The "Your events" button is switched off for now; see the note beside the sections.)
+// "Know more" on the artists slide opens a little retro "website window" (setupWindows): a + appears at the button, stretches into a box,
+// and the text is typed out inside it. The old dissolve + ticket (setupTickets) is switched off; add  ticket: ARTIST_TICKET  to a slide to bring it back.
+const ARTIST_WINDOW = {
+  know: "Know more", title: "For artists", close: "[\u00D7]",
+  body: "Your audience base feels saturated: a bunch in a WhatsApp group, a cluster of \u201CI\u2019m interested\u201D DMs floating on your Instagram, QR codes and \u201CPayment Successful\u201D screenshots circulating across platforms. So the next step toward growth feels like doing things professionally. A clean listing process. A dedicated place to redirect existing folks and be discovered by new audiences. This time, the only link circulating will be \u201CBook Your Tickets on PBJ\u201D",
+};
+const ARTIST_TICKET = {
+      know: "Know more",
+      kind: "For artists", code: "TYPE #PBJ-ARTIST", no: "No. 0001",
+      body: "Your audience base feels saturated: a bunch in a WhatsApp group, a cluster of \u201CI\u2019m interested\u201D DMs floating on your Instagram, QR codes and \u201CPayment Successful\u201D screenshots circulating across platforms. So the next step toward growth feels like doing things professionally. A clean listing process. A dedicated place to redirect existing folks and be discovered by new audiences. This time, the only link circulating will be <mark>\u201CBook Your Tickets on PBJ\u201D</mark>",
+      stubTitle: "That\u2019s me!", stubButton: "Sign me up", stubKind: "Tear-off", stubCode: "#PBJ-A1",
+};
+
+// "Know more" windows for the slides in between. The wording below is a first draft written to match each slide: swap in your own text any time.
+const padWin = (title, body, color, ask) => ({ know: "Know more", title, close: "[\u00D7]", body, color, ask });
+const EXCLUSIVE_WINDOW = padWin("For exclusive hosts", "You are someone who hosts events every weekday or weekend, or you are just getting into hosting; you are either familiar with various ticketing platforms, or this may be your first time trying one. Regardless, there is one thing you have certainly not tried: the fun of exclusivity.\n\nPBJ EXCLUSIVE HOSTS become our stars before listing any event on this platform. You already know the perks of being a star: an absolute makeover, front-line exposure, exclusive promotions, a curated profile, and premium status.\n\nOf course, there will be a catch! A PBJ EXCLUSIVE HOST must highlight two qualities our audience is promised at Peanut Butter Jelly. A unique vibe and a fresh taste. Bring these in and consider yourself in!", undefined, {
+  q: "Think you could be in?",
+  yes: ["Love the confidence!", "So, what\u2019s your signature move for making the cut?", "(NOTE: A PBJ EXCLUSIVE HOST WILL NOT HOLD BACK FROM CLICKING BOTH BUTTONS)"],
+  cta: ["Sign up", "Fill us in"],
+});
+const QUICKWIT_WINDOW = padWin("For the quick-witted", "You are tired of all your friends repeating \u201CNEXT WEEKEND\u201D for a simple outing. And the thought of cloning your busy friends on a random Tuesday for a cafe outing or a Colaba Causeway shopping spree makes you wonder how nice it would be if only that were possible.\n\nIt is possible! Not cloning, but finding those who are \u201CGAME\u201D for your last-minute plans.\n\nHear about a plan at five and be in a cab by six. These are your people. The ones who skip the planning and chase the fun right from the get-go. PBJ Sponty is built for last-minute plans happening around Mumbai. List yours and let the spontaneous ones find you.", "var(--cream)", {
+  q: "Are you a SPONTY?",
+  yes: ["Goody goody! Time to vibe with your SPONTY gang.", "You can choose to do both / simply sign up to get notified when we launch.", "(NOTE: FILLING OUT THE FORM HELPS US GET TO KNOW YOU FIRST BEFORE OTHERS IN LINE)"],
+});
+const VENUE_WINDOW = padWin("For venues", "You love your dining customers. Walk-ins are great. Seasons fill the room with the same workshops. Weekends let you proudly say, \u201CWE ARE BOOKED FOR THE EVENING\u201D. Yet your jaded four walls ask for more. Why wouldn\u2019t they? When these walls were being built brick by brick, they dreamt of being filled with crowds unknown to them. Their ears yearn for conversations beyond the same old first dates and friends\u2019 gossip. Especially if your walls are prey to the daily midday rinse-and-repeat, hour-long catch-up over TWO cups of coffee. Dangerously so, if their only crowd is the laptop-users. Maybe it is time you give your walls a new environment.\n\nWe welcome all kinds of walls. Reach out to PBJ to become our partner venue, and we\u2019ll personally pick the right events to fill your rooms with the perfect kind of buzz, a pinch of quirk, and that off-the-track zest to your normal Monday to Friday. If we\u2019re already at it, why leave Saturdays & Sundays?", undefined, {
+  q: "What do the walls say?",
+  yes: ["Great Choice! Your walls have TASTE!", "You can choose to do both / simply sign up to get notified when we launch.", "(NOTE: FILLING OUT THE FORM HELPS US GET TO KNOW YOU FIRST BEFORE OTHERS IN LINE)"],
+});
+const BRAND_WINDOW = padWin("For brands", "Marketing is great, but let\u2019s talk connection. \u201CThe room can be well decorated and have everything looking perfect, but if the right people don\u2019t fill it, it\u2019s a shame.\u201D If you share the sentiment, we want to work with you.", "var(--cream)", {
+  q: "Ready to LINK?",
+  yes: ["Great! We now have one link to a successful connection.", "You can choose to do both / simply sign up to get notified when we launch.", "(NOTE: FILLING OUT THE FORM HELPS US GET TO KNOW YOU FIRST BEFORE OTHERS IN LINE)"],
+});
+const BACKER_WINDOW = padWin("For backers", "You like investments. You want to be on one side of X, yeah?\nYOU X PBJ ORIGINAL!!!\nWe say. \u201CLet\u2019s do it!\u201D\n\nPBJ ORIGINAL NIGHTS are the evenings we host ourselves, from the first idea to the last song, and every one of them deserves a bold backer. PBJ welcomes creative individuals, brands, venues, institutions, firms, organisations, communities and groups. Everyone who wants to back an ORIGINAL. We want you in the mix!\n\nPut your name where the crowd actually gathers and be part of the night people talk about for weeks. Leave your details, and we will create the night for you.", "var(--cream)", {
+  q: "Ready to GLAZE?",
+  yes: ["Sweet deal! Your name just found its night.", "You can choose to do both / simply sign up to get notified when we launch.", "(NOTE: FILLING OUT THE FORM HELPS US GET TO KNOW YOU FIRST BEFORE OTHERS IN LINE)"],
+});
+
+// the colours of the paper-cut question in the windows
+ARTIST_WINDOW.look = EXCLUSIVE_WINDOW.look = QUICKWIT_WINDOW.look = VENUE_WINDOW.look = BRAND_WINDOW.look = BACKER_WINDOW.look = { fill: "var(--pop)", shadow: "var(--brown)" }; // all dark yellow with a dark brown shadow
+
 // (text colour and the hard shadow under it; any white text gets a shadow that is not white)
 const LIST_LOOP = [
   { textFx: "mask", stack: true, bg: "var(--cream)", fill: "var(--honey)", shadow: "var(--brown)", name: "WHO ARE YOU TODAY?" },
-  { textFx: "mask", bg: "var(--honey)", fill: "var(--cream)", shadow: "var(--crust)", name: "AN ARTIST LOOKING FOR YOUR NEXT AUDIENCE?" },
-  { textFx: "mask", bg: "var(--pop)", fill: "var(--cream)", shadow: "var(--brown)", name: "AN ARTIST WITH THE MINDSET OF EXCLUSIVITY?" },
-  { textFx: "mask", bg: "var(--strawberry)", fill: "var(--honey)", shadow: "var(--brown)", name: "QUICK-WITTED FOLKS WHO DEVOUR SPONTANEOUS PLANS & LEAVE NO CRUMBS?" },
-  { textFx: "mask", bg: "var(--cream)", fill: "var(--pop)", shadow: "var(--crust)", name: "A VENUE BRICKED UP & READY FOR HOMING OFF-THE-TRACK, QUIRKY, BUZZY CROWD?" },
-  { textFx: "mask", bg: "var(--crust)", fill: "var(--honey)", shadow: "var(--brown)", name: "HOL' ON! YOU ARE A BRAND THAT KNOWS BEST WHEN TO FILL THE RIGHT ROOMS?" },
+  { textFx: "mask", bg: "var(--honey)", fill: "var(--cream)", shadow: "var(--crust)", name: "AN ARTIST LOOKING FOR YOUR NEXT AUDIENCE?", win: ARTIST_WINDOW },
+  { textFx: "mask", bg: "var(--pop)", fill: "var(--cream)", shadow: "var(--brown)", name: "AN ARTIST WITH THE MINDSET OF EXCLUSIVITY?", win: EXCLUSIVE_WINDOW },
+  { textFx: "mask", bg: "var(--strawberry)", fill: "var(--honey)", shadow: "var(--brown)", name: "QUICK-WITTED FOLKS WHO DEVOUR SPONTANEOUS PLANS & LEAVE NO CRUMBS?", win: QUICKWIT_WINDOW },
+  { textFx: "mask", bg: "var(--cream)", fill: "var(--pop)", shadow: "var(--crust)", name: "A VENUE BRICKED UP & READY FOR HOMING OFF-THE-TRACK, QUIRKY, BUZZY CROWD?", win: VENUE_WINDOW },
+  { textFx: "mask", bg: "var(--crust)", fill: "var(--honey)", shadow: "var(--brown)", name: "HOL' ON! YOU ARE A BRAND THAT KNOWS BEST WHEN TO FILL THE RIGHT ROOMS?", win: BRAND_WINDOW },
   // (the "Your events" button is off for now; to bring it back add to this line: button: { label: "Your events", href: "/dashboard.html" })
-  { textFx: "mask", bg: "var(--brown)", fill: "var(--cream)", shadow: "var(--crust)", name: "OH...WE CAUGHT YOUR EYE, & YOU WANT TO GLAZE US WITH YOUR MONEY?" },
+  { textFx: "mask", bg: "var(--brown)", fill: "var(--cream)", shadow: "var(--crust)", name: "OH...WE CAUGHT YOUR EYE, & YOU WANT TO GLAZE US WITH YOUR MONEY?", win: BACKER_WINDOW },
   // the closing line types itself out when it comes into view
-  { type: true, phoneBreak: true, bg: "var(--cream)", fill: "var(--strawberry)", shadow: "var(--brown)", name: "SO, WHO ARE YOU TODAY..." },
+  { type: true, phoneBreak: true, bg: "var(--cream)", fill: "var(--strawberry)", shadow: "var(--brown)", name: "SO, WHO ARE YOU TODAY...", button: { label: "Your dashboard", href: "/dashboard.html" } },
 ];
 
 // A line that types itself out, letter by letter with a blinking cursor, each time it comes into view
@@ -39,15 +79,17 @@ function setupTypewriter(slide, title, auto = true) {
   cursor.className = "ev-cursor";
   cursor.setAttribute("aria-hidden", "true");
   const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const btn = slide.querySelector(".btn"); // a button on this slide waits until the line has been typed
   let tl = null;
   const reset = () => {
     tl?.kill();
     letters.forEach((l) => (l.style.visibility = "hidden"));
     cursor.remove();
+    if (btn) { gsap.killTweensOf(btn); gsap.set(btn, { opacity: 0, y: 14, pointerEvents: "none" }); }
   };
   const play = () => {
     reset();
-    if (calm) { letters.forEach((l) => (l.style.visibility = "visible")); return; }
+    if (calm) { letters.forEach((l) => (l.style.visibility = "visible")); if (btn) gsap.set(btn, { opacity: 1, y: 0, pointerEvents: "" }); return; }
     tl = gsap.timeline({ delay: 0.4 });
     // a steady tap-tap-tap, with a beat between words. After a comma the cursor waits, then drops to the start of the next line (or the
     // next word) and blinks there for a moment before the first letter is typed, like a typewriter's carriage return
@@ -66,7 +108,8 @@ function setupTypewriter(slide, title, auto = true) {
       }
       tl.call(() => { l.style.visibility = "visible"; l.after(cursor); }, null, at);
     });
-    tl.call(() => {}, null, "+=0.1");
+    if (btn) tl.to(btn, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", onStart: () => { btn.style.pointerEvents = ""; } }, "+=0.35");
+    else tl.call(() => {}, null, "+=0.1");
   };
   reset();
   if (auto) {
@@ -116,18 +159,587 @@ export function setupLoop(root, lenis, LOOP = LIST_LOOP) {
 // its content (inner) slides the other way, so the colour appears to be wiped across the screen; the old section's colour drifts away
 // and the new letters fly up in random order. The page itself never scrolls. After the last section, scrolling on opens the next
 // folder (and scrolling up from the first opens the previous one), like on every other page.
+// ---- The "know more" tickets ----
+// First the slide dissolves into the cream page in square blocks that fill in from the bottom up (like the hero picture on thedesignsociety.fr/evenements
+// as you scroll); then a ticket in two pieces (a long side with the story, a short tear-off side) rolls up from below the screen,
+// spinning, settles at a tilt, and the short piece is torn off a little way (like the reference ticket). Close it with the cross,
+// Escape, or a click outside it: everything plays backwards, the ticket rolls down and the blocks clear to show the slide again.
+function setupTickets(stage, sections, LOOP) {
+  const entries = [];
+  let openIndex = -1;
+  let tl = null;
+
+  LOOP.forEach((def, i) => {
+    const t = def.ticket;
+    if (!t) return;
+    const wrap = document.createElement("div");
+    wrap.className = "ev-ticket-wrap";
+    wrap.hidden = true;
+    wrap.innerHTML = `
+      <div class="ev-ticket-backdrop"></div>
+      <div class="ev-dissolve" aria-hidden="true"></div>
+      <div class="ev-ticket" role="dialog" aria-modal="true" aria-label="${esc(def.name)}">
+        <button class="ev-ticket-x" type="button" aria-label="Close">\u00D7</button>
+        <div class="tk2 tk2-stub">
+          <p class="tk2-top"><span>${esc(t.stubKind)}</span><span>${esc(t.stubCode)}</span></p>
+          <h3 class="tk2-title">${esc(t.stubTitle)}</h3>
+          <button class="tk2-sign" type="button">${esc(t.stubButton)}</button>
+        </div>
+        <div class="tk2 tk2-main">
+          <p class="tk2-top"><span class="tk2-kind">${esc(t.kind)}</span><span>${esc(t.code)}<br>${esc(t.no)}</span></p>
+          <p class="tk2-body">${t.body}</p>
+          <span class="tk2-rip" aria-hidden="true">Rip here</span>
+          <span class="tk2-barcode" aria-hidden="true"><i></i><b>2368 237845 11</b></span>
+        </div>
+      </div>`;
+    stage.append(wrap);
+    const ticket = wrap.querySelector(".ev-ticket");
+    const stub = wrap.querySelector(".tk2-stub");
+    const sign = wrap.querySelector(".tk2-sign");
+    const know = sections[i].querySelector(".ev-know");
+    const entry = { i, wrap, ticket, stub, know, dissolve: wrap.querySelector(".ev-dissolve") };
+    entries[i] = entry;
+
+    know.addEventListener("click", () => open(i));
+    wrap.querySelector(".ev-ticket-x").addEventListener("click", () => close());
+    wrap.querySelector(".ev-ticket-backdrop").addEventListener("click", () => close());
+    // signups are not connected yet (a later step), so for now the button just says so
+    sign.addEventListener("click", () => { sign.textContent = "Coming soon"; setTimeout(() => (sign.textContent = t.stubButton), 1800); });
+  });
+
+  const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const phone = () => window.matchMedia("(max-width: 767px)").matches;
+
+  // a grid of square blocks over the whole slide area (about 110px each, the same cream as the page)
+  function buildTiles(e) {
+    const box = e.wrap.getBoundingClientRect();
+    const size = Math.max(70, Math.min(120, box.width / 9));
+    const cols = Math.ceil(box.width / size);
+    const rows = Math.ceil(box.height / size);
+    e.dissolve.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    e.dissolve.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+    e.dissolve.replaceChildren(...Array.from({ length: cols * rows }, () => document.createElement("i")));
+    e.cols = cols;
+    e.rows = rows;
+    return [...e.dissolve.children];
+  }
+
+  function open(i) {
+    const e = entries[i];
+    if (!e || openIndex >= 0) return;
+    openIndex = i;
+    e.wrap.hidden = false;
+    const tilt = phone() ? -4 : -9;
+    tl?.kill();
+    gsap.set(e.stub, { clearProps: "all" });
+    if (calm) {
+      buildTiles(e).forEach((t) => (t.style.opacity = 1));
+      gsap.set(e.ticket, { autoAlpha: 1, rotation: tilt, yPercent: 0, scale: 1 });
+    } else {
+      const tiles = buildTiles(e);
+      tl = gsap.timeline();
+      // the blocks fill in from the bottom of the screen upwards, like a fade-out rising (a little ragged, so it looks like a dissolve)
+      const rise = (n) => ((e.rows - 1 - Math.floor(n / e.cols)) / Math.max(1, e.rows - 1)) * 0.6 + Math.random() * 0.2;
+      tl.fromTo(tiles, { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "none", stagger: rise }, 0)
+        // then, on the cream, the ticket rolls up from below the screen, spinning, and settles at a slant
+        .fromTo(e.ticket, { autoAlpha: 0, yPercent: 130, rotation: -560 + tilt, scale: 0.45 }, { autoAlpha: 1, yPercent: 0, rotation: tilt, scale: 1, duration: 1.2, ease: "power3.out" }, 0.8)
+        // and the short piece is torn off a little way
+        .to(e.stub, phone() ? { y: 14, rotation: 3, duration: 0.6, ease: "back.out(2.2)" } : { x: -30, y: 12, rotation: 6, duration: 0.6, ease: "back.out(2.2)" }, 1.75);
+    }
+    e.wrap.querySelector(".ev-ticket-x").focus({ preventScroll: true });
+  }
+
+  function close() {
+    if (openIndex < 0) return;
+    const e = entries[openIndex];
+    const index = openIndex;
+    openIndex = -1;
+    const done = () => { e.wrap.hidden = true; e.know?.focus({ preventScroll: true }); };
+    if (calm || !tl) { done(); return; }
+    tl.eventCallback("onReverseComplete", () => { done(); tl = null; });
+    tl.timeScale(1.6).reverse(); // it rolls back down the way it came
+  }
+
+  // used when the page is left: no animation
+  function closeNow() {
+    if (openIndex < 0) return;
+    const e = entries[openIndex];
+    openIndex = -1;
+    tl?.kill();
+    tl = null;
+    e.wrap.hidden = true;
+  }
+
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") close(); });
+  return { isOpen: () => openIndex >= 0, close, closeNow };
+}
+
+// ---- The "know more" window: a small + appears beside the button, stretches into a box, the text is typed in, and then it is a tiny
+// working notepad (menus, toolbar, fonts, find, save...). The typed listing text is protected: only your own lines below it can be edited. ----
+const PAD_ICONS = {
+  new: '<path d="M3 1.5h6l3.5 3.5v9.5H3z" fill="#fff" stroke="#463721"/><path d="M9 1.5V5h3.5" fill="none" stroke="#463721"/>',
+  open: '<path d="M1.5 4h5l1.5 1.5h6.5v8h-13z" fill="#FFE386" stroke="#463721"/>',
+  save: '<rect x="2" y="2" width="12" height="12" fill="#8A4B1E" stroke="#463721"/><rect x="4.5" y="2.5" width="7" height="4.5" fill="#fff"/><rect x="5" y="9.5" width="6" height="4" fill="#F8F8F0"/>',
+  print: '<rect x="2" y="6" width="12" height="6" fill="#F8F8F0" stroke="#463721"/><rect x="4.5" y="2" width="7" height="4" fill="#fff" stroke="#463721"/><rect x="4.5" y="10" width="7" height="4" fill="#fff" stroke="#463721"/>',
+  find: '<circle cx="6" cy="6" r="3.8" fill="#FFE386" stroke="#463721"/><path d="M9 9l5 5" stroke="#463721" stroke-width="2"/>',
+  cut: '<path d="M5 2l6 8M11 2L5 10" stroke="#463721" stroke-width="1.4"/><circle cx="4.5" cy="12" r="2" fill="none" stroke="#C2184F" stroke-width="1.4"/><circle cx="11.5" cy="12" r="2" fill="none" stroke="#C2184F" stroke-width="1.4"/>',
+  copy: '<path d="M2.5 2.5h6v8h-6z" fill="#fff" stroke="#463721"/><path d="M7.5 5.5h6v8h-6z" fill="#fff" stroke="#463721"/>',
+  paste: '<rect x="2.5" y="3" width="9" height="11" fill="#FFE386" stroke="#463721"/><rect x="5" y="1.5" width="4" height="3" fill="#8A4B1E"/><path d="M8 7h6v7H8z" fill="#fff" stroke="#463721"/>',
+  undo: '<path d="M4 6h6a3.5 3.5 0 010 7H6" fill="none" stroke="#463721" stroke-width="1.6"/><path d="M6.5 2.5L3 6l3.5 3.5z" fill="#463721"/>',
+};
+const PAD_TOOLS = ["new", "open", "save", "print", "|", "find", "|", "cut", "copy", "paste", "|", "undo"];
+const PAD_TOOL_NAMES = { new: "New", open: "Open", save: "Save", print: "Print", find: "Find", cut: "Cut", copy: "Copy", paste: "Paste", undo: "Undo" };
+const PAD_MENUS = {
+  File: [["New", "new", "Ctrl+N"], ["Open…", "open", "Ctrl+O"], ["Save", "save", "Ctrl+S"], ["Print…", "print", "Ctrl+P"], "-", ["Exit", "exit"]],
+  Edit: [["Undo", "undo", "Ctrl+Z"], ["Redo", "redo", "Ctrl+Y"], "-", ["Cut", "cut", "Ctrl+X"], ["Copy", "copy", "Ctrl+C"], ["Paste", "paste", "Ctrl+V"], "-", ["Select all", "all", "Ctrl+A"], ["Find…", "find", "Ctrl+F"]],
+  View: [["Toolbar", "v-tools"], ["Format bar", "v-fmt"], ["Ruler", "v-ruler"], ["Status bar", "v-status"]],
+  Insert: [["Date and time", "date"], ["Bullet", "bullet"], ["Mumbai sign-off", "sign"]],
+  Format: [["Bold", "bold", "Ctrl+B"], ["Italic", "italic", "Ctrl+I"], ["Underline", "underline", "Ctrl+U"], "-", ["Justify", "justify"], ["Align left", "left"], ["Centre", "center"], ["Align right", "right"]],
+  Help: [["Help topics", "help", "F1"], ["About PBJ Pad", "about"]],
+};
+const PAD_FONTS = [["Chivo Mono", "var(--mono)"], ["Helvetica Neue", "var(--display)"]];
+const PAD_SIZES = [10, 12, 14, 16, 18, 20, 24, 28];
+const PAD_CASES = [["ALL CAPS", "uppercase"], ["Normal", "none"], ["lowercase", "lowercase"]];
+// the question under the listing, and what each answer says
+const ASK = {
+  q: "Is this you?",
+  cta: ["Sign up", "Fill the form"],
+  yes: ["Good Job! You found yourself.", "You can choose to do both / simply sign up to get notified when we launch.", "(NOTE: FILLING OUT THE FORM HELPS US GET TO KNOW YOU FIRST BEFORE OTHERS IN LINE)"],
+  no: ["No worries. Scroll on and see who you are today."],
+  maybe: ["Fair enough. Take your time, we are not going anywhere."],
+};
+const PAD_VIEW = { "v-tools": "tools", "v-fmt": "fmt", "v-ruler": "ruler", "v-status": "status" };
+
+function setupWindows(stage, sections, LOOP) {
+  const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fine = window.matchMedia("(pointer: fine)").matches;
+  let open = null; // the entry that is showing
+  const entries = [];
+  const tool = (k) => k === "|" ? '<i class="ev-win-sep"></i>' : `<button class="ev-win-ic" type="button" data-do="${k}" title="${PAD_TOOL_NAMES[k]}" aria-label="${PAD_TOOL_NAMES[k]}"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">${PAD_ICONS[k]}</svg></button>`;
+
+  LOOP.forEach((def, i) => {
+    const btn = sections[i].querySelector(".ev-know");
+    if (!def.win || !btn || i === 0 || i === LOOP.length - 1) return; // never on the first or the last slide, only the ones in between
+    const A = { ...ASK, ...def.win.ask }; // this slide's own question and replies (anything it leaves out uses the standard ones)
+    const wrap = document.createElement("div");
+    wrap.className = "ev-ticket-wrap ev-win-wrap";
+    wrap.hidden = true;
+    wrap.setAttribute("role", "dialog");
+    wrap.setAttribute("data-lenis-prevent", ""); // the smooth-scroll helper must leave the wheel and swipes inside the window alone
+    wrap.setAttribute("aria-label", def.win.title);
+    wrap.innerHTML = `<div class="ev-ticket-backdrop"></div>
+      <div class="ev-win"><div class="ev-win-in">
+        <div class="ev-win-bar"><svg class="ev-win-logo" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 1.5h6l3.5 3.5v9.5H3z" fill="#fff" stroke="#463721"/><path d="M5 8h6M5 10h6M5 12h4" stroke="#C2184F"/></svg><span class="ev-win-ttl">${esc(def.win.title)} - PBJ Pad</span>
+          <button class="ev-win-b ev-win-min" type="button" aria-label="Minimise"><u></u></button><button class="ev-win-b ev-win-max" type="button" aria-label="Maximise"><u></u></button>
+          <button class="ev-win-b ev-win-x" type="button" aria-label="Close"><u></u></button></div>
+        <div class="ev-win-menu">${Object.keys(PAD_MENUS).map((m) => `<button type="button" data-menu="${m}">${m}</button>`).join("")}</div>
+        <div class="ev-win-tools">${PAD_TOOLS.map(tool).join("")}</div>
+        <div class="ev-win-fmt"><button class="ev-win-sel w1" type="button" data-pick="font"><span></span><b>▾</b></button><button class="ev-win-sel w2" type="button" data-pick="size"><span></span><b>▾</b></button><button class="ev-win-sel w3" type="button" data-pick="case"><span></span><b>▾</b></button><button class="ev-win-fb" type="button" data-do="bold" title="Bold" aria-label="Bold"><b>B</b></button><button class="ev-win-fb" type="button" data-do="italic" title="Italic" aria-label="Italic"><em>I</em></button><button class="ev-win-fb" type="button" data-do="underline" title="Underline" aria-label="Underline"><u>U</u></button></div>
+        <div class="ev-win-findbar" hidden><label>Find <input type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-do="findnext">Next</button><button type="button" data-do="findclose" aria-label="Close find">×</button></div>
+        <div class="ev-win-ruler" aria-hidden="true"></div>
+        <div class="ev-win-card"><div class="ev-win-body"><span class="on"></span><span class="off">${esc(def.win.body)}</span>
+          <div class="ev-win-ask" hidden>
+            <p class="q"></p>
+            <div class="opts" hidden><button type="button" data-ask="yes">Yes</button><button type="button" data-ask="no">No</button><button type="button" data-ask="maybe">Maybe</button></div>
+            <p class="r1"></p><p class="r2"></p><p class="r3"></p>
+            <div class="cta" hidden><button type="button" data-do="signup">${esc(A.cta[0])}</button><button type="button" data-do="form">${esc(A.cta[1])}</button></div>
+          </div>
+          <span class="mine" contenteditable="false" spellcheck="false" role="textbox" aria-multiline="true" aria-label="Your own lines"></span></div></div>
+        <div class="ev-win-status"><span class="msg">For help, press F1</span><span class="cnt"></span></div>
+        <div class="ev-win-pop" hidden></div>
+        <div class="ev-win-dlg" hidden><div class="ev-win-dlg-in"><div class="ev-win-dlg-bar"><span></span></div><p></p><button type="button" data-do="dlgok">OK</button></div></div>
+        <i class="ev-win-size" aria-hidden="true"></i>
+      </div></div>`;
+    stage.appendChild(wrap);
+    const $ = (s) => wrap.querySelector(s);
+    const win = $(".ev-win"), inner = $(".ev-win-in"), card = $(".ev-win-card");
+    const body = $(".ev-win-body"), on = $(".on"), off = $(".off"), mine = $(".mine");
+    const pop = $(".ev-win-pop"), dlg = $(".ev-win-dlg"), msg = $(".msg"), cnt = $(".cnt");
+    const findBar = $(".ev-win-findbar"), findIn = findBar.querySelector("input");
+    const text = def.win.body;
+    const ask = $(".ev-win-ask"), askQ = ask.querySelector(".q"), askOpts = ask.querySelector(".opts"), askCta = ask.querySelector(".cta");
+    const askR = [".r1", ".r2", ".r3"].map((c) => ask.querySelector(c));
+    let askTl = null, askRun = 0;
+    const st = { font: 0, size: 16, kase: 0, align: "justify" };
+    const entry = { wrap, btn, tl: null, shut: null };
+    entries.push(entry);
+
+    // ---- small helpers ----
+    const say = (m) => { msg.textContent = m; };
+    const counted = () => { const n = mine.textContent.length; cnt.textContent = n ? `${n} typed` : ""; };
+    const inMine = (node) => !!node && mine.contains(node.nodeType === 3 ? node.parentNode : node);
+    const selIn = () => { const s = getSelection(); return s.rangeCount > 0 && inMine(s.anchorNode) && inMine(s.focusNode); };
+    const endCaret = () => {
+      if (mine.contentEditable !== "true") return false;
+      mine.focus({ preventScroll: true });
+      const r = document.createRange(); r.selectNodeContents(mine); r.collapse(false);
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      return true;
+    };
+    const ensure = () => selIn() || endCaret();
+    const insert = (t) => { if (ensure()) { document.execCommand("insertText", false, t); counted(); } };
+    const fullText = () => body.innerText.replace(/​/g, "").trim();
+    const wholeBody = () => { const r = document.createRange(); r.selectNodeContents(body); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+    const applyLook = () => {
+      body.style.fontFamily = PAD_FONTS[st.font][1];
+      body.style.fontSize = st.size + "px";
+      body.style.textTransform = PAD_CASES[st.kase][1];
+      body.style.textAlign = st.align;
+      $('[data-pick="font"] span').textContent = PAD_FONTS[st.font][0];
+      $('[data-pick="size"] span').textContent = st.size;
+      $('[data-pick="case"] span').textContent = PAD_CASES[st.kase][0];
+    };
+    const syncMarks = () => {
+      ["bold", "italic", "underline"].forEach((c) => {
+        let v = false; try { v = selIn() && document.queryCommandState(c); } catch (e) { /* ignore */ }
+        $(`.ev-win-fb[data-do="${c}"]`).classList.toggle("is-on", !!v);
+      });
+    };
+
+    // ---- pop-up lists (menus and the three pick-boxes) ----
+    let popFor = null;
+    const closePop = () => { pop.hidden = true; popFor = null; wrap.querySelectorAll("[data-menu].is-open,[data-pick].is-open").forEach((b) => b.classList.remove("is-open")); };
+    const showPop = (trigger, items) => {
+      closePop();
+      popFor = trigger; trigger.classList.add("is-open");
+      pop.innerHTML = items.map((it) => it === "-" ? '<hr>' : `<button type="button" data-do="${it.do}"${it.val !== undefined ? ` data-val="${it.val}"` : ""}><span class="ck">${it.on ? "✓" : ""}</span><span>${it.label}</span><em>${it.key || ""}</em></button>`).join("");
+      const a = inner.getBoundingClientRect(), t = trigger.getBoundingClientRect();
+      pop.hidden = false;
+      const maxLeft = Math.max(0, a.width - pop.offsetWidth - 4);
+      pop.style.left = Math.min(maxLeft, Math.max(0, t.left - a.left)) + "px";
+      pop.style.top = t.bottom - a.top + "px";
+    };
+    const menuItems = (m) => PAD_MENUS[m].map((it) => {
+      if (it === "-") return it;
+      const o = { label: it[0], do: it[1], key: it[2] || "" };
+      if (PAD_VIEW[it[1]]) { o.on = !wrap.classList.contains("hide-" + PAD_VIEW[it[1]]); o.do = "view"; o.val = it[1]; }
+      return o;
+    });
+    const pickItems = (k) => k === "font" ? PAD_FONTS.map((f, n) => ({ label: f[0], do: "set-font", val: n, on: n === st.font }))
+      : k === "size" ? PAD_SIZES.map((s) => ({ label: s, do: "set-size", val: s, on: s === st.size }))
+      : PAD_CASES.map((c, n) => ({ label: c[0], do: "set-case", val: n, on: n === st.kase }));
+
+    // ---- dialog (help / about) ----
+    const dialog = (title, html) => { closePop(); dlg.querySelector("span").textContent = title; dlg.querySelector("p").innerHTML = html; dlg.hidden = false; dlg.querySelector("button").focus({ preventScroll: true }); };
+    const closeDlg = () => { if (dlg.hidden) return false; dlg.hidden = true; return true; };
+
+    // ---- the actions ----
+    const clipSel = () => (selIn() ? getSelection().toString() : "") || fullText();
+    const download = () => {
+      const url = URL.createObjectURL(new Blob([fullText() + "\n"], { type: "text/plain" }));
+      const a = document.createElement("a"); a.href = url; a.download = "pbj-notes.txt"; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000); say("Saved as pbj-notes.txt");
+    };
+    const printIt = () => {
+      const f = document.createElement("iframe"); f.style.cssText = "position:fixed;width:0;height:0;border:0;opacity:0";
+      document.body.appendChild(f);
+      const d = f.contentDocument; d.open(); d.write(`<pre style="white-space:pre-wrap;font:16px/1.5 monospace">${esc(fullText())}</pre>`); d.close();
+      f.contentWindow.focus(); f.contentWindow.print(); setTimeout(() => f.remove(), 3000); say("Sent to the printer");
+    };
+    const openFile = () => {
+      const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".txt,text/plain";
+      inp.onchange = () => { const f = inp.files[0]; if (!f) return; f.text().then((t) => { insert(t.slice(0, 5000)); say("Opened " + f.name); }); };
+      inp.click();
+    };
+    const doFind = (again) => {
+      const q = findIn.value; if (!q) return;
+      const ok = window.find(q, false, false, true, false, false, false);
+      say(ok ? "Found “" + q + "”" : "Not found");
+    };
+    const openFind = () => { closePop(); findBar.hidden = false; findIn.focus({ preventScroll: true }); findIn.select(); };
+    const act = (a, val) => {
+      if (a !== "view") closePop();
+      switch (a) {
+        case "new": if (mine.contentEditable === "true") { mine.innerHTML = ""; counted(); endCaret(); say("New page: your own lines were cleared"); } break;
+        case "open": openFile(); break;
+        case "save": download(); break;
+        case "print": printIt(); break;
+        case "exit": entry.shut?.(); break;
+        case "undo": case "redo": if (ensure()) { document.execCommand(a); counted(); } break;
+        case "cut": if (selIn() && !getSelection().isCollapsed) { document.execCommand("cut"); counted(); say("Cut"); } else say("Only your own lines can be cut"); break;
+        case "copy": navigator.clipboard?.writeText(clipSel()).then(() => say("Copied"), () => say("Press Ctrl+C to copy")); break;
+        case "paste": if (navigator.clipboard?.readText) navigator.clipboard.readText().then((t) => { insert(t.slice(0, 5000)); say("Pasted"); }, () => say("Press Ctrl+V to paste")); else say("Press Ctrl+V to paste"); break;
+        case "all": wholeBody(); say("Everything selected"); break;
+        case "find": openFind(); break;
+        case "findnext": doFind(); break;
+        case "findclose": findBar.hidden = true; break;
+        case "view": { const k = PAD_VIEW[val]; wrap.classList.toggle("hide-" + k); showPop(popFor || $('[data-menu="View"]'), menuItems("View")); break; }
+        case "date": insert(new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })); break;
+        case "bullet": insert("• "); break;
+        case "sign": insert("— sent from Mumbai, via PeanutButterJelly.vip"); break;
+        case "bold": case "italic": case "underline": if (ensure()) { document.execCommand(a); syncMarks(); } break;
+        case "justify": case "left": case "center": case "right": st.align = a === "center" ? "center" : a; applyLook(); break;
+        case "set-font": st.font = +val; applyLook(); break;
+        case "set-size": st.size = +val; applyLook(); break;
+        case "set-case": st.kase = +val; applyLook(); break;
+        case "help": dialog("Help topics", "Type your own lines under the listing. The listing text itself stays put: it can’t be deleted or changed.<br><br>Keys: Ctrl+B bold, Ctrl+I italic, Ctrl+U underline, Ctrl+Z undo, Ctrl+S save, Ctrl+F find, Esc closes."); break;
+        case "about": dialog("About PBJ Pad", "PBJ Pad is a tiny notepad on PeanutButterJelly.vip.<br>Mining hidden gems around you, from Mumbai."); break;
+        case "dlgok": closeDlg(); break;
+        case "signup": say("Sign-ups are not connected yet, nothing was saved"); break;
+        case "form": say("The form is not connected yet, nothing was saved"); break;
+        default: break;
+      }
+    };
+
+    // clicks: keep the text selection alive while pressing the toolbar (mousedown is cancelled), then run the action
+    inner.addEventListener("mousedown", (e) => { if (e.target.closest("button") && !e.target.closest(".ev-win-b")) e.preventDefault(); });
+    inner.addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      if (b.dataset.menu) { b.classList.contains("is-open") ? closePop() : showPop(b, menuItems(b.dataset.menu)); return; }
+      if (b.dataset.pick) { b.classList.contains("is-open") ? closePop() : showPop(b, pickItems(b.dataset.pick)); return; }
+      if (b.dataset.ask) { answer(b.dataset.ask); return; }
+      if (b.dataset.do) act(b.dataset.do, b.dataset.val);
+    });
+    wrap.querySelectorAll("[data-menu]").forEach((b) => b.addEventListener("pointerenter", () => { if (popFor && popFor.dataset.menu && popFor !== b) showPop(b, menuItems(b.dataset.menu)); }));
+    wrap.addEventListener("pointerdown", (e) => { if (!pop.hidden && !e.target.closest(".ev-win-pop,[data-menu],[data-pick]")) closePop(); });
+    findIn.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doFind(); } });
+
+    // ---- the protected text: only the lines in `mine` can change ----
+    mine.addEventListener("beforeinput", (e) => {
+      if (/^delete.*Backward$/.test(e.inputType)) {
+        const s = getSelection();
+        if (s.isCollapsed) { const r = document.createRange(); r.selectNodeContents(mine); r.setEnd(s.anchorNode, s.anchorOffset); if (!r.toString()) e.preventDefault(); }
+      }
+    });
+    mine.addEventListener("input", () => { counted(); syncMarks(); });
+    mine.addEventListener("paste", (e) => { e.preventDefault(); insert((e.clipboardData?.getData("text/plain") || "").slice(0, 5000)); });
+    document.addEventListener("selectionchange", () => { if (!wrap.hidden) syncMarks(); });
+    card.addEventListener("click", (e) => {
+      if (entry.tl && entry.tl.progress() < 1 && open === entry) { entry.tl.progress(1, false); return; } // a click finishes the typing
+      if (e.target.closest(".ev-win-body") && !getSelection().toString()) endCaret();
+      else if (e.target === card) endCaret();
+    });
+    // the page behind (its swipe-to-change-slide) must never grab a scroll or swipe that starts inside the window
+    ["touchstart", "touchmove", "wheel"].forEach((t) => wrap.addEventListener(t, (e) => e.stopPropagation(), { passive: true }));
+    wrap.addEventListener("keydown", (e) => {
+      const k = e.key, mod = e.ctrlKey || e.metaKey;
+      if (k === "Escape") { if (!pop.hidden) { closePop(); e.stopPropagation(); } else if (closeDlg()) e.stopPropagation(); else if (!findBar.hidden) { findBar.hidden = true; e.stopPropagation(); } return; }
+      e.stopPropagation(); // the page behind must not react to typing
+      if (k === "F1") { e.preventDefault(); act("help"); return; }
+      if (mod) {
+        const c = k.toLowerCase();
+        const map = { s: "save", p: "print", f: "find", n: "new", o: "open", a: "all" };
+        if (map[c]) { e.preventDefault(); act(map[c]); }
+        return;
+      }
+      if (e.target === findIn) return;
+      if (e.target.closest?.(".ev-win-ask,.ev-win-dlg,.ev-win-pop,.ev-win-menu,.ev-win-tools,.ev-win-fmt,.ev-win-bar,.ev-win-findbar")) return;
+      // typing while the cursor is not in the user's lines: send it there; deleting outside them does nothing
+      if (!selIn() && (k.length === 1 || k === "Enter" || k === "Backspace" || k === "Delete")) {
+        e.preventDefault();
+        if (k.length === 1) insert(k); else if (k === "Enter") insert("\n");
+      }
+    });
+
+    // ---- the question: it writes itself, then three answers; "yes" brings a message, a second line, a note and two buttons ----
+    const scrollDown = () => { card.scrollTop = card.scrollHeight; };
+    const typeInto = (tl, el, str, at) => {
+      const o = { v: 0 };
+      tl.add(() => { el.classList.add("is-typing"); el.textContent = ""; }, at);
+      if (calm) { tl.add(() => { el.textContent = str; el.classList.remove("is-typing"); scrollDown(); }); return; }
+      tl.to(o, { v: str.length, duration: Math.max(0.3, str.length * 0.028), ease: "none", onUpdate: () => { el.textContent = str.slice(0, Math.round(o.v)); scrollDown(); } })
+        .add(() => el.classList.remove("is-typing"));
+    };
+    // the question is drawn in the same paper-cut lettering as the slide headings (wobbling edges and all), and comes in the same way:
+    // it rises up out of a mask (like the "Text Masking" reveal on the slides)
+    let qLetters = [];
+    const typeCut = (tl, el, str) => {
+      qLetters.forEach((l) => l.dispose?.()); qLetters = [];
+      el.textContent = ""; el.setAttribute("aria-label", str);
+      const look = def.win.look || {};
+      const mask = document.createElement("span"), line = document.createElement("span");
+      mask.className = "ev-mask"; line.className = "ev-reveal-line"; mask.append(line);
+      str.split(" ").forEach((word, wi, all) => {
+        const w = document.createElement("span");
+        w.className = "w"; w.setAttribute("aria-hidden", "true");
+        [...word].forEach((ch) => {
+          const L = createCutLetter(ch, { fill: look.fill || "var(--brown)", shadow: look.shadow || "var(--crust)", shadowK: 1.4 });
+          if (L) { qLetters.push(L); w.append(L.el); } else w.append(document.createTextNode(ch));
+        });
+        line.append(w);
+        if (wi < all.length - 1) line.append(" ");
+      });
+      el.append(mask);
+      if (calm) return;
+      tl.fromTo(line, { yPercent: 130, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.6, ease: "expo.out" });
+    };
+    const showEl = (tl, el, at) => tl.add(() => { el.hidden = false; if (!calm) gsap.fromTo(el, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }); scrollDown(); }, at);
+    const resetAsk = () => {
+      askTl?.kill(); askTl = null; askRun++;
+      ask.hidden = true; askOpts.hidden = true; askCta.hidden = true;
+      qLetters.forEach((l) => l.dispose?.()); qLetters = [];
+      askQ.textContent = ""; askR.forEach((r) => { r.textContent = ""; });
+      askOpts.querySelectorAll("button").forEach((b) => b.classList.remove("is-chosen"));
+    };
+    const startAsk = () => {
+      resetAsk();
+      ask.hidden = false;
+      askTl = gsap.timeline({ delay: 0.5 });
+      typeCut(askTl, askQ, A.q);
+      showEl(askTl, askOpts, "+=0.15");
+    };
+    const answer = (k) => {
+      askTl?.kill(); askRun++;
+      askR.forEach((r) => { r.textContent = ""; r.classList.remove("is-typing"); });
+      askCta.hidden = true;
+      askOpts.querySelectorAll("button").forEach((b) => b.classList.toggle("is-chosen", b.dataset.ask === k));
+      const lines = A[k];
+      askTl = gsap.timeline({ delay: 0.15 });
+      lines.forEach((ln, n) => typeInto(askTl, askR[n], ln, n ? "+=0.35" : undefined));
+      if (k === "yes") showEl(askTl, askCta, "+=0.3");
+    };
+
+    // ---- open / close ----
+    const reset = () => {
+      win.style.width = win.style.height = win.style.translate = ""; win.classList.remove("sized"); pos.x = pos.y = 0;
+      resetAsk(); mine.innerHTML = ""; mine.contentEditable = "false"; counted(); say("For help, press F1");
+      Object.assign(st, { font: 0, size: 16, kase: 0, align: "justify" }); applyLook();
+      wrap.classList.remove("min", "max", "hide-status"); wrap.classList.add("hide-tools", "hide-fmt", "hide-ruler"); // the toolbar, font bar and ruler start tucked away (View menu brings them back) findBar.hidden = true; findIn.value = ""; closePop(); dlg.hidden = true;
+    };
+    const pos = { x: 0, y: 0 };
+    const grab = (el, move) => el.addEventListener("pointerdown", (e) => {
+      if (e.button || e.target.closest(".ev-win-b") || wrap.classList.contains("max")) return;
+      e.preventDefault();
+      const x0 = e.clientX, y0 = e.clientY, r = win.getBoundingClientRect(), p0 = { ...pos };
+      el.setPointerCapture(e.pointerId);
+      const mv = (ev) => move(ev.clientX - x0, ev.clientY - y0, r, p0);
+      const up = () => { el.removeEventListener("pointermove", mv); el.removeEventListener("pointerup", up); el.removeEventListener("pointercancel", up); };
+      el.addEventListener("pointermove", mv); el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
+    });
+    grab($(".ev-win-bar"), (dx, dy, r, p0) => {
+      const f = wrap.getBoundingClientRect();
+      const cx = Math.min(f.right - 60 - r.left, Math.max(f.left + 60 - r.right, dx));
+      const cy = Math.min(f.bottom - 32 - r.top, Math.max(f.top - r.top, dy));
+      pos.x = p0.x + cx; pos.y = p0.y + cy;
+      win.style.translate = `${pos.x}px ${pos.y}px`;
+    });
+    grab($(".ev-win-size"), (dx, dy, r) => {
+      const f = wrap.getBoundingClientRect();
+      win.style.width = Math.min(f.right - r.left, Math.max(240, r.width + dx)) + "px";
+      win.style.height = Math.min(f.bottom - r.top, Math.max(130, r.height + dy)) + "px";
+      win.classList.add("sized");
+      wrap.classList.remove("min");
+    });
+
+    // when the typing is done the words slide apart, slowly, from left-aligned into justified (each line's gaps open up together)
+    const finish = () => {
+      wrap.classList.remove("typing");
+      const done = () => {
+        on.innerHTML = esc(text).replace(/\n/g, "<br>"); off.textContent = "";
+        body.style.textAlign = st.align;
+        if (open === entry && ask.hidden) startAsk();
+      };
+      mine.contentEditable = "true"; counted();
+      if (fine && open === entry) endCaret();
+      const chars = [...on.children];
+      if (calm || st.align !== "justify" || !chars.length || wrap.hidden) { done(); return; }
+      const limit = body.getBoundingClientRect().right;
+      const lines = []; let cur = null, top = null;
+      chars.forEach((c) => {
+        if (c.tagName === "BR") { if (cur) cur.hard = true; cur = null; return; } // the end of a paragraph: that line is not stretched
+        if (c.textContent === " ") { cur?.items.push(c); return; }
+        const r = c.getBoundingClientRect(), t = Math.round(r.top);
+        if (!cur || Math.abs(t - top) > 4) { cur = { items: [], right: 0 }; lines.push(cur); top = t; }
+        cur.items.push(c); cur.right = r.right; cur.last = cur.items.length - 1;
+      });
+      const moves = lines.slice(0, -1).filter((l) => !l.hard).map((l) => {
+        const spaces = l.items.slice(0, l.last).filter((c) => c.textContent === " ");
+        return { spaces, extra: spaces.length ? Math.max(0, limit - l.right - 0.5) / spaces.length : 0 };
+      }).filter((m) => m.extra > 0);
+      const o = { p: 0 };
+      entry.just = gsap.to(o, { p: 1, duration: 1.8, ease: "power2.inOut", onUpdate: () => moves.forEach((m) => { const v = m.extra * o.p + "px"; m.spaces.forEach((c) => { c.style.paddingRight = v; }); }), onComplete: done });
+    };
+    const placeTop = () => {
+      // the free space starts right under the lowest of the three options (role / city / menu) and ends at the bottom of the page
+      const tops = [...document.querySelectorAll(".topbar .tb-item")].map((e) => e.getBoundingClientRect()).filter((r) => r.height && r.bottom < innerHeight * 0.5);
+      wrap.style.top = tops.length ? Math.ceil(Math.max(...tops.map((r) => r.bottom))) + "px" : "";
+    };
+    window.addEventListener("resize", () => { if (!wrap.hidden) placeTop(); });
+    const play = () => {
+      entry.tl?.kill(); entry.just?.kill(); entry.closing?.kill(); // (a window that is still folding away must not hide the new one)
+      reset();
+      // stay clear of the three options (role / city / menu) at the top of the page
+      placeTop();
+      wrap.hidden = false;
+      wrap.classList.add("typing");
+      body.style.textAlign = "left"; // left-aligned while it types; it spaces out into the chosen alignment once it is all in
+      // every letter is already in its final place (invisible); typing just switches them on, so the lines never re-flow or jump
+      on.textContent = ""; off.textContent = "";
+      const chars = [...text].map((ch) => { const c = document.createElement(ch === "\n" ? "br" : "span"); if (ch !== "\n") c.textContent = ch; c.style.opacity = "0"; on.append(c); return c; });
+      let shown = 0, cur = null; // the cursor is just a bar painted beside the last letter (a real element in the text let words hop to the next line)
+      const reveal = (k) => {
+        for (; shown < k; shown++) chars[shown].style.opacity = "1";
+        for (; shown > k; ) chars[--shown].style.opacity = "0";
+        cur?.classList.remove("cur"); cur = k > 0 ? chars[k - 1] : null; cur?.classList.add("cur");
+      };
+      reveal(0);
+      const w = win.getBoundingClientRect(), b = btn.getBoundingClientRect();
+      const cx = b.right + 12, cy = b.top + b.height / 2; // the window opens out from just right of the button
+      const px = Math.min(96, Math.max(4, ((cx - w.left) / w.width) * 100));
+      const py = Math.min(96, Math.max(4, ((cy - w.top) / w.height) * 100));
+      const ex = (2 / w.width) * 100, ey = (2 / w.height) * 100;
+      const clip = (t, r, bo, l) => `inset(${t}% ${r}% ${bo}% ${l}%)`;
+      const dot = clip(py - ey, 100 - px - ex, 100 - py - ey, px - ex);
+      entry.dot = dot;
+            gsap.set(win, { clipPath: dot });
+      const n = { v: 0 };
+      const tl = gsap.timeline({ onReverseComplete: () => { if (entry.tl === tl) wrap.hidden = true; } });
+      if (calm) {
+        tl.set(win, { clipPath: clip(0, 0, 0, 0) }).add(finish);
+      } else {
+        tl.to(win, { clipPath: clip(0, 0, 0, 0), duration: 0.6, ease: "power3.out" })
+          .to(n, { v: text.length, duration: text.length * 0.014, ease: "none", onUpdate: () => {
+            reveal(Math.round(n.v));
+          } }, "+=0.05")
+          .add(finish);
+      }
+      entry.tl = tl;
+      open = entry;
+      btn.setAttribute("aria-expanded", "true");
+      $(".ev-win-x").focus({ preventScroll: true });
+    };
+    btn.addEventListener("click", () => { if (!open) play(); });
+    const shut = () => {
+      if (open !== entry) return;
+      open = null;
+      closePop(); dlg.hidden = true; mine.contentEditable = "false";
+      btn.setAttribute("aria-expanded", "false");
+      // close at once: stop the typing and everything else, then fold the box back into the button in a quick snap (no un-typing)
+      entry.tl.kill(); entry.just?.kill(); askTl?.kill(); askRun++;
+      if (calm) wrap.hidden = true;
+      else entry.closing = gsap.to(win, { clipPath: entry.dot, duration: 0.22, ease: "power2.in", onComplete: () => { wrap.hidden = true; } });
+      btn.focus({ preventScroll: true });
+    };
+    entry.shut = shut;
+    $(".ev-win-x").addEventListener("click", shut);
+    $(".ev-ticket-backdrop").addEventListener("click", shut);
+    $(".ev-win-min").addEventListener("click", () => { closePop(); wrap.classList.remove("max"); wrap.classList.toggle("min"); });
+    $(".ev-win-max").addEventListener("click", () => { wrap.classList.remove("min"); wrap.classList.toggle("max"); if (wrap.classList.contains("max")) { win.style.width = win.style.height = win.style.translate = ""; win.classList.remove("sized"); pos.x = pos.y = 0; } });
+    applyLook();
+  });
+  const closeNow = () => {
+    if (!open) return;
+    open.tl.kill(); open.wrap.hidden = true; open = null;
+  };
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") open?.shut?.(); });
+  return { isOpen: () => !!open, closeNow };
+}
+
 function setupObserverLoop(root, LOOP, layered = false) {
   const stage = document.createElement("div");
   stage.className = "ev-loop obs" + (layered ? " layered" : "");
-  stage.innerHTML = LOOP.map((s) => `<section class="ev-loop-slide" aria-label="${esc(s.name)}">
-      <div class="ev-outer"><div class="ev-inner"><div class="ev-bg" style="--bg:${s.bg}">
+  stage.innerHTML = LOOP.map((s, n) => `<section class="ev-loop-slide" aria-label="${esc(s.name)}">
+      <div class="ev-outer"><div class="ev-inner"><div class="ev-bg" style="--bg:${s.bg};--fill:${s.fill};--shade:${s.shadow}">
         <h2 class="ev-loop-title${s.stack ? " stack" : ""}" data-text="${esc(s.name)}"></h2>
         ${s.button ? `<p><a class="btn" href="${esc(s.button.href)}">${esc(s.button.label)}</a></p>` : ""}
+        ${s.ticket ? `<p><button class="ev-know" type="button" aria-haspopup="dialog">${esc(s.ticket.know)}</button></p>` : ""}
+        ${s.win && n > 0 && n < LOOP.length - 1 ? `<p><button class="ev-know" type="button" aria-haspopup="dialog"${s.win.color ? ` style="color:${s.win.color}"` : ""}>${esc(s.win.know)}</button></p>` : ""}
       </div></div></div>
     </section>`).join("");
   root.prepend(stage);
 
   const sections = [...stage.querySelectorAll(".ev-loop-slide")];
+  const tickets = setupWindows(stage, sections, LOOP); // the "know more" windows (see setupWindows)
   const outers = sections.map((s) => s.querySelector(".ev-outer"));
   const inners = sections.map((s) => s.querySelector(".ev-inner"));
   const bgs = sections.map((s) => s.querySelector(".ev-bg"));
@@ -156,7 +768,10 @@ function setupObserverLoop(root, LOOP, layered = false) {
   // drop in from above at random angles, with a little overshoot. (A section opts in with textFx in LIST_LOOP.)
   const fxTween = [];
   const unmask = (title) => title.querySelectorAll(".ev-mask").forEach((mask) => { mask.before(...mask.firstChild.childNodes); mask.remove(); });
+  const btnTween = [];
   const textFxOut = (i) => {
+    btnTween[i]?.revert();
+    btnTween[i] = null;
     fxTween[i]?.revert();
     fxTween[i] = null;
     const title = sections[i].querySelector(".ev-loop-title");
@@ -167,6 +782,8 @@ function setupObserverLoop(root, LOOP, layered = false) {
     const kind = LOOP[i].textFx;
     textFxOut(i);
     if (!kind || calm) return;
+    const know = sections[i].querySelector(".ev-know");
+    if (know) btnTween[i] = gsap.fromTo(know, { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.7, ease: "expo.out", delay: delay + 0.55 }); // the button follows the last line
     const words = [...sections[i].querySelectorAll(".ev-loop-title .w")];
     if (kind === "mask") {
       // GSAP's "Text Masking" demo (demos.gsap.com/demo/text-masking): every line sits in a mask (a clipping box) and rises up out of it, from
@@ -304,8 +921,9 @@ function setupObserverLoop(root, LOOP, layered = false) {
       wheelSpeed: -1,
       tolerance: 10,
       preventDefault: true,
-      onDown: () => { if (animating || used || current <= 0) return; used = true; gotoSection(current - 1, -1); },
-      onUp: () => { if (animating || used || current >= last) return; used = true; gotoSection(current + 1, 1); },
+      ignore: ".ev-ticket-wrap", // a ticket that is open keeps its own gestures (and can scroll on small screens)
+      onDown: () => { if (animating || used || current <= 0 || tickets.isOpen()) return; used = true; gotoSection(current - 1, -1); },
+      onUp: () => { if (animating || used || current >= last || tickets.isOpen()) return; used = true; gotoSection(current + 1, 1); },
     });
     gotoSection(0, 1);
   };
@@ -319,6 +937,7 @@ function setupObserverLoop(root, LOOP, layered = false) {
     root$.removeAttribute("data-loop-lock");
     gsap.killTweensOf([...outers, ...inners, ...bgs, ...sections, ...letters.flat()]);
     typers.forEach((t) => t?.reset());
+    tickets.closeNow();
     sections.forEach((_, i) => textFxOut(i));
     animating = false;
   };

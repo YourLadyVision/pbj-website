@@ -195,3 +195,8 @@ _Anything that doesn't fit above._
 - **List Your Event on computers (update):** the sections are still pinned by ScrollTrigger, but one scroll gesture now glides exactly one section (an eased move of the page, driven by us, not by the wheel), so a hard flick or a trackpad's coasting can never skip a section. `ScrollTrigger.maxScroll()` marks the end of the page; scrolling on past it opens the next folder.
 
 - **List Your Event, final (computers and phones):** both now use the same swipe/scroll-driven version: the page itself never scrolls, and one gesture slides the next section up over the last (and back). The ScrollTrigger pinning version is still in `src/events.js`; set `LOOP_MODE` to `"pinned"` there to use it again.
+
+## "Know more" website box (List Your Event, slides 2 to 7)
+- **What it is:** a "Know more" button under each in-between slide's title opens a small window (a tiny notepad look, in our own colours: rounded cream body, crust-brown title bar, thin edge, no shadow). It grows out of the button, types the slide's text, then asks a paper-cut question (Is this you? etc.) with Yes / No / Maybe; Yes brings a reply, a note and two buttons (sign up / fill the form). Buttons copy the NEXT button look (soft yellow, rounded, hard brown shadow).
+- **Rules the owner set:** never on the first or last slide; the typed text can't be backspaced (only the visitor's own lines can); it opens centred with equal space above and below and never covers the three top options; menus, toolbar and fonts work but start tucked away.
+- **Earlier idea, switched off:** the cream block-dissolve and the two-piece "rip here" ticket (code kept dormant in src/events.js as setupTickets).
