@@ -1614,3 +1614,7 @@ select.box { appearance: none; -webkit-appearance: none; background-image: url("
 
 /* No divider line either */
 .tk-stub::after { display: none; }
+
+.tkt.locked { opacity: 0.45; cursor: not-allowed; }
+.tkt.locked:hover { background: var(--card); }
+#typenote .notice .btn.small { margin: 0.3em 0.4em 0 0; padding: 0.5em 1em; font-size: 0.85em; }

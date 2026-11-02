@@ -188,7 +188,7 @@ function renderList() {
             <div class="st-wrap"><button type="button" class="kebab" data-act="kebab" aria-label="More options" aria-haspopup="menu" aria-expanded="${kebab}">${ic("dots", "1.3em")}</button>
               <div class="st-menu small" ${kebab ? "" : "hidden"}><button type="button" data-act="dup"><span><b>Duplicate</b></span></button><button type="button" data-act="del" class="dangerous"><span><b>Delete</b></span></button></div></div>
           </div></div>
-        <div class="ev-tags"><span class="tag dark1">${esc(TYPE_SHORT[e.type] || "No type")}</span>${(e.tickets || []).length ? `<span class="tag ${paid ? "dark2" : "free"}">${paid ? "Paid" : "Free"}</span>` : ""}${!done ? `<span class="tag soft">Step ${Math.min(e.step ?? 0, STEPS.length - 1) + 1} of ${STEPS.length}</span>` : ""}${past ? '<span class="tag soft">Past</span>' : ""}</div>
+        <div class="ev-tags"><span class="tag dark1">${esc(typeClash(e) ? "Fix event type" : TYPE_SHORT[e.type] || "No type")}</span>${(e.tickets || []).length ? `<span class="tag ${paid ? "dark2" : "free"}">${paid ? "Paid" : "Free"}</span>` : ""}${!done ? `<span class="tag soft">Step ${Math.min(e.step ?? 0, STEPS.length - 1) + 1} of ${STEPS.length}</span>` : ""}${past ? '<span class="tag soft">Past</span>' : ""}</div>
         <div class="sold">${ic("ticket", "1.2em")}<b>0</b> sold</div>
         ${done ? `<div class="ev-link">${ic("link", "1.1em")}<span>${eventLink(e)}</span><button type="button" data-act="copy">${ic("copy", "1.1em")}Copy</button></div>` : ""}
         <div class="ev-actions">
@@ -1159,6 +1159,7 @@ function stepTickets(host) {
   host.innerHTML = `
     <h2 class="section-title cut">Tickets</h2>
     <p class="section-sub">Select ticket type</p>
+    <div id="typenote"></div>
     <div class="tickets" role="group" aria-label="Ticket types">
       ${TICKET_TYPES.map((t) => `<button type="button" class="tkt" data-t="${t.id}">
         <span class="tkt-badge" data-count="${t.id}" hidden></span>
@@ -1168,8 +1169,15 @@ function stepTickets(host) {
     <div class="nav three"><button class="btn dark prev" type="button" id="prev">Previous</button><button class="btn" type="button" id="next">Next</button><button class="btn" type="button" id="save">Save draft</button></div>`;
   cutHeadings();
   const next = host.querySelector("#next"), made = host.querySelector("#made");
+  const note = host.querySelector("#typenote");
   const paint = () => {
+    // a Free Impromptu event only has free tickets: the paid kinds are locked, and a clash is explained with a one-tap fix
+    const free = draft.type === "guestlist";
+    note.innerHTML = free ? `<p class="notice"><b>${typeClash(draft) ? "This event is set to Free Impromptu but it has a paid ticket." : "Free Impromptu events only have free tickets."}</b> To sell paid tickets, switch the event type: <button type="button" class="btn small" data-settype="exclusive">Exclusive event</button> <button type="button" class="btn small" data-settype="open">Non-exclusive event</button></p>` : "";
     TICKET_TYPES.forEach((tt) => {
+      const el = host.querySelector(`[data-t="${tt.id}"]`);
+      el.classList.toggle("locked", free && tt.id !== "guest");
+      el.setAttribute("aria-disabled", free && tt.id !== "guest");
       const n = draft.tickets.filter((x) => x.type === tt.id).length;
       const badge = host.querySelector(`[data-count="${tt.id}"]`);
       badge.hidden = !n; badge.textContent = n;
@@ -1198,7 +1206,17 @@ function stepTickets(host) {
     if (i >= 0) draft.tickets[i] = t; else draft.tickets.push(t);
     persist(4); paint();
   });
-  host.querySelector(".tickets").addEventListener("click", (e) => { const b = e.target.closest("[data-t]"); if (b) add(TICKET_TYPES.find((t) => t.id === b.dataset.t)); });
+  note.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-settype]");
+    if (!b) return;
+    draft.type = b.dataset.settype; persist(4); paint(); toast("Event type changed");
+  });
+  host.querySelector(".tickets").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-t]");
+    if (!b) return;
+    if (b.classList.contains("locked")) { toast("Free Impromptu events only have free tickets. Switch the event type to sell paid ones."); return; }
+    add(TICKET_TYPES.find((t) => t.id === b.dataset.t));
+  });
   made.addEventListener("click", async (e) => {
     const ed = e.target.closest("[data-edit-t]"), del = e.target.closest("[data-del-t]");
     if (ed) { const x = draft.tickets.find((q) => q.id === ed.dataset.editT); add(TICKET_TYPES.find((t) => t.id === x.type), x); }
@@ -1390,6 +1408,8 @@ function stepOrganizer(host) {
 const dmy = (v) => { if (!v) return "—"; const [y, m, d] = v.split("-").map(Number); return `${d} ${SHORT[m - 1]} ${y}`; };
 const hm = (t) => (t && t.h && t.m ? `${t.h}:${t.m}` : "—");
 const TYPE_SHORT = { guestlist: "Free impromptu", exclusive: "Exclusive", open: "Non-exclusive" };
+// a Free Impromptu event can only have free tickets: paid tickets on one is a mix-up that has to be fixed (see the Tickets step)
+const typeClash = (e) => e.type === "guestlist" && (e.tickets || []).some((t) => t.paid);
 
 function stepReview(host) {
   const d = draft;
@@ -1399,7 +1419,7 @@ function stepReview(host) {
   const tickets = d.tickets || [], orgs = d.organizers || [], images = (d.images || []).filter(Boolean);
   // Anything still missing, with the step that fixes it
   const missing = [
-    [!d.type, "Event type", 0], [!d.title, "Title", 1], [!d.description || !textLen(d.description), "Description", 1],
+    [!d.type, "Event type", 0], [typeClash(d), "Event type (a Free Impromptu event can only have free tickets)", 4], [!d.title, "Title", 1], [!d.description || !textLen(d.description), "Description", 1],
     [!d.category, "Category", 2], [!(d.subs || []).length, "Sub categories", 2], [!d.city, "City", 2], [!images.length, "A cover image", 2],
     [!d.dateFrom, "Event dates", 3], [!(d.start && d.start.h && d.start.m), "Start time", 3],
     [!tickets.length, "At least one ticket", 4], [!orgs.length, "An organizer", 6],
