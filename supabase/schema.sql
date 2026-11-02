@@ -12,6 +12,7 @@ create table if not exists public.leads (
   phone       text check (char_length(phone) <= 40),
   link        text check (char_length(link) <= 300),
   message     text check (char_length(message) <= 2000),
+  answers     jsonb check (answers is null or char_length(answers::text) <= 8000),
   page        text
 );
 
@@ -21,3 +22,6 @@ alter table public.leads enable row level security;
 
 drop policy if exists "anyone can add a lead" on public.leads;
 create policy "anyone can add a lead" on public.leads for insert to anon with check (true);
+
+-- Added later (the slide-by-slide questions). If the table already existed, this adds the column; safe to run again.
+alter table public.leads add column if not exists answers jsonb check (answers is null or char_length(answers::text) <= 8000);

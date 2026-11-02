@@ -37,7 +37,7 @@ body {
   overflow-x: hidden;
 }
 .dash, .dash-top, .toast { font-size: 0.75em; font-weight: 400; } /* their regular text size */
-input, textarea { text-transform: none; }
+input, textarea { text-transform: uppercase; }
 button, input, textarea, select { font: inherit; color: inherit; text-transform: inherit; }
 a { color: inherit; }
 h1, h2, h3 { font-family: var(--display); font-weight: 700; letter-spacing: -1.44px; text-align: left; line-height: 1; margin: 0; }
@@ -158,7 +158,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 700; letter-spacing: -1.4
 .err { display: none; color: var(--jam); margin-top: 0.6em; font-weight: 400; }
 .field.bad .err { display: block; }
 
-.box { width: 100%; border: 1px solid var(--line); border-radius: 14px; background: var(--card); padding: 1em 1.2em; text-transform: none; }
+.box { width: 100%; border: 1px solid var(--line); border-radius: 14px; background: var(--card); padding: 1em 1.2em; text-transform: uppercase; }
 .box:focus, .box:focus-within { outline: none; border-color: var(--ink); box-shadow: 0 0 0 4px rgba(255,227,134,.35); }
 
 /* Rich text editor */
@@ -538,7 +538,7 @@ select.box { appearance: none; -webkit-appearance: none; background-image: url("
 .pa-body { padding: 1.6em; }
 .pa-search { display: flex; align-items: center; gap: 0.8em; padding: 0 1.2em; border: 1px solid var(--line); border-radius: 14px; background: var(--page); }
 .pa-search:focus-within { border-color: var(--ink); box-shadow: 0 0 0 4px rgba(255,227,134,.35); }
-.pa-search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; padding: 1.1em 0; text-transform: none; }
+.pa-search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; padding: 1.1em 0; text-transform: uppercase; }
 .pa-search svg { opacity: 0.55; }
 .pop li.add-new { color: var(--ink); }
 .pa-empty { display: grid; justify-items: center; gap: 0.6em; text-align: center; padding: 3em 1em; margin-top: 1.6em; border: 1px dashed var(--line); border-radius: var(--r); background: var(--page); }
@@ -686,7 +686,7 @@ select.box { appearance: none; -webkit-appearance: none; background-image: url("
 /* ---------- My events ---------- */
 .head-tools { display: flex; align-items: center; gap: 1em; flex-wrap: wrap; }
 .search { display: flex; align-items: center; gap: 0.7em; padding: 0 1.1em; min-width: 18em; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
-.search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; padding: 1em 0; text-transform: none; }
+.search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; padding: 1em 0; text-transform: uppercase; }
 .search:focus-within { border-color: var(--ink); box-shadow: 0 0 0 4px rgba(255,227,134,.35); }
 .search svg { opacity: 0.55; }
 .create-btn { background: var(--bread); color: var(--brown); border: 0; border-radius: 8px; box-shadow: 5px 5px 0 var(--brown); min-height: 44px; padding: 0.6rem 1.6rem; }

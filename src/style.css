@@ -1259,3 +1259,71 @@ html.intro .intro-swirl {
 .ev-win-wrap .ev-win-fx u::before, .ev-win-wrap .ev-win-fx u::after { content: ""; position: absolute; left: 12px; top: 6px; width: 2px; height: 13px; background: var(--brown); rotate: 45deg; }
 .ev-win-wrap .ev-win-fx u::after { rotate: -45deg; }
 .ev-win-form-bar .ev-win-b { cursor: pointer; }
+
+/* the "pick one" questions in the forms: tap-able chips */
+.ev-win-form-body fieldset.pick { margin: 0; padding: 0; border: 0; min-width: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.ev-win-form-body fieldset.pick legend { padding: 0; margin-bottom: 8px; font: 400 12px / 1.2 var(--mono); }
+.ev-win-form-body fieldset.pick label { display: block; position: relative; }
+.ev-win-form-body fieldset.pick label input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.ev-win-form-body fieldset.pick span { display: block; padding: 10px 14px; border: 1.5px solid rgba(70, 55, 33, 0.45); border-radius: 999px; font: 400 13px / 1.1 var(--mono); }
+.ev-win-form-body fieldset.pick label input:checked + span { background: var(--honey); border-color: var(--brown); }
+.ev-win-form-body fieldset.pick label input:focus-visible + span { box-shadow: 0 0 0 2px var(--honey); }
+
+/* the form panel: min / max / close like the window, and the same look as the host dashboard (brown head, soft boxes, honey chips and buttons) */
+.ev-win-wrap .ev-win-fmin u::before { content: ""; position: absolute; left: 8px; bottom: 8px; width: 10px; height: 2px; background: var(--brown); }
+.ev-win-wrap .ev-win-fmax u::before { content: ""; position: absolute; left: 8px; top: 7px; width: 10px; height: 10px; box-sizing: border-box; border: 1px solid var(--brown); border-top-width: 2px; border-radius: 2px; }
+.ev-win-form-bar .ev-win-b { width: 26px; height: 26px; border: 0; border-radius: 8px; background: var(--cream); box-shadow: none; }
+.ev-win-form-bar .ev-win-b:hover { background: var(--honey); }
+.ev-win-form-bar .ev-win-fx { margin-left: 2px; }
+.ev-win-form.fmin { inset: auto 0 0 0; background: none; }
+.ev-win-form.fmin .ev-win-form-body { display: none; }
+.ev-win-form.fmin .ev-win-form-bar { border-radius: 16px; }
+.ev-win-form { background: #fffffa; }
+.ev-win-form-bar { background: var(--brown); color: var(--honey); }
+.ev-win-form-body { gap: 20px; }
+.ev-win-form-body .hint { opacity: 0.75; }
+.ev-win-form-body label { gap: 8px; }
+.ev-win-form-body label .req { color: var(--jam, #C2184F); font-style: normal; }
+.ev-win-form-body label small.opt { margin-left: 6px; padding: 2px 8px; border: 1px solid rgba(70, 55, 33, 0.16); border-radius: 8px; background: var(--cream); opacity: 1; text-transform: uppercase; }
+.ev-win-form-body input, .ev-win-form-body textarea { padding: 14px 16px; border: 1px solid rgba(70, 55, 33, 0.16); border-radius: 14px; background: #fffffa; }
+.ev-win-form-body input:focus, .ev-win-form-body textarea:focus { border-color: var(--brown); box-shadow: 0 0 0 4px rgba(255, 227, 134, 0.35); }
+.ev-win-form-body fieldset.pick span { padding: 10px 16px; border: 1px solid rgba(70, 55, 33, 0.16); background: #fffffa; }
+.ev-win-form-body fieldset.pick label:hover span { background: #fff6d4; }
+.ev-win-form-body fieldset.pick label input:checked + span { background: var(--honey); border-color: var(--honey); }
+.ev-win-form-body .go { min-height: 44px; border-radius: 8px; box-shadow: 5px 5px 0 var(--brown); }
+.ev-win-form-body .go:hover:not(:disabled) { background: #ffd95c; }
+.ev-win-form-body .go:active { transform: translate(4px, 4px); box-shadow: 1px 1px 0 var(--brown); }
+.ev-win-form-body .cancel { min-height: 44px; padding: 0 18px; border: 1px solid rgba(70, 55, 33, 0.16); border-radius: 8px; background: #fffffa; text-decoration: none; }
+.ev-win-form-body .cancel:hover { background: #fff6d4; }
+.ev-win-form-body .row { gap: 16px; border-top: 1px solid rgba(70, 55, 33, 0.16); padding-top: 18px; margin-top: 4px; }
+
+/* what people type in the forms is in capitals too, like the rest of the site (saved exactly as typed) */
+.ev-win-form-body input, .ev-win-form-body textarea { text-transform: uppercase; }
+
+/* typed text and placeholders are the same size as the labels */
+.ev-win-form-body input, .ev-win-form-body textarea { font-size: 13px; }
+
+.ev-win-form-body fieldset.pick .pick-other { flex: 1 1 100%; width: 100%; margin-top: 2px; }
+.ev-win-form-body fieldset.pick .pick-other[hidden] { display: none; }
+
+/* "Not in Mumbai?": a small tick that opens a region / state list */
+.ev-win-form-body .place { display: flex; flex-direction: column; gap: 10px; }
+.ev-win-form-body label.notmum { flex-direction: row; align-items: center; gap: 10px; align-self: flex-start; cursor: pointer; }
+.ev-win-form-body label.notmum input { width: 18px; height: 18px; padding: 0; margin: 0; accent-color: var(--brown); cursor: pointer; }
+.ev-win-form-body select { width: 100%; box-sizing: border-box; padding: 14px 44px 14px 16px; border: 1px solid rgba(70, 55, 33, 0.16); border-radius: 14px; background: #fffffa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' fill='none' stroke='%23463721' stroke-width='2'%3E%3Cpath d='m1 1 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 16px center; appearance: none; -webkit-appearance: none; color: var(--brown); font: 400 13px / 1.3 var(--mono); text-transform: uppercase; outline: none; cursor: pointer; }
+.ev-win-form-body select:focus { border-color: var(--brown); box-shadow: 0 0 0 4px rgba(255, 227, 134, 0.35); }
+.ev-win-form-body select[hidden] { display: none; }
+
+/* the region list: same look as the dashboard's drop-downs (soft box, chevron, honey hover), and the same in-box text size as the rest of the form */
+.ev-win-form-body .region { position: relative; }
+.ev-win-form-body .region[hidden] { display: none; }
+.ev-win-form-body .region input { padding-right: 44px; background: #fffffa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' fill='none' stroke='%23463721' stroke-width='2'%3E%3Cpath d='m1 1 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 16px center; cursor: pointer; }
+.ev-win-form-body .region-list { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 6px); margin: 0; padding: 6px; list-style: none; max-height: 14em; overflow-y: auto; background: #fffffa; border: 1px solid rgba(70, 55, 33, 0.16); border-radius: 14px; box-shadow: 0 10px 24px rgba(70, 55, 33, 0.1); }
+.ev-win-form-body .region-list[hidden] { display: none; }
+.ev-win-form-body .region-list li { padding: 11px 14px; border-radius: 10px; font: 400 13px / 1.2 var(--mono); text-transform: uppercase; cursor: pointer; }
+.ev-win-form-body .region-list li:hover { background: var(--honey); }
+.ev-win-form-body .region-list li.none { opacity: 0.6; cursor: default; }
+.ev-win-form-body .region-list li.none:hover { background: none; }
+
+/* a small nudge on the link questions */
+.ev-win-form-body small.linkhint { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: #fff6d4; font-size: 10px; opacity: 1; white-space: nowrap; vertical-align: 1px; }

@@ -47,7 +47,7 @@ const VENUE_WINDOW = padWin("For venues", "You love your dining customers. Walk-
   q: "What do the walls say?",
   yes: ["Great Choice! Your walls have TASTE!", "You can choose to do both / simply sign up to get notified when we launch.", "(NOTE: FILLING OUT THE FORM HELPS US GET TO KNOW YOU FIRST BEFORE OTHERS IN LINE)"],
 });
-const BRAND_WINDOW = padWin("For brands", "Marketing is great, but let\u2019s talk connection. \u201CThe room can be well decorated and have everything looking perfect, but if the right people don\u2019t fill it, it\u2019s a shame.\u201D If you share the sentiment, we want to work with you.", "var(--cream)", {
+const BRAND_WINDOW = padWin("For brands", "Marketing is great, but let\u2019s talk connection. \u201CThe room can be well decorated and have everything looking perfect, but if the right names don\u2019t fill it, it\u2019s a shame.\u201D If you share the sentiment, we want to work with you.", "var(--cream)", {
   q: "Ready to LINK?",
   yes: ["Great! We now have one link to a successful connection.", "You can choose to do both / simply sign up to get notified when we launch.", "(NOTE: FILLING OUT THE FORM HELPS US GET TO KNOW YOU FIRST BEFORE OTHERS IN LINE)"],
 });
@@ -55,6 +55,59 @@ const BACKER_WINDOW = padWin("For backers", "You like investments. You want to b
   q: "Ready to GLAZE?",
   yes: ["Sweet deal! Your name just found its night.", "You can choose to do both / simply sign up to get notified when we launch.", "(NOTE: FILLING OUT THE FORM HELPS US GET TO KNOW YOU FIRST BEFORE OTHERS IN LINE)"],
 });
+
+// The questions inside "Fill the form", slide by slide (first drafts, edit freely). type: text, area (long answer), link (also saved as the link) or pick (tap one).
+// Only name and email are required; every question here is optional. Answers are saved together under the question's own wording.
+ARTIST_WINDOW.qs = [
+  { q: "What do you make?", type: "pick", opts: ["Music", "Comedy", "Poetry / spoken word", "Dance", "Theatre", "Art / craft", "Something else"] },
+  { q: "Where can we see your work?", type: "link", ph: "Instagram, YouTube, website\u2026" },
+  { q: "Your last show: where was it and how many came?", type: "text" },
+  { q: "How do you sell tickets today?", type: "pick", opts: ["WhatsApp / DMs", "Google Form + UPI screenshots", "Another platform", "I don\u2019t yet"] },
+  { q: "Which Mumbai spot do you dream of playing?", type: "text" },
+  { q: "What annoys you most about getting people through the door?", type: "area" },
+];
+EXCLUSIVE_WINDOW.qs = [
+  { q: "What kind of events do you host?", type: "pick", opts: ["Music nights", "Workshops", "Comedy / open mics", "Food & drink", "Markets / pop-ups", "Mixed bag", "Something else"] },
+  { q: "How often do you host?", type: "pick", opts: ["Every week", "Every month", "A few times a year", "Just starting"] },
+  { q: "Show us a past event", type: "link", ph: "Instagram post, album, website\u2026" },
+  { q: "Which ticketing platform do you use now?", type: "text", ph: "Or \u201Cnone yet\u201D" },
+  { q: "You think you got something never tested in India before?", type: "pick", opts: ["Yes", "No, but we can always make it"], more: { Yes: "All ears!" } },
+  { q: "What\u2019s cookin\u2019 in your brain that fits the \u201CPBJ EXCLUSIVE HOST\u201D label?", type: "area" },
+  { q: "Describe the \u201CUnique Vibe\u201D & \u201CFresh Taste\u201D of your upcoming / existing event style?", type: "area" },
+];
+QUICKWIT_WINDOW.qs = [
+  { q: "What is your kind of last-minute plan?", type: "pick", opts: ["Cafe hop", "Shopping spree", "Gig / open mic", "Late-night food run", "Sports / games", "Anything goes", "Nothing we know of?"], more: { "Nothing we know of?": "Let us know now\u2026" } },
+  { q: "Which part of Mumbai are you usually in?", type: "place", ph: "Bandra, Andheri, Thane\u2026" },
+  { q: "How short a notice is too short?", type: "pick", opts: ["Under 2 hours", "Same day", "Next day is fine"] },
+  { q: "Do you host the plan or join it?", type: "pick", opts: ["I host", "I join", "Both"] },
+  { q: "How do you usually host / join your spontaneous plans?", type: "pick", opts: ["WhatsApp group", "Insta DMs", "Ring my friends", "Use a specific platform"], more: { "Use a specific platform": "Tell us which" } },
+  { q: "Usual gang size?", type: "pick", opts: ["2 to 4", "5 to 10", "10 or more"] },
+  { q: "Best spur-of-the-moment plan you ever had?", type: "area" },
+];
+VENUE_WINDOW.qs = [
+  { q: "Venue name", type: "text" },
+  { q: "What kind of place is it?", type: "pick", opts: ["Cafe", "Bar", "Restaurant", "Studio", "Rooftop", "Gallery / bookshop", "Something else"] },
+  { q: "Which area of Mumbai?", type: "place" },
+  { q: "How many people fit comfortably?", type: "text", ph: "A rough number is fine" },
+  { q: "Which days or hours sit quiet?", type: "text", ph: "Monday afternoons, Sunday evenings\u2026" },
+  { q: "Link to your place", type: "link", ph: "Instagram or Google Maps" },
+  { q: "What do your walls say?", type: "area" },
+];
+BRAND_WINDOW.qs = [
+  { q: "Brand name", type: "text" },
+  { q: "What do you make or sell?", type: "text" },
+  { q: "Link to your brand", type: "link", ph: "Instagram or website" },
+  { q: "Which crowd do you most want to meet?", type: "area" },
+  { q: "What kind of link are you after?", type: "pick", opts: ["Sponsor a night", "Product in the room", "Co-host an evening", "Not sure yet"] },
+  { q: "Roughly what are you thinking of spending?", type: "pick", opts: ["Under \u20B950,000", "\u20B950,000 to \u20B91 lakh", "Above \u20B91 lakh", "Budget in mind?"], more: { "Budget in mind?": "Punch in the numbers\u2026" } },
+];
+BACKER_WINDOW.qs = [
+  { q: "Who is backing?", type: "pick", opts: ["Just me", "A brand", "A venue", "A firm / institution", "A community / group"] },
+  { q: "Name of your brand or group", type: "text", ph: "Leave blank if it is just you" },
+  { q: "Link to you or your work", type: "link", ph: "Instagram, LinkedIn, website\u2026" },
+  { q: "How would you like to back a night?", type: "pick", opts: ["With funding", "With a space", "With products", "With skills / time", "Not sure yet"] },
+  { q: "What kind of night would you love your name on?", type: "area" },
+];
 
 // the colours of the paper-cut question in the windows
 ARTIST_WINDOW.look = EXCLUSIVE_WINDOW.look = QUICKWIT_WINDOW.look = VENUE_WINDOW.look = BRAND_WINDOW.look = BACKER_WINDOW.look = { fill: "var(--pop)", shadow: "var(--brown)" }; // all dark yellow with a dark brown shadow
@@ -298,6 +351,7 @@ const PAD_MENUS = {
   Format: [["Bold", "bold", "Ctrl+B"], ["Italic", "italic", "Ctrl+I"], ["Underline", "underline", "Ctrl+U"], "-", ["Justify", "justify"], ["Align left", "left"], ["Centre", "center"], ["Align right", "right"]],
   Help: [["Help topics", "help", "F1"], ["About PBJ Pad", "about"]],
 };
+const REGIONS = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra (outside Mumbai)", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman & Nicobar Islands", "Chandigarh", "Dadra & Nagar Haveli and Daman & Diu", "Delhi", "Jammu & Kashmir", "Ladakh", "Lakshadweep", "Puducherry", "Outside India"];
 const PAD_FONTS = [["Chivo Mono", "var(--mono)"], ["Helvetica Neue", "var(--display)"]];
 const PAD_SIZES = [10, 12, 14, 16, 18, 20, 24, 28];
 const PAD_CASES = [["ALL CAPS", "uppercase"], ["Normal", "none"], ["lowercase", "lowercase"]];
@@ -427,19 +481,33 @@ function setupWindows(stage, sections, LOOP) {
 
     // ---- the sign-up and the longer form (saved to the database once it is connected, see src/leads.js) ----
     const formEl = $(".ev-win-form");
-    const closeForm = () => { formEl.hidden = true; formEl.innerHTML = ""; };
+    let formMaxed = false; // true while the form's own Maximise is what made the window big
+    const closeForm = () => { formEl.hidden = true; formEl.innerHTML = ""; formEl.classList.remove("fmin", "fmax"); if (formMaxed) { formMaxed = false; wrap.classList.remove("max"); } };
     const openForm = (kind) => {
       closePop(); closeDlg();
       const signup = kind === "signup";
       const title = signup ? A.cta[0] : A.cta[1];
-      formEl.innerHTML = `<div class="ev-win-form-bar"><span>${esc(title)} \u00B7 ${esc(def.win.title)}</span><button type="button" class="ev-win-b ev-win-fx" aria-label="Close form"><u></u></button></div>
+      const qs = def.win.qs || [];
+      const isOther = (o) => /^(something else|another platform|other)$/i.test(o || ""); // these options open a small box to say what
+      const fieldHtml = (x, i) => x.type === "pick"
+        ? `<fieldset class="pick" data-more="${esc(JSON.stringify(x.more || {}))}"><legend>${esc(x.q)}</legend>${x.opts.map((o) => `<label><input type="radio" name="q${i}" value="${esc(o)}"><span>${esc(o)}</span></label>`).join("")}${x.opts.some(isOther) || x.more ? `<input class="pick-other" name="q${i}o" maxlength="${x.more ? 600 : 150}" placeholder="Tell us what" hidden>` : ""}</fieldset>`
+        : x.type === "place"
+          ? `<div class="place"><label><span data-q="${esc(x.q)}">${esc(x.q)}</span><input name="q${i}" maxlength="200" placeholder="${esc(x.ph || "")}"></label>
+            <label class="notmum"><input type="checkbox" name="q${i}n"><span>Not in Mumbai?</span></label>
+            <div class="region" hidden><input name="q${i}s" autocomplete="off" role="combobox" aria-expanded="false" placeholder="Select your region / state"><ul class="region-list" role="listbox" hidden></ul></div></div>`
+        : x.type === "area"
+          ? `<label>${esc(x.q)}<textarea name="q${i}" rows="3" maxlength="600"></textarea></label>`
+          : x.type === "link"
+            ? `<label><span>${esc(x.q)} <small class="linkhint"><svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6.5 9.5a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2l-.8.8"/><path d="M9.5 6.5a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2l.8-.8"/></svg>paste a link</small></span><input name="q${i}" type="text" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="300" placeholder="${esc(x.ph || "")}"></label>`
+            : `<label>${esc(x.q)}<input name="q${i}" maxlength="200" placeholder="${esc(x.ph || "")}"></label>`;
+      formEl.innerHTML = `<div class="ev-win-form-bar"><span>${esc(title)} \u00B7 ${esc(def.win.title)}</span><button type="button" class="ev-win-b ev-win-fmin" aria-label="Minimise form"><u></u></button><button type="button" class="ev-win-b ev-win-fmax" aria-label="Maximise form"><u></u></button><button type="button" class="ev-win-b ev-win-fx" aria-label="Close form"><u></u></button></div>
         <form class="ev-win-form-body" novalidate>
-          <p class="hint">${signup ? "Leave your details and we will tell you the moment we launch." : "Tell us a little about you. Filling this out helps us get to know you before others in line."}</p>
-          <label>Name<input name="name" autocomplete="name" maxlength="120"></label>
-          <label>Email<input name="email" type="email" autocomplete="email" maxlength="200"></label>
-          <label><span>Phone / WhatsApp <small>(optional)</small></span><input name="phone" type="tel" autocomplete="tel" maxlength="40"></label>
-          ${signup ? "" : `<label><span>Instagram or website <small>(optional)</small></span><input name="link" maxlength="300"></label>
-          <label>Tell us about you<textarea name="message" rows="4" maxlength="2000"></textarea></label>`}
+          <p class="hint">${signup ? "Leave your details and we will tell you the moment we launch." : "Tell us a little about you. Only name and email are needed; the rest helps us get to know you before others in line."}</p>
+          <label><span>Name <i class="req">*</i></span><input name="name" autocomplete="name" maxlength="120"></label>
+          <label><span>Email <i class="req">*</i></span><input name="email" type="email" autocomplete="email" maxlength="200"></label>
+          <label><span>Phone / WhatsApp <small class="opt">optional</small></span><input name="phone" type="tel" autocomplete="tel" maxlength="40"></label>
+          ${signup ? "" : (qs.length ? qs.map(fieldHtml).join("") : `<label><span>Instagram or website <small>(optional)</small></span><input name="link" maxlength="300"></label>
+          <label>Tell us about you<textarea name="message" rows="4" maxlength="2000"></textarea></label>`)}
           <input class="hp" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
           <p class="err" role="alert"></p>
           <div class="row"><button type="submit" class="go">Send</button><button type="button" class="cancel">Cancel</button></div>
@@ -447,7 +515,49 @@ function setupWindows(stage, sections, LOOP) {
       formEl.hidden = false;
       const f = formEl.querySelector("form"), err = formEl.querySelector(".err"), go = formEl.querySelector(".go");
       formEl.querySelector(".ev-win-fx").addEventListener("click", closeForm);
+      formEl.querySelector(".ev-win-fmin").addEventListener("click", () => formEl.classList.toggle("fmin")); // shrinks to its title bar along the bottom
+      formEl.querySelector(".ev-win-fmax").addEventListener("click", () => { // opens the whole window out to full size, and puts it back the way it was
+        formEl.classList.remove("fmin");
+        const on = formEl.classList.toggle("fmax");
+        if (on && !wrap.classList.contains("max")) { $(".ev-win-max").click(); formMaxed = true; }
+        else if (!on && formMaxed) { formMaxed = false; $(".ev-win-max").click(); }
+      });
       formEl.querySelector(".cancel").addEventListener("click", closeForm);
+      f.addEventListener("change", (e) => { // "Not in Mumbai?" opens the region list and asks for the city or town instead
+        const n = e.target.closest(".notmum input");
+        if (!n) return;
+        const g = n.closest(".place"), reg = g.querySelector(".region"), cap = g.querySelector("label span[data-q]");
+        reg.hidden = !n.checked;
+        cap.textContent = n.checked ? "Which city or town?" : cap.dataset.q;
+        if (n.checked) reg.querySelector("input").focus({ preventScroll: true });
+      });
+      // the region list works like the dashboard's drop-downs: tap to open, type to narrow it down, tap a name to choose it
+      const regionBox = (reg) => {
+        const input = reg.querySelector("input"), list = reg.querySelector("ul");
+        const shut = () => { list.hidden = true; input.setAttribute("aria-expanded", "false"); };
+        const show = () => {
+          const q = input.value.trim().toLowerCase();
+          const hits = REGIONS.filter((r) => !q || r.toLowerCase().includes(q));
+          list.innerHTML = hits.length ? hits.map((r) => `<li role="option">${esc(r)}</li>`).join("") : `<li class="none">No match</li>`;
+          list.hidden = false; input.setAttribute("aria-expanded", "true");
+        };
+        input.addEventListener("focus", () => { input.select(); show(); });
+        input.addEventListener("click", show);
+        input.addEventListener("input", show);
+        input.addEventListener("keydown", (e) => { if (e.key === "Escape" && !list.hidden) { shut(); e.stopPropagation(); } });
+        list.addEventListener("mousedown", (e) => e.preventDefault()); // keep the box focused while choosing
+        list.addEventListener("click", (e) => { const li = e.target.closest("li:not(.none)"); if (li) { input.value = li.textContent; shut(); } });
+        input.addEventListener("blur", () => { shut(); if (!REGIONS.includes(input.value)) input.value = ""; }); // only a name from the list is kept
+      };
+      f.querySelectorAll(".region").forEach(regionBox);
+      f.addEventListener("change", (e) => { // picking "Something else" opens its little box; picking anything else tucks it away
+        const g = e.target.closest("fieldset.pick"), box = g && g.querySelector(".pick-other");
+        if (!box) return;
+        const more = JSON.parse(g.dataset.more || "{}")[e.target.value]; // some options (like "Yes") open the box with their own prompt
+        box.hidden = !(more || isOther(e.target.value));
+        box.placeholder = more || (/platform/i.test(e.target.value) ? "Tell us which" : "Tell us what");
+        if (!box.hidden) box.focus({ preventScroll: true });
+      });
       f.addEventListener("submit", async (e) => {
         e.preventDefault();
         const d = Object.fromEntries(new FormData(f));
@@ -456,7 +566,10 @@ function setupWindows(stage, sections, LOOP) {
         if (!name) { err.textContent = "Please add your name."; f.elements.name.focus(); return; }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { err.textContent = "Please add a valid email."; f.elements.email.focus(); return; }
         err.textContent = ""; go.disabled = true; go.textContent = "Sending\u2026";
-        const r = await saveLead({ kind, role: def.win.title, name, email, phone: (d.phone || "").trim() || null, link: (d.link || "").trim() || null, message: (d.message || "").trim() || null, page: location.pathname });
+        const answers = {};
+        let link = (d.link || "").trim() || null;
+        qs.forEach((x, i) => { let v = (d["q" + i] || "").trim(); if (x.type === "place" && d["q" + i + "n"]) { const r = d["q" + i + "s"] || "region not chosen"; v = "Not in Mumbai (" + r + ")" + (v ? ": " + v : ""); } if (!v) return; if (x.type === "pick" && (isOther(v) || (x.more && x.more[v]))) { const more = (d["q" + i + "o"] || "").trim(); if (more) v += ": " + more; } answers[x.q] = v; if (x.type === "link" && !link) link = v; });
+        const r = await saveLead({ kind, role: def.win.title, name, email, phone: (d.phone || "").trim() || null, link, message: (d.message || "").trim() || null, answers: Object.keys(answers).length ? answers : null, page: location.pathname });
         if (r.ok) {
           f.innerHTML = `<p class="thanks">Thank you, ${esc(name.split(" ")[0])}! You are on the list.</p><div class="row"><button type="button" class="go">Done</button></div>`;
           f.querySelector(".go").addEventListener("click", closeForm);
