@@ -3,6 +3,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Observer } from "gsap/Observer";
 import { Flip } from "gsap/Flip";
 import { createCutLetter } from "./cutword.js";
+import { saveLead } from "./leads.js";
 import { EVENTS } from "./eventsData.js";
 
 gsap.registerPlugin(Flip, ScrollTrigger, Observer);
@@ -348,6 +349,7 @@ function setupWindows(stage, sections, LOOP) {
         <div class="ev-win-status"><span class="msg">For help, press F1</span><span class="cnt"></span></div>
         <div class="ev-win-pop" hidden></div>
         <div class="ev-win-dlg" hidden><div class="ev-win-dlg-in"><div class="ev-win-dlg-bar"><span></span></div><p></p><button type="button" data-do="dlgok">OK</button></div></div>
+        <div class="ev-win-form" hidden></div>
         <i class="ev-win-size" aria-hidden="true"></i>
       </div></div>`;
     stage.appendChild(wrap);
@@ -423,6 +425,50 @@ function setupWindows(stage, sections, LOOP) {
     const dialog = (title, html) => { closePop(); dlg.querySelector("span").textContent = title; dlg.querySelector("p").innerHTML = html; dlg.hidden = false; dlg.querySelector("button").focus({ preventScroll: true }); };
     const closeDlg = () => { if (dlg.hidden) return false; dlg.hidden = true; return true; };
 
+    // ---- the sign-up and the longer form (saved to the database once it is connected, see src/leads.js) ----
+    const formEl = $(".ev-win-form");
+    const closeForm = () => { formEl.hidden = true; formEl.innerHTML = ""; };
+    const openForm = (kind) => {
+      closePop(); closeDlg();
+      const signup = kind === "signup";
+      const title = signup ? A.cta[0] : A.cta[1];
+      formEl.innerHTML = `<div class="ev-win-form-bar"><span>${esc(title)} \u00B7 ${esc(def.win.title)}</span><button type="button" class="ev-win-b ev-win-fx" aria-label="Close form"><u></u></button></div>
+        <form class="ev-win-form-body" novalidate>
+          <p class="hint">${signup ? "Leave your details and we will tell you the moment we launch." : "Tell us a little about you. Filling this out helps us get to know you before others in line."}</p>
+          <label>Name<input name="name" autocomplete="name" maxlength="120"></label>
+          <label>Email<input name="email" type="email" autocomplete="email" maxlength="200"></label>
+          <label><span>Phone / WhatsApp <small>(optional)</small></span><input name="phone" type="tel" autocomplete="tel" maxlength="40"></label>
+          ${signup ? "" : `<label><span>Instagram or website <small>(optional)</small></span><input name="link" maxlength="300"></label>
+          <label>Tell us about you<textarea name="message" rows="4" maxlength="2000"></textarea></label>`}
+          <input class="hp" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <p class="err" role="alert"></p>
+          <div class="row"><button type="submit" class="go">Send</button><button type="button" class="cancel">Cancel</button></div>
+        </form>`;
+      formEl.hidden = false;
+      const f = formEl.querySelector("form"), err = formEl.querySelector(".err"), go = formEl.querySelector(".go");
+      formEl.querySelector(".ev-win-fx").addEventListener("click", closeForm);
+      formEl.querySelector(".cancel").addEventListener("click", closeForm);
+      f.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const d = Object.fromEntries(new FormData(f));
+        if (d.company) { closeForm(); return; } // a hidden field only robots fill in
+        const name = (d.name || "").trim(), email = (d.email || "").trim();
+        if (!name) { err.textContent = "Please add your name."; f.elements.name.focus(); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { err.textContent = "Please add a valid email."; f.elements.email.focus(); return; }
+        err.textContent = ""; go.disabled = true; go.textContent = "Sending\u2026";
+        const r = await saveLead({ kind, role: def.win.title, name, email, phone: (d.phone || "").trim() || null, link: (d.link || "").trim() || null, message: (d.message || "").trim() || null, page: location.pathname });
+        if (r.ok) {
+          f.innerHTML = `<p class="thanks">Thank you, ${esc(name.split(" ")[0])}! You are on the list.</p><div class="row"><button type="button" class="go">Done</button></div>`;
+          f.querySelector(".go").addEventListener("click", closeForm);
+          say("Saved. Thank you!");
+        } else {
+          go.disabled = false; go.textContent = "Send";
+          err.textContent = r.reason === "not-connected" ? "Saving is not connected yet, so nothing was saved." : "Could not send. Please try again.";
+        }
+      });
+      f.elements.name.focus({ preventScroll: true });
+    };
+
     // ---- the actions ----
     const clipSel = () => (selIn() ? getSelection().toString() : "") || fullText();
     const download = () => {
@@ -475,8 +521,8 @@ function setupWindows(stage, sections, LOOP) {
         case "help": dialog("Help topics", "Type your own lines under the listing. The listing text itself stays put: it can’t be deleted or changed.<br><br>Keys: Ctrl+B bold, Ctrl+I italic, Ctrl+U underline, Ctrl+Z undo, Ctrl+S save, Ctrl+F find, Esc closes."); break;
         case "about": dialog("About PBJ Pad", "PBJ Pad is a tiny notepad on PeanutButterJelly.vip.<br>Mining hidden gems around you, from Mumbai."); break;
         case "dlgok": closeDlg(); break;
-        case "signup": say("Sign-ups are not connected yet, nothing was saved"); break;
-        case "form": say("The form is not connected yet, nothing was saved"); break;
+        case "signup": openForm("signup"); break;
+        case "form": openForm("form"); break;
         default: break;
       }
     };
@@ -513,8 +559,9 @@ function setupWindows(stage, sections, LOOP) {
     ["touchstart", "touchmove", "wheel"].forEach((t) => wrap.addEventListener(t, (e) => e.stopPropagation(), { passive: true }));
     wrap.addEventListener("keydown", (e) => {
       const k = e.key, mod = e.ctrlKey || e.metaKey;
-      if (k === "Escape") { if (!pop.hidden) { closePop(); e.stopPropagation(); } else if (closeDlg()) e.stopPropagation(); else if (!findBar.hidden) { findBar.hidden = true; e.stopPropagation(); } return; }
+      if (k === "Escape") { if (!formEl.hidden) { closeForm(); e.stopPropagation(); } else if (!pop.hidden) { closePop(); e.stopPropagation(); } else if (closeDlg()) e.stopPropagation(); else if (!findBar.hidden) { findBar.hidden = true; e.stopPropagation(); } return; }
       e.stopPropagation(); // the page behind must not react to typing
+      if (e.target.closest?.(".ev-win-form")) return; // typing in the form is just typing
       if (k === "F1") { e.preventDefault(); act("help"); return; }
       if (mod) {
         const c = k.toLowerCase();
@@ -594,7 +641,7 @@ function setupWindows(stage, sections, LOOP) {
       win.style.width = win.style.height = win.style.translate = ""; win.classList.remove("sized"); pos.x = pos.y = 0;
       resetAsk(); mine.innerHTML = ""; mine.contentEditable = "false"; counted(); say("For help, press F1");
       Object.assign(st, { font: 0, size: 16, kase: 0, align: "justify" }); applyLook();
-      wrap.classList.remove("min", "max", "hide-status"); wrap.classList.add("hide-tools", "hide-fmt", "hide-ruler"); // the toolbar, font bar and ruler start tucked away (View menu brings them back) findBar.hidden = true; findIn.value = ""; closePop(); dlg.hidden = true;
+      wrap.classList.remove("min", "max", "hide-status"); wrap.classList.add("hide-tools", "hide-fmt", "hide-ruler"); findBar.hidden = true; findIn.value = ""; closePop(); dlg.hidden = true; closeForm(); // (the toolbar, font bar and ruler start tucked away; the View menu brings them back)
     };
     const pos = { x: 0, y: 0 };
     const grab = (el, move) => el.addEventListener("pointerdown", (e) => {
@@ -702,7 +749,7 @@ function setupWindows(stage, sections, LOOP) {
     const shut = () => {
       if (open !== entry) return;
       open = null;
-      closePop(); dlg.hidden = true; mine.contentEditable = "false";
+      closePop(); dlg.hidden = true; closeForm(); mine.contentEditable = "false";
       btn.setAttribute("aria-expanded", "false");
       // close at once: stop the typing and everything else, then fold the box back into the button in a quick snap (no un-typing)
       entry.tl.kill(); entry.just?.kill(); askTl?.kill(); askRun++;
