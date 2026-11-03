@@ -108,7 +108,7 @@ function setupFunFact(about) {
     w.className = "fword";
     w.setAttribute("aria-hidden", "true");
     const index = letters.length; // (the first letter of this word)
-    const opts = { fill: COLOURS[i % COLOURS.length], shadow: "var(--brown)", skip: () => ready && (reduce || phone.matches || !onScreen[index]) }; // (every letter is drawn once when made; after that it shakes only while the line is on screen)
+    const opts = { fill: COLOURS[i % COLOURS.length], shadow: "var(--brown)", skip: () => ready && (reduce || !onScreen[index]) }; // (every letter is drawn once when made; after that it shakes only while the line is on screen)
     [...word].forEach((ch) => {
       const l = createCutLetter(ch, opts);
       const el = l ? l.el : piece(ch, { ...opts, coarse: false });
@@ -143,11 +143,11 @@ function setupFunFact(about) {
     seen.fill(-1);
   };
   const render = () => {
-    if (native) return; // (on a native phone the browser animates the tumble itself, see placeLetters)
     const x = xNow(), w = stage.offsetWidth;
     for (let i = 0; i < letters.length; i++) {
       const left = base[i] + x;
       onScreen[i] = left > -w * 0.2 && left < w * 1.05; // only the letters on screen shake
+      if (native) continue; // (on a native phone the browser animates the tumble itself, see placeLetters)
       const p = Math.min(1, Math.max(0, (w - left) / (w * 0.28)));
       if (p === seen[i] && p === 1) continue;
       seen[i] = p;
