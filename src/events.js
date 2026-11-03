@@ -43,7 +43,7 @@ const QUICKWIT_WINDOW = padWin("For the quick-witted", "You are tired of all you
   q: "Are you a SPONTY?",
   yes: ["Goody goody! Time to vibe with your SPONTY gang.", "You can choose to do both / simply sign up to get notified when we launch.", "(NOTE: FILLING OUT THE FORM HELPS US GET TO KNOW YOU FIRST BEFORE OTHERS IN LINE)"],
 });
-const VENUE_WINDOW = padWin("For venues", "You love your dining customers. Walk-ins are great. Seasons fill the room with the same workshops. Weekends let you proudly say, \u201CWE ARE BOOKED FOR THE EVENING\u201D. Yet your jaded four walls ask for more. Why wouldn\u2019t they? When these walls were being built brick by brick, they dreamt of being filled with crowds unknown to them. Their ears yearn for conversations beyond the same old first dates and friends\u2019 gossip. Especially if your walls are prey to the daily midday rinse-and-repeat, hour-long catch-up over TWO cups of coffee. Dangerously so, if their only crowd is the laptop-users. Maybe it is time you give your walls a new environment.\n\nWe welcome all kinds of walls. Reach out to PBJ to become our partner venue, and we\u2019ll personally pick the right events to fill your rooms with the perfect kind of buzz, a pinch of quirk, and that off-the-track zest to your normal Monday to Friday. If we\u2019re already at it, why leave Saturdays & Sundays?", undefined, {
+const VENUE_WINDOW = padWin("For venues", "You love your dining customers. Walk-ins are great. Seasons fill the room with the same workshops. Weekends let you proudly say, \u201CWE ARE BOOKED FOR THE EVENING\u201D. Yet your jaded four walls ask for more. Why wouldn\u2019t they? Every wall deserves to be met by crowds unknown to it. Its ears must yearn for conversations beyond the same old first dates and friends\u2019 gossip. Especially if your walls are prey to the daily midday rinse-and-repeat: the hour-long catch-up over TWO cups of coffee. Dangerously so, if their only crowd is the laptop-users. Maybe it is time you gave your walls a new environment.\n\nWe welcome all kinds of walls. Reach out to PBJ to become our partner venue, and we\u2019ll personally pick the right events to fill your rooms with the perfect kind of buzz, a pinch of quirk, and that off-the-track zest to your normal Monday to Friday. While we\u2019re at it, why leave Saturdays & Sundays?", undefined, {
   q: "What do the walls say?",
   yes: ["Great Choice! Your walls have TASTE!", "You can choose to do both / simply sign up to get notified when we launch.", "(NOTE: FILLING OUT THE FORM HELPS US GET TO KNOW YOU FIRST BEFORE OTHERS IN LINE)"],
 });
@@ -61,9 +61,9 @@ const BACKER_WINDOW = padWin("For backers", "You like investments. You want to b
 ARTIST_WINDOW.qs = [
   { q: "What do you make?", type: "pick", opts: ["Music", "Comedy", "Poetry / spoken word", "Dance", "Theatre", "Art / craft", "Something else"] },
   { q: "Where can we see your work?", type: "link", ph: "Instagram, YouTube, website\u2026" },
-  { q: "Your last show: where was it and how many came?", type: "text" },
+  { q: "Your last event: where was it and how many came?", type: "text" },
   { q: "How do you sell tickets today?", type: "pick", opts: ["WhatsApp / DMs", "Google Form + UPI screenshots", "Another platform", "I don\u2019t yet"] },
-  { q: "Which Mumbai spot do you dream of playing?", type: "text" },
+  { q: "Which Mumbai spot do you dream of hosting your next event in?", type: "place" },
   { q: "What annoys you most about getting people through the door?", type: "area" },
 ];
 EXCLUSIVE_WINDOW.qs = [
@@ -83,6 +83,7 @@ QUICKWIT_WINDOW.qs = [
   { q: "How do you usually host / join your spontaneous plans?", type: "pick", opts: ["WhatsApp group", "Insta DMs", "Ring my friends", "Use a specific platform"], more: { "Use a specific platform": "Tell us which" } },
   { q: "Usual gang size?", type: "pick", opts: ["2 to 4", "5 to 10", "10 or more"] },
   { q: "Best spur-of-the-moment plan you ever had?", type: "area" },
+  { q: "If you use PBJ today, what kind of spontaneous plan would you list with us?", type: "area" },
 ];
 VENUE_WINDOW.qs = [
   { q: "Venue name", type: "text" },
@@ -91,15 +92,17 @@ VENUE_WINDOW.qs = [
   { q: "How many people fit comfortably?", type: "text", ph: "A rough number is fine" },
   { q: "Which days or hours sit quiet?", type: "text", ph: "Monday afternoons, Sunday evenings\u2026" },
   { q: "Link to your place", type: "link", ph: "Instagram or Google Maps" },
-  { q: "What do your walls say?", type: "area" },
+  { q: "What kind of crowd is your usual customer?", type: "area" },
+  { q: "What kind of crowd are your walls most excited to fill?", type: "area" },
+  { q: "How does becoming our venue partner sound to you?", type: "pick", opts: ["We\u2019d love to", "Need to think", "We\u2019re okay"] },
 ];
 BRAND_WINDOW.qs = [
   { q: "Brand name", type: "text" },
-  { q: "What do you make or sell?", type: "text" },
+  { q: "What kind of product / services does the brand sell?", type: "text" },
   { q: "Link to your brand", type: "link", ph: "Instagram or website" },
-  { q: "Which crowd do you most want to meet?", type: "area" },
+  { q: "Which crowd do you most want to connect with?", type: "area" },
   { q: "What kind of link are you after?", type: "pick", opts: ["Sponsor a night", "Product in the room", "Co-host an evening", "Not sure yet"] },
-  { q: "Roughly what are you thinking of spending?", type: "pick", opts: ["Under \u20B950,000", "\u20B950,000 to \u20B91 lakh", "Above \u20B91 lakh", "Budget in mind?"], more: { "Budget in mind?": "Punch in the numbers\u2026" } },
+  { q: "Roughly what are you thinking of spending?", type: "text", ph: "Punch in the numbers\u2026", note: "Rough figure is fine. Not sure yet? Say so." },
 ];
 BACKER_WINDOW.qs = [
   { q: "Who is backing?", type: "pick", opts: ["Just me", "A brand", "A venue", "A firm / institution", "A community / group"] },
@@ -353,7 +356,8 @@ const PAD_MENUS = {
 };
 const REGIONS = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra (outside Mumbai)", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman & Nicobar Islands", "Chandigarh", "Dadra & Nagar Haveli and Daman & Diu", "Delhi", "Jammu & Kashmir", "Ladakh", "Lakshadweep", "Puducherry", "Outside India"];
 const PAD_FONTS = [["Chivo Mono", "var(--mono)"], ["Helvetica Neue", "var(--display)"]];
-const PAD_SIZES = [10, 12, 14, 16, 18, 20, 24, 28];
+const PAD_SIZES = [10, 12, 13, 14, 16, 18, 20, 24, 28];
+const padSize = () => (matchMedia("(max-width: 767px)").matches ? Math.round(Math.min(15, Math.max(12, innerWidth * 0.037))) : 16); // phones start at the same size as the About page sub text
 const PAD_CASES = [["ALL CAPS", "uppercase"], ["Normal", "none"], ["lowercase", "lowercase"]];
 // the question under the listing, and what each answer says
 const ASK = {
@@ -416,7 +420,7 @@ function setupWindows(stage, sections, LOOP) {
     const ask = $(".ev-win-ask"), askQ = ask.querySelector(".q"), askOpts = ask.querySelector(".opts"), askCta = ask.querySelector(".cta");
     const askR = [".r1", ".r2", ".r3"].map((c) => ask.querySelector(c));
     let askTl = null, askRun = 0;
-    const st = { font: 0, size: 16, kase: 0, align: "justify" };
+    const st = { font: 0, size: padSize(), kase: 0, align: "justify" };
     const entry = { wrap, btn, tl: null, shut: null };
     entries.push(entry);
 
@@ -494,12 +498,12 @@ function setupWindows(stage, sections, LOOP) {
         : x.type === "place"
           ? `<div class="place"><label><span data-q="${esc(x.q)}">${esc(x.q)}</span><input name="q${i}" maxlength="200" placeholder="${esc(x.ph || "")}"></label>
             <label class="notmum"><input type="checkbox" name="q${i}n"><span>Not in Mumbai?</span></label>
-            <div class="region" hidden><input name="q${i}s" autocomplete="off" role="combobox" aria-expanded="false" placeholder="Select your region / state"><ul class="region-list" role="listbox" hidden></ul></div></div>`
+            <div class="region" hidden><input name="q${i}s" autocomplete="off" role="combobox" aria-expanded="false" placeholder="Select region / state"><ul class="region-list" role="listbox" hidden></ul></div></div>`
         : x.type === "area"
           ? `<label>${esc(x.q)}<textarea name="q${i}" rows="3" maxlength="600"></textarea></label>`
           : x.type === "link"
             ? `<label><span>${esc(x.q)} <small class="linkhint"><svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6.5 9.5a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2l-.8.8"/><path d="M9.5 6.5a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2l.8-.8"/></svg>paste a link</small></span><input name="q${i}" type="text" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="300" placeholder="${esc(x.ph || "")}"></label>`
-            : `<label>${esc(x.q)}<input name="q${i}" maxlength="200" placeholder="${esc(x.ph || "")}"></label>`;
+            : `<label>${esc(x.q)}<input name="q${i}" maxlength="200" placeholder="${esc(x.ph || "")}">${x.note ? `<small class="note">${esc(x.note)}</small>` : ""}</label>`;
       formEl.innerHTML = `<div class="ev-win-form-bar"><span>${esc(title)} \u00B7 ${esc(def.win.title)}</span><button type="button" class="ev-win-b ev-win-fmin" aria-label="Minimise form"><u></u></button><button type="button" class="ev-win-b ev-win-fmax" aria-label="Maximise form"><u></u></button><button type="button" class="ev-win-b ev-win-fx" aria-label="Close form"><u></u></button></div>
         <form class="ev-win-form-body" novalidate>
           <p class="hint">${signup ? "Leave your details and we will tell you the moment we launch." : "Tell us a little about you. Only name and email are needed; the rest helps us get to know you before others in line."}</p>
@@ -579,7 +583,7 @@ function setupWindows(stage, sections, LOOP) {
           err.textContent = r.reason === "not-connected" ? "Saving is not connected yet, so nothing was saved." : "Could not send. Please try again.";
         }
       });
-      f.elements.name.focus({ preventScroll: true });
+      if (matchMedia("(pointer: fine)").matches && !navigator.maxTouchPoints) f.elements.name.focus({ preventScroll: true }); // on a phone, do not pop the keyboard up before they have even seen the form
     };
 
     // ---- the actions ----
@@ -665,6 +669,8 @@ function setupWindows(stage, sections, LOOP) {
     document.addEventListener("selectionchange", () => { if (!wrap.hidden) syncMarks(); });
     card.addEventListener("click", (e) => {
       if (entry.tl && entry.tl.progress() < 1 && open === entry) { entry.tl.progress(1, false); return; } // a click finishes the typing
+      if (e.target.closest("button")) return; // tapping a button (Yes, No, Fill the form...) must never drop the cursor into the text, or a phone's keyboard pops up
+      if (matchMedia("(pointer: coarse)").matches && !e.target.closest(".mine")) return; // on a touch screen the cursor goes in only when they tap their own line
       if (e.target.closest(".ev-win-body") && !getSelection().toString()) endCaret();
       else if (e.target === card) endCaret();
     });
@@ -753,7 +759,7 @@ function setupWindows(stage, sections, LOOP) {
     const reset = () => {
       win.style.width = win.style.height = win.style.translate = ""; win.classList.remove("sized"); pos.x = pos.y = 0;
       resetAsk(); mine.innerHTML = ""; mine.contentEditable = "false"; counted(); say("For help, press F1");
-      Object.assign(st, { font: 0, size: 16, kase: 0, align: "justify" }); applyLook();
+      Object.assign(st, { font: 0, size: padSize(), kase: 0, align: "justify" }); applyLook();
       wrap.classList.remove("min", "max", "hide-status"); wrap.classList.add("hide-tools", "hide-fmt", "hide-ruler"); findBar.hidden = true; findIn.value = ""; closePop(); dlg.hidden = true; closeForm(); // (the toolbar, font bar and ruler start tucked away; the View menu brings them back)
     };
     const pos = { x: 0, y: 0 };

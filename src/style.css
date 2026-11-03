@@ -1327,3 +1327,50 @@ html.intro .intro-swirl {
 
 /* a small nudge on the link questions */
 .ev-win-form-body small.linkhint { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: #fff6d4; font-size: 10px; opacity: 1; white-space: nowrap; vertical-align: 1px; }
+
+.ev-win-form-body label small.note { font-size: 11px; opacity: 0.65; }
+
+/* phones: the website box and its forms */
+@media (max-width: 767px) {
+  .ev-win-ask .q { text-align: left; font-size: clamp(22px, 6.4vw, 28px); } /* a justified question stretched its words apart */
+  .ev-win-ask .opts { gap: 10px; padding-right: 0; flex-wrap: nowrap; }
+  .ev-win-ask .opts button { flex: 1 1 0; min-width: 0; padding: 0 8px; }
+  .ev-win-ask .cta { gap: 12px; padding-right: 0; }
+  .ev-win-ask .cta button { flex: 1 1 100%; min-height: 52px; }
+  .ev-win-form-body { overscroll-behavior: contain; padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
+  .ev-win-form-body .region-list li { font-size: 14px; padding: 13px 14px; }
+  .ev-win-form-body fieldset.pick span { padding: 12px 16px; }
+  .ev-win-form-body label.notmum { min-height: 44px; }
+  .ev-win-form-body .row .go, .ev-win-form-body .row .cancel { flex: 1 1 0; }
+}
+/* touch screens (phones and tablets): 16px stops iPhones and iPads zooming the whole page in when a box is tapped */
+@media (pointer: coarse) { .ev-win-form-body input, .ev-win-form-body textarea { font-size: 16px; } }
+
+/* phones: the website box and its form use the same size as the About page sub text (--sub-size) */
+@media (max-width: 767px) {
+  :root { --sub-size: clamp(12px, 3.7vw, 15px); }
+  .ev-win-ask { font-size: var(--sub-size); }
+  .ev-win-ask .r3 { font-size: 0.9em; }
+  .ev-win-ask .q { font-size: clamp(18px, 5.3vw, 22px); }
+  .ev-win-ask button, .ev-win-ask .cta button { font-size: var(--sub-size); min-height: 48px; }
+  .ev-win-ask .cta button { min-height: 50px; }
+}
+
+/* phones and tablets: no zoom-in when tapping the website box's buttons or typing in it */
+.ev-win-wrap { touch-action: manipulation; } /* a quick second tap on a button no longer zooms the page */
+@media (pointer: coarse) {
+  .ev-win-body .mine, .ev-win-findbar input { font-size: 16px; } /* iPhones zoom in on any typing area smaller than 16px */
+}
+
+/* phones: the form uses the sub text size (--sub-size) for everything except what is typed (16px, so iPhones do not zoom in) */
+@media (max-width: 767px) {
+  .ev-win-form-body .hint, .ev-win-form-body label, .ev-win-form-body fieldset.pick legend { font-size: var(--sub-size); }
+  .ev-win-form-body label.notmum span, .ev-win-form-body fieldset.pick span { font-size: var(--sub-size); }
+  .ev-win-form-body .region-list li { font-size: var(--sub-size); }
+  .ev-win-form-body .go, .ev-win-form-body .cancel { font-size: var(--sub-size); }
+  .ev-win-form-body .thanks { font-size: 16px; }
+}
+
+/* the window can never be wider than the screen, however long its title or content is */
+.ev-win-wrap { grid-template-columns: minmax(0, 1fr); }
+.ev-win-wrap .ev-win, .ev-win-wrap .ev-win-in { min-width: 0; }
