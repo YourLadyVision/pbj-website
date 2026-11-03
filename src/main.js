@@ -15,6 +15,7 @@ import { setupAboutStory } from "./aboutStory.js";
 import glyphData from "./glyphs.json";
 
 gsap.registerPlugin(ScrollTrigger);
+window.addEventListener("scroll", () => ScrollTrigger.update(), { passive: true }); // belt and braces: any scroll, however it happens (scrollbar, keys), moves the scroll-driven effects
 ScrollTrigger.config({ ignoreMobileResize: true }); // phone address bar sliding must not re-measure and jolt the page
 
 // Smooth scrolling on computers. On phones Lenis leaves normal touch scrolling alone (its default).

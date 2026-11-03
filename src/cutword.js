@@ -259,7 +259,7 @@ export function createCutLetter(ch, { fill, shadow, calm, skip, rough = 1, shado
   const self = {
     el: svg,
     step(f) {
-      if (svg._off || skip?.()) return;
+      if ((!skip && svg._off) || skip?.()) return; // (letters that say for themselves when they are out of sight do not rely on the page-wide watcher)
       const [sx, sy] = shadowAt(f);
       const d = roughPath(glyph, f, seed, AMP * (0.6 + 0.4 * c) * rough, jag);
       back.setAttribute("d", d);
