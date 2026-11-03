@@ -72,7 +72,7 @@ document.querySelector(".signup-form").addEventListener("submit", (e) => {
   const about = document.querySelector('[data-panel="about"]'), frame = about?.querySelector(".about-pbj"), still = about?.querySelector(".about-pbj-still"), box = about?.querySelector(".about-image");
   const load = () => { if (frame && !frame.src) frame.src = frame.dataset.src; };
   if (about && frame) {
-    const lite = matchMedia("(max-width: 991px), (pointer: coarse)").matches;
+    const lite = matchMedia("(pointer: coarse)").matches; // only touch screens wait for a tap; a narrow window on a computer loads the 3D letters like any other
     addEventListener("message", (e) => {
       if (e.data !== "pbj-ready") return;
       frame.classList.add("ready");
